@@ -5,9 +5,9 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import scorex.account.PublicKeyAccount
 import scorex.api.http.BroadcastRequest
-import scorex.transaction.TransactionParser.SignatureStringLength
-import scorex.transaction.assets.BurnTransaction
-import scorex.transaction.{AssetIdStringLength, ValidationError}
+import io.lunes.transaction.TransactionParser.SignatureStringLength
+import io.lunes.transaction.assets.BurnTransaction
+import io.lunes.transaction.{AssetIdStringLength, ValidationError}
 
 object SignedBurnRequest {
   implicit val reads: Reads[SignedBurnRequest] = (

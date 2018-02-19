@@ -6,7 +6,7 @@ package scorex.crypto.hash
  */
 object SecureCryptographicHash extends CryptographicHash {
 
-  private val hf: CryptographicHash = scorex.waves.crypto.HashChain
+  private val hf: CryptographicHash = scorex.platform.crypto.HashChain
 
   override val DigestSize: Int = hf.DigestSize
 

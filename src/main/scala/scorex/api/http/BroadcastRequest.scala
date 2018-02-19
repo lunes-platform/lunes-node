@@ -1,7 +1,7 @@
 package scorex.api.http
 
-import com.wavesplatform.state2.ByteStr
-import scorex.transaction.ValidationError
+import io.lunes.state2.ByteStr
+import io.lunes.transaction.ValidationError
 
 trait BroadcastRequest {
   protected def parseBase58(v: String, error: String, maxLength: Int): Either[ValidationError, ByteStr] =

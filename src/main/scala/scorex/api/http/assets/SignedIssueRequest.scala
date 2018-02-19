@@ -5,9 +5,9 @@ import io.swagger.annotations.{ApiModel, ApiModelProperty}
 import play.api.libs.json.{Format, Json}
 import scorex.account.PublicKeyAccount
 import scorex.api.http.BroadcastRequest
-import scorex.transaction.TransactionParser.SignatureStringLength
-import scorex.transaction.ValidationError
-import scorex.transaction.assets.IssueTransaction
+import io.lunes.transaction.TransactionParser.SignatureStringLength
+import io.lunes.transaction.ValidationError
+import io.lunes.transaction.assets.IssueTransaction
 
 
 object SignedIssueRequest {

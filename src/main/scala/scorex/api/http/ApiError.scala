@@ -1,10 +1,10 @@
 package scorex.api.http
 
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
-import com.wavesplatform.state2.diffs.TransactionDiffer.TransactionValidationError
+import io.lunes.state2.diffs.TransactionDiffer.TransactionValidationError
 import play.api.libs.json._
 import scorex.account.{Address, AddressOrAlias, Alias}
-import scorex.transaction.{Transaction, ValidationError}
+import io.lunes.transaction.{Transaction, ValidationError}
 
 case class ApiErrorResponse(error: Int, message: String)
 

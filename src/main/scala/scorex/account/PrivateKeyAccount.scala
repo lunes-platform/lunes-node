@@ -2,7 +2,7 @@ package scorex.account
 
 import scorex.crypto.EllipticCurveImpl
 import scorex.crypto.encode.Base58
-import scorex.transaction.ValidationError.GenericError
+import io.lunes.transaction.ValidationError.GenericError
 
 import scala.util.{Failure, Success}
 

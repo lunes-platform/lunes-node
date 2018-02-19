@@ -4,9 +4,9 @@ import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{Format, Json}
 import scorex.account.PublicKeyAccount
 import scorex.api.http.BroadcastRequest
-import scorex.transaction.TransactionParser.SignatureStringLength
-import scorex.transaction.{AssetIdStringLength, ValidationError}
-import scorex.transaction.assets.ReissueTransaction
+import io.lunes.transaction.TransactionParser.SignatureStringLength
+import io.lunes.transaction.{AssetIdStringLength, ValidationError}
+import io.lunes.transaction.assets.ReissueTransaction
 
 object SignedReissueRequest {
   implicit val assetReissueRequestReads: Format[SignedReissueRequest] = Json.format

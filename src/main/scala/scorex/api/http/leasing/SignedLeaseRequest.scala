@@ -4,9 +4,9 @@ import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{Format, Json}
 import scorex.account.{AddressOrAlias, PublicKeyAccount}
 import scorex.api.http.BroadcastRequest
-import scorex.transaction.TransactionParser.SignatureStringLength
-import scorex.transaction.ValidationError
-import scorex.transaction.lease.LeaseTransaction
+import io.lunes.transaction.TransactionParser.SignatureStringLength
+import io.lunes.transaction.ValidationError
+import io.lunes.transaction.lease.LeaseTransaction
 
 case class SignedLeaseRequest(@ApiModelProperty(value = "Base58 encoded sender public key", required = true)
                               senderPublicKey: String,

@@ -5,9 +5,9 @@ import javax.ws.rs.Path
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
-import com.wavesplatform.UtxPool
-import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.{ByteStr, StateReader}
+import io.lunes.utx.UtxPool
+import io.lunes.settings.RestAPISettings
+import io.lunes.state2.{ByteStr, StateReader}
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
 import play.api.libs.json._
@@ -16,9 +16,9 @@ import scorex.account.Address
 import scorex.api.http.alias.{CreateAliasRequest, SignedCreateAliasRequest}
 import scorex.api.http.assets._
 import scorex.api.http.leasing.{LeaseCancelRequest, LeaseRequest, SignedLeaseCancelRequest, SignedLeaseRequest}
-import scorex.transaction.TransactionParser.TransactionType
-import scorex.transaction.ValidationError.GenericError
-import scorex.transaction.{History, Transaction, TransactionFactory}
+import io.lunes.transaction.TransactionParser.TransactionType
+import io.lunes.transaction.ValidationError.GenericError
+import io.lunes.transaction.{History, Transaction, TransactionFactory}
 import scorex.utils.Time
 import scorex.wallet.Wallet
 
@@ -66,7 +66,7 @@ case class TransactionsApiRoute(
                   case Some(limit) if limit > 0 && limit <= MaxTransactionsPerRequest =>
                     complete(Json.arr(JsArray(
                       state().accountTransactions(a, limit).map { case (h, tx) =>
-                        txToCompactJson(a, tx) + ("height" -> JsNumber(h))
+                        txToExtendedJson(tx) + ("height" -> JsNumber(h))
                     })))
                   case Some(limit) if limit > MaxTransactionsPerRequest =>
                     complete(TooBigArrayAllocation)
@@ -151,7 +151,6 @@ case class TransactionsApiRoute(
         val txEi = TransactionType((jsv \ "type").as[Int]) match {
           case IssueTransaction => TransactionFactory.issueAsset(jsv.as[IssueRequest], wallet, time)
           case TransferTransaction => TransactionFactory.transferAsset(jsv.as[TransferRequest], wallet, time)
-          case MassTransferTransaction => TransactionFactory.massTransferAsset(jsv.as[MassTransferRequest], wallet, time)
           case ReissueTransaction => TransactionFactory.reissueAsset(jsv.as[ReissueRequest], wallet, time)
           case BurnTransaction => TransactionFactory.burnAsset(jsv.as[BurnRequest], wallet, time)
           case LeaseTransaction => TransactionFactory.lease(jsv.as[LeaseRequest], wallet, time)
@@ -160,7 +159,7 @@ case class TransactionsApiRoute(
           case t => Left(GenericError(s"Bad transaction type: $t"))
         }
         txEi match {
-          case Right(tx) => tx.json()
+          case Right(tx) => Json.toJson(tx)
           case Left(err) => ApiError.fromValidationError(err)
         }
       }
@@ -179,7 +178,6 @@ case class TransactionsApiRoute(
         val req = TransactionType((jsv \ "type").as[Int]) match {
           case IssueTransaction => jsv.as[SignedIssueRequest].toTx
           case TransferTransaction => jsv.as[SignedTransferRequest].toTx
-          case MassTransferTransaction => jsv.as[SignedMassTransferRequest].toTx
           case ReissueTransaction => jsv.as[SignedReissueRequest].toTx
           case BurnTransaction => jsv.as[SignedBurnRequest].toTx
           case LeaseTransaction => jsv.as[SignedLeaseRequest].toTx
@@ -193,7 +191,7 @@ case class TransactionsApiRoute(
   }
 
   private def txToExtendedJson(tx: Transaction): JsObject = {
-    import scorex.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+    import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
     tx match {
       case lease: LeaseTransaction =>
         import LeaseTransaction.Status._
@@ -201,18 +199,6 @@ case class TransactionsApiRoute(
       case leaseCancel: LeaseCancelTransaction =>
         leaseCancel.json() ++ Json.obj("lease" -> state().findTransaction[LeaseTransaction](leaseCancel.leaseId).map(_.json()).getOrElse[JsValue](JsNull))
       case t => t.json()
-    }
-  }
-
-  /**
-    * Produces compact representation for large transactions by stripping unnecessary data.
-    * Currently implemented for MassTransfer transaction only.
-    */
-  private def txToCompactJson(address: Address, tx: Transaction): JsObject = {
-    import scorex.transaction.assets.MassTransferTransaction
-    tx match {
-      case mtt: MassTransferTransaction if mtt.sender.toAddress != address => mtt.compactJson(address)
-      case _ => txToExtendedJson(tx)
     }
   }
 

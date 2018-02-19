@@ -1,8 +1,8 @@
 package scorex.account
 
-import com.wavesplatform.state2.ByteStr
+import io.lunes.state2.ByteStr
 import scorex.serialization.Deser
-import scorex.transaction.ValidationError
+import io.lunes.transaction.ValidationError
 
 
 trait AddressOrAlias {

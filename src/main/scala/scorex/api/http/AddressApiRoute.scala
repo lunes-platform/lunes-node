@@ -5,14 +5,14 @@ import javax.ws.rs.Path
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Route
-import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
-import com.wavesplatform.state2.StateReader
+import io.lunes.settings.{FunctionalitySettings, RestAPISettings}
+import io.lunes.state2.StateReader
 import io.swagger.annotations._
 import play.api.libs.json._
 import scorex.account.{Address, PublicKeyAccount}
 import scorex.crypto.EllipticCurveImpl
 import scorex.crypto.encode.Base58
-import scorex.transaction.PoSCalc
+import io.lunes.transaction.PoSCalc
 import scorex.wallet.Wallet
 
 import scala.util.{Failure, Success, Try}

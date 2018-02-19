@@ -4,8 +4,8 @@ import java.nio.ByteBuffer
 
 import cats._
 import com.google.common.primitives.{Bytes, Ints, Longs}
-import com.wavesplatform.settings.GenesisSettings
-import com.wavesplatform.state2.{ByteStr, LeaseInfo, Portfolio}
+import io.lunes.settings.GenesisSettings
+import io.lunes.state2.{ByteStr, LeaseInfo, Portfolio}
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import scorex.account.{Address, PrivateKeyAccount, PublicKeyAccount}
@@ -13,9 +13,9 @@ import scorex.block.fields.FeaturesBlockField
 import scorex.consensus.nxt.{NxtConsensusBlockField, NxtLikeConsensusBlockData}
 import scorex.crypto.EllipticCurveImpl
 import scorex.crypto.hash.FastCryptographicHash.DigestSize
-import scorex.transaction.TransactionParser._
-import scorex.transaction.ValidationError.GenericError
-import scorex.transaction._
+import io.lunes.transaction.TransactionParser._
+import io.lunes.transaction.ValidationError.GenericError
+import io.lunes.transaction._
 import scorex.utils.ScorexLogging
 
 import scala.util.{Failure, Try}
@@ -245,7 +245,9 @@ object Block extends ScorexLogging {
             transactionData: Seq[Transaction],
             signerData: SignerData,
             featureVotes: Set[Short]): Either[GenericError, Block] = {
+    val txsCount = transactionData.size
     (for {
+      _ <- Either.cond(areTxsFitInBlock(version, txsCount), (), s"Too many transactions in Block version ${version.toInt}: $txsCount")
       _ <- Either.cond(reference.arr.length == SignatureLength, (), "Incorrect reference")
       _ <- Either.cond(consensusData.generationSignature.arr.length == GeneratorSignatureLength, (), "Incorrect consensusData.generationSignature")
       _ <- Either.cond(signerData.generator.publicKey.length == KeyLength, (), "Incorrect signer.publicKey")

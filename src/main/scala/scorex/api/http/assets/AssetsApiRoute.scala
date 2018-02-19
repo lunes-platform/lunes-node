@@ -3,9 +3,9 @@ package scorex.api.http.assets
 import javax.ws.rs.Path
 
 import akka.http.scaladsl.server.Route
-import com.wavesplatform.UtxPool
-import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.{ByteStr, StateReader}
+import io.lunes.utx.UtxPool
+import io.lunes.settings.RestAPISettings
+import io.lunes.state2.{ByteStr, StateReader}
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
 import play.api.libs.json._
@@ -13,9 +13,9 @@ import scorex.BroadcastRoute
 import scorex.account.Address
 import scorex.api.http.{ApiError, ApiRoute, InvalidAddress}
 import scorex.crypto.encode.Base58
-import scorex.transaction.assets.exchange.Order
-import scorex.transaction.assets.exchange.OrderJson._
-import scorex.transaction.{AssetIdStringLength, TransactionFactory}
+import io.lunes.transaction.assets.exchange.Order
+import io.lunes.transaction.assets.exchange.OrderJson._
+import io.lunes.transaction.{AssetIdStringLength, TransactionFactory}
 import scorex.utils.Time
 import scorex.wallet.Wallet
 
@@ -29,7 +29,7 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
 
   override lazy val route =
     pathPrefix("assets") {
-      balance ~ balances ~ issue ~ reissue ~ burnRoute ~ transfer ~ massTransfer ~ signOrder ~ balanceDistribution
+      balance ~ balances ~ issue ~ reissue ~ burnRoute ~ transfer ~ signOrder ~ balanceDistribution
     }
 
   @Path("/balance/{address}/{assetId}")
@@ -53,7 +53,7 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
       complete {
         Success(assetId).filter(_.length <= AssetIdStringLength).flatMap(Base58.decode) match {
           case Success(byteArray) => Json.toJson(state().assetDistribution(byteArray))
-          case Failure(_) => ApiError.fromValidationError(scorex.transaction.ValidationError.GenericError("Must be base58-encoded assetId"))
+          case Failure(_) => ApiError.fromValidationError(io.lunes.transaction.ValidationError.GenericError("Must be base58-encoded assetId"))
         }
       }
     }
@@ -87,25 +87,6 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
   ))
   def transfer: Route =
     processRequest("transfer", (t: TransferRequest) => doBroadcast(TransactionFactory.transferAsset(t, wallet, time)))
-
-  @Path("/masstransfer")
-  @ApiOperation(value = "Mass Transfer",
-    notes = "Mass transfer of assets",
-    httpMethod = "POST",
-    produces = "application/json",
-    consumes = "application/json")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(
-      name = "body",
-      value = "Json with data",
-      required = true,
-      paramType = "body",
-      dataType = "scorex.api.http.assets.MassTransferRequest",
-      defaultValue = "{\"sender\":\"3Mn6xomsZZepJj1GL1QaW6CaCJAq8B3oPef\",\"transfers\":(\"3Mciuup51AxRrpSz7XhutnQYTkNT9691HAk\",100000000),\"fee\":100000,\"timestamp\":1517315595291}"
-    )
-  ))
-  def massTransfer: Route =
-    processRequest("masstransfer", (t: MassTransferRequest) => doBroadcast(TransactionFactory.massTransferAsset(t, wallet, time)))
 
   @Path("/issue")
   @ApiOperation(value = "Issue Asset",
@@ -209,7 +190,7 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
       value = "Order Json with data",
       required = true,
       paramType = "body",
-      dataType = "scorex.transaction.assets.exchange.Order"
+      dataType = "io.lunes.transaction.assets.exchange.Order"
     )
   ))
   def signOrder: Route = processRequest("order", (order: Order) => {

@@ -1,9 +1,9 @@
 package scorex.api.http
 
 import akka.http.scaladsl.server.Directive1
-import com.wavesplatform.state2.ByteStr
+import io.lunes.state2.ByteStr
 import scorex.block.Block
-import scorex.transaction.{History, TransactionParser}
+import io.lunes.transaction.{History, TransactionParser}
 
 
 trait CommonApiFunctions { this: ApiRoute =>

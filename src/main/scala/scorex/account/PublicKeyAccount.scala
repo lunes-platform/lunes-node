@@ -1,8 +1,8 @@
 package scorex.account
 
 import scorex.crypto.encode.Base58
-import scorex.transaction.TransactionParser
-import scorex.transaction.ValidationError.InvalidAddress
+import io.lunes.transaction.TransactionParser
+import io.lunes.transaction.ValidationError.InvalidAddress
 
 trait PublicKeyAccount {
   def publicKey: Array[Byte]

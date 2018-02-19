@@ -5,9 +5,9 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import scorex.account.{AddressOrAlias, PublicKeyAccount}
 import scorex.api.http.BroadcastRequest
-import scorex.transaction.TransactionParser.SignatureStringLength
-import scorex.transaction.assets.TransferTransaction
-import scorex.transaction.{AssetIdStringLength, ValidationError}
+import io.lunes.transaction.TransactionParser.SignatureStringLength
+import io.lunes.transaction.assets.TransferTransaction
+import io.lunes.transaction.{AssetIdStringLength, ValidationError}
 
 object SignedTransferRequest {
   implicit val reads: Reads[SignedTransferRequest] = (
@@ -18,7 +18,6 @@ object SignedTransferRequest {
       (JsPath \ "fee").read[Long] and
       (JsPath \ "feeAssetId").read[String].map(Option.apply).orElse((JsPath \ "feeAsset").readNullable[String]) and
       (JsPath \ "timestamp").read[Long] and
-      (JsPath \ "attachment").readNullable[String] and
       (JsPath \ "signature").read[String]
     )(SignedTransferRequest.apply _)
 
@@ -40,8 +39,6 @@ case class SignedTransferRequest(@ApiModelProperty(value = "Base58 encoded sende
                                 feeAssetId: Option[String],
                                  @ApiModelProperty(required = true)
                                 timestamp: Long,
-                                 @ApiModelProperty(value = "Base58 encoded attachment")
-                                attachment: Option[String],
                                  @ApiModelProperty(required = true)
                                 signature: String) extends BroadcastRequest {
   def toTx: Either[ValidationError, TransferTransaction] = for {
@@ -49,8 +46,7 @@ case class SignedTransferRequest(@ApiModelProperty(value = "Base58 encoded sende
     _assetId <- parseBase58ToOption(assetId.filter(_.length > 0), "invalid.assetId", AssetIdStringLength)
     _feeAssetId <- parseBase58ToOption(feeAssetId.filter(_.length > 0), "invalid.feeAssetId", AssetIdStringLength)
     _signature <- parseBase58(signature, "invalid.signature", SignatureStringLength)
-    _attachment <- parseBase58(attachment.filter(_.length > 0), "invalid.attachment", TransferTransaction.MaxAttachmentStringSize)
     _account <-  AddressOrAlias.fromString(recipient)
-    t <- TransferTransaction.create(_assetId, _sender, _account, amount, timestamp, _feeAssetId, fee, _attachment.arr,  _signature)
+    t <- TransferTransaction.create(_assetId, _sender, _account, amount, timestamp, _feeAssetId, fee, _signature)
   } yield t
 }

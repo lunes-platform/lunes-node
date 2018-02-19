@@ -3,9 +3,9 @@ package scorex.api.http.leasing
 import javax.ws.rs.Path
 
 import akka.http.scaladsl.server.Route
-import com.wavesplatform.UtxPool
-import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.StateReader
+import io.lunes.utx.UtxPool
+import io.lunes.settings.RestAPISettings
+import io.lunes.state2.StateReader
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
 import scorex.BroadcastRoute
@@ -13,8 +13,8 @@ import scorex.account.Address
 import scorex.api.http._
 import scorex.api.http.leasing.LeaseCancelRequest.leaseCancelRequestFormat
 import scorex.api.http.leasing.LeaseRequest.leaseCancelRequestFormat
-import scorex.transaction._
-import scorex.transaction.lease.LeaseTransaction
+import io.lunes.transaction._
+import io.lunes.transaction.lease.LeaseTransaction
 import scorex.utils.Time
 import scorex.wallet.Wallet
 

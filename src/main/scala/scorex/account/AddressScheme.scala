@@ -1,5 +1,7 @@
 package scorex.account
 
+import io.lunes.settings.Constants
+
 abstract class AddressScheme {
   val chainId: Byte
 }
@@ -9,5 +11,5 @@ object AddressScheme {
 }
 
 object DefaultAddressScheme extends AddressScheme {
-  val chainId: Byte = 'T'.toByte
+  val chainId: Byte = Constants.TestSchemeCharacter.toByte
 }

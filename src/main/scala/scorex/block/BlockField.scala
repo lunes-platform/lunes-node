@@ -1,13 +1,13 @@
 package scorex.block
 
 import com.google.common.primitives.{Bytes, Longs}
-import com.wavesplatform.state2.ByteStr
+import io.lunes.state2.ByteStr
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import scorex.account.PublicKeyAccount
 import scorex.crypto.encode.Base58
 import scorex.serialization.{BytesSerializable, JsonSerializable}
-import scorex.transaction.Transaction
+import io.lunes.transaction.Transaction
 
 abstract class BlockField[T] extends BytesSerializable with JsonSerializable {
   val name: String

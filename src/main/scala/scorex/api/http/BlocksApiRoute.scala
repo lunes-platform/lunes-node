@@ -4,16 +4,16 @@ import javax.ws.rs.Path
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.{Route, StandardRoute}
-import com.wavesplatform.network._
-import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.ByteStr
+import io.lunes.network._
+import io.lunes.settings.RestAPISettings
+import io.lunes.state2.ByteStr
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
 import monix.eval.{Coeval, Task}
 import monix.execution.Scheduler.Implicits.global
 import play.api.libs.json._
 import scorex.block.BlockHeader
-import scorex.transaction._
+import io.lunes.transaction._
 
 import scala.concurrent._
 
@@ -211,7 +211,7 @@ case class BlocksApiRoute(settings: RestAPISettings,
   @ApiOperation(value = "Checkpoint", notes = "Broadcast checkpoint of blocks", httpMethod = "POST")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "message", value = "Checkpoint message", required = true, paramType = "body",
-      dataType = "com.wavesplatform.network.Checkpoint")
+      dataType = "io.lunes.network.Checkpoint")
   ))
   @ApiResponses(Array(
     new ApiResponse(code = 200, message = "Json with response or error")

@@ -4,10 +4,10 @@ import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{Format, Json}
 import scorex.account.PublicKeyAccount
 import scorex.api.http.BroadcastRequest
-import scorex.transaction.TransactionParser.SignatureStringLength
-import scorex.transaction.ValidationError
-import scorex.transaction.assets.exchange.{ExchangeTransaction, Order}
-import scorex.transaction.assets.exchange.OrderJson.orderFormat
+import io.lunes.transaction.TransactionParser.SignatureStringLength
+import io.lunes.transaction.ValidationError
+import io.lunes.transaction.assets.exchange.{ExchangeTransaction, Order}
+import io.lunes.transaction.assets.exchange.OrderJson.orderFormat
 
 object SignedExchangeRequest {
   implicit val signedExchangeRequestFormat: Format[SignedExchangeRequest] = Json.format

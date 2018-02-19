@@ -1,15 +1,15 @@
 package scorex.block
 
 import com.google.common.primitives.{Bytes, Ints}
-import com.wavesplatform.mining.Miner.MaxTransactionsPerMicroblock
-import com.wavesplatform.state2._
+import io.lunes.mining.Miner.MaxTransactionsPerMicroblock
+import io.lunes.state2._
 import monix.eval.Coeval
 import scorex.account.{PrivateKeyAccount, PublicKeyAccount}
 import scorex.block.Block.{BlockId, transParseBytes}
 import scorex.crypto.EllipticCurveImpl
-import scorex.transaction.TransactionParser.SignatureLength
-import scorex.transaction.ValidationError.GenericError
-import scorex.transaction._
+import io.lunes.transaction.TransactionParser.SignatureLength
+import io.lunes.transaction.ValidationError.GenericError
+import io.lunes.transaction._
 import scorex.utils.ScorexLogging
 
 import scala.util.{Failure, Try}

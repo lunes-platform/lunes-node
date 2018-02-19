@@ -3,19 +3,19 @@ package scorex.wallet
 import java.io.File
 
 import com.google.common.primitives.{Bytes, Ints}
-import com.wavesplatform.settings.WalletSettings
-import com.wavesplatform.state2.ByteStr
-import com.wavesplatform.utils.JsonFileStorage
+import io.lunes.settings.WalletSettings
+import io.lunes.state2.ByteStr
+import io.lunes.utils.JsonFileStorage
 import play.api.libs.json._
 import scorex.account.{Address, PrivateKeyAccount}
 import scorex.crypto.hash.SecureCryptographicHash
-import scorex.transaction.ValidationError
-import scorex.transaction.ValidationError.MissingSenderPrivateKey
+import io.lunes.transaction.ValidationError
+import io.lunes.transaction.ValidationError.MissingSenderPrivateKey
 import scorex.utils.{ScorexLogging, randomBytes}
 
 import scala.collection.concurrent.TrieMap
 import scala.util.control.NonFatal
-import com.wavesplatform.utils._
+import io.lunes.utils._
 
 trait Wallet {
 

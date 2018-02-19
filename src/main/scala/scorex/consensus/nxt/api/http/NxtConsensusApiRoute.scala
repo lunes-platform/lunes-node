@@ -3,13 +3,13 @@ package scorex.consensus.nxt.api.http
 import javax.ws.rs.Path
 
 import akka.http.scaladsl.server.Route
-import com.wavesplatform.settings.{FunctionalitySettings, RestAPISettings}
-import com.wavesplatform.state2.StateReader
+import io.lunes.settings.{FunctionalitySettings, RestAPISettings}
+import io.lunes.state2.StateReader
 import io.swagger.annotations._
 import play.api.libs.json.Json
 import scorex.account.Address
 import scorex.api.http.{ApiRoute, CommonApiFunctions, InvalidAddress}
-import scorex.transaction.{History, PoSCalc}
+import io.lunes.transaction.{History, PoSCalc}
 
 @Path("/consensus")
 @Api(value = "/consensus")

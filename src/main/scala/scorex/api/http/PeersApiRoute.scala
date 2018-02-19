@@ -6,8 +6,8 @@ import java.util.stream.Collectors
 import javax.ws.rs.Path
 
 import akka.http.scaladsl.server.Route
-import com.wavesplatform.network.{PeerDatabase, PeerInfo}
-import com.wavesplatform.settings.RestAPISettings
+import io.lunes.network.{PeerDatabase, PeerInfo}
+import io.lunes.settings.RestAPISettings
 import io.netty.channel.Channel
 import io.swagger.annotations._
 import play.api.libs.json._

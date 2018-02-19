@@ -1,11 +1,11 @@
 package scorex.account
 
-import com.wavesplatform.state2.ByteStr
-import com.wavesplatform.utils.base58Length
+import io.lunes.state2.ByteStr
+import io.lunes.utils.base58Length
 import scorex.crypto.encode.Base58
 import scorex.crypto.hash.SecureCryptographicHash._
-import scorex.transaction.ValidationError
-import scorex.transaction.ValidationError.InvalidAddress
+import io.lunes.transaction.ValidationError
+import io.lunes.transaction.ValidationError.InvalidAddress
 import scorex.utils.ScorexLogging
 
 

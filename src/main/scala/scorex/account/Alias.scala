@@ -1,9 +1,9 @@
 package scorex.account
 
-import com.wavesplatform.state2.ByteStr
+import io.lunes.state2.ByteStr
 import scorex.serialization.BytesSerializable
-import scorex.transaction.ValidationError
-import scorex.transaction.ValidationError.GenericError
+import io.lunes.transaction.ValidationError
+import io.lunes.transaction.ValidationError.GenericError
 
 sealed trait Alias extends AddressOrAlias {
   lazy val stringRepr: String = Alias.Prefix + networkByte.toChar + ":" + name

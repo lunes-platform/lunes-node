@@ -3,16 +3,16 @@ package scorex.api.http.alias
 import javax.ws.rs.Path
 
 import akka.http.scaladsl.server.Route
-import com.wavesplatform.UtxPool
-import com.wavesplatform.settings.RestAPISettings
-import com.wavesplatform.state2.StateReader
+import io.lunes.utx.UtxPool
+import io.lunes.settings.RestAPISettings
+import io.lunes.state2.StateReader
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
 import play.api.libs.json.{Format, Json}
 import scorex.BroadcastRoute
 import scorex.account.Alias
 import scorex.api.http._
-import scorex.transaction._
+import io.lunes.transaction._
 import scorex.utils.Time
 import scorex.wallet.Wallet
 

@@ -1,9 +1,9 @@
 package scorex.consensus
 
-import scorex.transaction.Transaction
+import io.lunes.transaction.Transaction
 
 object TransactionsOrdering {
-  trait WavesOrdering extends Ordering[Transaction] {
+  trait LunesOrdering extends Ordering[Transaction] {
     def txTimestampOrder(ts: Long): Long
     private def orderBy(t: Transaction): (Long, Long, String) = {
       val byFee = if (t.assetFee._1.nonEmpty) 0 else -t.assetFee._2
@@ -17,12 +17,12 @@ object TransactionsOrdering {
     }
   }
 
-  object InBlock extends WavesOrdering {
+  object InBlock extends LunesOrdering {
     // sorting from network start
     override def txTimestampOrder(ts: Long): Long = -ts
   }
 
-  object InUTXPool extends WavesOrdering {
+  object InUTXPool extends LunesOrdering {
     override def txTimestampOrder(ts: Long): Long = ts
   }
 }
