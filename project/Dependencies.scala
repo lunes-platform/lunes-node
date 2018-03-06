@@ -1,3 +1,4 @@
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport.toPlatformDepsGroupID
 import sbt._
 
 object Dependencies {
@@ -8,7 +9,7 @@ object Dependencies {
 
   def akkaHttpModule(module: String) = "com.typesafe.akka" %% module % "10.0.9"
 
-  def nettyModule(module: String) = "io.netty" % s"netty-$module" % "4.1.13.Final"
+  def nettyModule(module: String) = "io.netty" % s"netty-$module" % "4.1.22.Final"
 
   def kamonModule(module: String) = "io.kamon" %% s"kamon-$module" % "0.6.7"
 
@@ -18,11 +19,6 @@ object Dependencies {
     "org.bitlet" % "weupnp" % "0.1.4",
     // Solves an issue with kamon-influxdb
     asyncHttpClient
-  )
-
-  lazy val scalatest = Seq(
-    "org.scalatest" %% "scalatest" % "3.0.3",
-    "org.scalactic" %% "scalactic" % "3.0.3"
   )
 
   lazy val testKit = scalatest ++ Seq(
@@ -36,7 +32,7 @@ object Dependencies {
 
   lazy val itKit = scalatest ++ Seq(
     // Swagger is using Jersey 1.1, hence the shading (https://github.com/spotify/docker-client#a-note-on-shading)
-    "com.spotify" % "docker-client" % "8.8.2" classifier "shaded",
+    "com.spotify" % "docker-client" % "8.9.0" classifier "shaded",
     "com.fasterxml.jackson.dataformat" % "jackson-dataformat-properties" % "2.8.9",
     asyncHttpClient
   )
@@ -76,7 +72,20 @@ object Dependencies {
   )
 
   lazy val fp = Seq(
-    "org.typelevel" %% "cats-core" % "1.0.0-RC1",
-    "io.monix" %% "monix" % "3.0.0-M2"
+    "org.typelevel" %% "cats-core" % "1.0.1",
+    "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
+  )
+  lazy val monix = Def.setting(Seq("io.monix" %%% "monix" % "3.0.0-M3"))
+  lazy val scodec = Def.setting(Seq("org.scodec" %%% "scodec-core" % "1.10.3"))
+  lazy val fastparse = Def.setting(Seq("com.lihaoyi" %%% "fastparse" % "1.0.0"))
+  lazy val ficus = Seq("com.iheart" %% "ficus" % "1.4.2")
+  lazy val scorex = Seq(("org.scorexfoundation" %% "scrypto" % "2.0.4").exclude("org.slf4j", "slf4j-api"))
+  lazy val commons_net = Seq("commons-net" % "commons-net" % "3.+")
+  lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.0.3")
+  lazy val scalactic = Seq("org.scalactic" %% "scalactic" % "3.0.3")
+  lazy val cats = Seq("org.typelevel" %% "cats-core" % "1.0.1")
+  lazy val scalacheck = Seq(
+    "org.scalacheck" %% "scalacheck" % "1.13.5",
+    "io.github.amrhassan" %% "scalacheck-cats" % "0.4.0" % Test
   )
 }

@@ -27,6 +27,7 @@ import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
 import kamon.Kamon
+import monix.reactive.subjects.ConcurrentSubject
 import monix.execution.Scheduler.global
 import monix.execution.schedulers.SchedulerService
 import monix.execution.{Scheduler, UncaughtExceptionReporter}
@@ -74,7 +75,14 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
   private val checkpointService = new CheckpointServiceImpl(db, settings.checkpointsSettings)
   private val (history, featureProvider, stateReader, blockchainUpdater, blockchainDebugInfo) = storage()
   private lazy val upnp = new UPnP(settings.networkSettings.uPnPSettings) // don't initialize unless enabled
-  private val wallet: Wallet = Wallet(settings.walletSettings)
+
+  private val wallet: Wallet = try {
+    Wallet(settings.walletSettings)
+  } catch {
+    case e: IllegalStateException =>
+      log.error(s"Failed to open wallet file '${settings.walletSettings.file.get.getAbsolutePath}")
+      throw e
+  }
   private val peerDatabase = new PeerDatabaseImpl(settings.networkSettings)
 
   private val extensionLoaderScheduler = Scheduler.singleThread("tx-extension-loader", reporter = UncaughtExceptionReporter { ex => log.error(s"ExtensionLoader: $ex") })
@@ -116,7 +124,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
     else Miner.Disabled
 
     val processBlock = BlockAppender(checkpointService, history, blockchainUpdater, time, stateReader, utxStorage,
-      settings.blockchainSettings, featureProvider, allChannels, peerDatabase, miner, appenderScheduler) _
+      settings, featureProvider, allChannels, peerDatabase, miner, appenderScheduler) _
     val processCheckpoint = CheckpointAppender(checkpointService, history, blockchainUpdater, peerDatabase, miner,
       allChannels, appenderScheduler) _
     val processFork = ExtensionAppender(checkpointService, history, blockchainUpdater, stateReader, utxStorage, time,
@@ -141,12 +149,13 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
     maybeNetwork = Some(network)
     val (signatures, blocks, blockchainScores, checkpoints, microblockInvs, microblockResponses, transactions) = network.messages
 
+    val timeoutSubject: ConcurrentSubject[Channel, Channel] = ConcurrentSubject.publish[Channel]
     val (syncWithChannelClosed, scoreStatsReporter) = RxScoreObserver(settings.synchronizationSettings.scoreTTL, 1.second,
-      history.score(), lastScore, blockchainScores, network.closedChannels, scoreObserverScheduler)
+      history.score(), lastScore, blockchainScores, network.closedChannels, timeoutSubject, scoreObserverScheduler)
     val (microblockDatas, mbSyncCacheSizes) = MicroBlockSynchronizer(settings.synchronizationSettings.microBlockSynchronizer,
       peerDatabase, lastBlockInfo.map(_.id), microblockInvs, microblockResponses, microblockSynchronizerScheduler)
     val (newBlocks, extLoaderState, sh) = RxExtensionLoader(settings.synchronizationSettings.maxRollback, settings.synchronizationSettings.synchronizationTimeout,
-      history, peerDatabase, knownInvalidBlocks, blocks, signatures, syncWithChannelClosed, extensionLoaderScheduler) { case ((c, b)) => processFork(c, b.blocks) }
+      history, peerDatabase, knownInvalidBlocks, blocks, signatures, syncWithChannelClosed, extensionLoaderScheduler, timeoutSubject) { case ((c, b)) => processFork(c, b.blocks) }
 
     rxExtensionLoaderShutdown = Some(sh)
 

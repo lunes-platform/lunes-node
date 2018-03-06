@@ -1,11 +1,13 @@
 package scorex.api.http.assets
 
 import play.api.libs.json.{Format, Json}
+import io.lunes.transaction.assets.MassTransferTransaction.Transfer
 
 case class MassTransferRequest(assetId: Option[String],
                                sender: String,
-                               transfers: List[(String, Long)],
+                               transfers: List[Transfer],
                                fee: Long,
+                               attachment: Option[String],
                                timestamp: Option[Long] = None)
 
 object MassTransferRequest {

@@ -1,13 +1,17 @@
-import Dependencies._
+import com.typesafe.sbt.packager.archetypes.TemplateWriter
+import sbt.Keys.{sourceGenerators, _}
+import sbt._
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
-inThisBuild(Seq(
-  scalaVersion := "2.12.4",
-  organization := "io.lunes" //,
-  //crossPaths := false
-))
 
 name := "LunesNode"
 mainClass in Compile := Some("io.lunes.LunesNode")
+
+inThisBuild(Seq(
+  scalaVersion := "2.12.4",
+  organization := "io.lunes",
+  crossPaths := false
+))
 
 scalacOptions ++= Seq(
   "-feature",
@@ -17,26 +21,60 @@ scalacOptions ++= Seq(
   "-Ywarn-unused:-implicits",
   "-Xlint")
 
-libraryDependencies ++=
-  Dependencies.network ++
-  Dependencies.db ++
-  Dependencies.http ++
-  Dependencies.akka ++
-  Dependencies.serialization ++
-  Dependencies.testKit.map(_ % "test") ++
-  Dependencies.logging ++
-  Dependencies.matcher ++
-  Dependencies.metrics ++
-  Dependencies.fp ++
-  Seq(
-    "com.iheart" %% "ficus" % "1.4.2",
-    ("org.scorexfoundation" %% "scrypto" % "1.2.2").exclude("org.slf4j", "slf4j-api"),
-    "commons-net" % "commons-net" % "3.+"
-  )
-
-
+resolvers += Resolver.bintrayRepo("ethereum", "maven")
 
 fork in run := true
+
+
+lazy val lang =
+  crossProject(JSPlatform, JVMPlatform)
+    .withoutSuffixFor(JVMPlatform)
+    .settings(
+      version := "0.0.1",
+      test in assembly := {},
+      libraryDependencies ++=
+        Dependencies.cats ++
+        Dependencies.scalacheck ++
+        Dependencies.scorex ++
+        Dependencies.scalatest ++
+        Dependencies.scalactic ++
+        Dependencies.monix.value ++
+        Dependencies.scodec.value ++
+        Dependencies.fastparse.value,
+      resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins")
+    )
+    .jsSettings(
+      scalaJSLinkerConfig ~= {
+        _.withModuleKind(ModuleKind.CommonJSModule)
+      }
+    )
+    .jvmSettings(libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "0.6.22" % "provided")
+
+lazy val langJS = lang.js
+lazy val langJVM = lang.jvm
+
+lazy val node = project.in(file("."))
+  .settings(
+    libraryDependencies ++=
+      Dependencies.network ++
+      Dependencies.db ++
+      Dependencies.http ++
+      Dependencies.akka ++
+      Dependencies.serialization ++
+      Dependencies.testKit.map(_ % "test") ++
+      Dependencies.logging ++
+      Dependencies.matcher ++
+      Dependencies.metrics ++
+      Dependencies.fp ++
+      Dependencies.ficus ++
+      Dependencies.scorex ++
+      Dependencies.commons_net ++
+      Dependencies.monix.value
+  )
+  .aggregate(langJVM)
+  .dependsOn(langJVM)
+
+
 
 //assembly settings
 assemblyJarName in assembly := s"LunesNode-all-${version.value}.jar"

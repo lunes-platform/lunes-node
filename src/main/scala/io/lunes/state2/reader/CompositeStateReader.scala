@@ -10,6 +10,7 @@ import monix.eval.Coeval
 import scorex.account.{Address, Alias}
 import io.lunes.transaction.Transaction
 import io.lunes.transaction.lease.LeaseTransaction
+import io.lunes.transaction.smart.Script
 
 class CompositeStateReader private(inner: SnapshotStateReader, blockDiff: BlockDiff) extends SnapshotStateReader {
 
@@ -34,7 +35,7 @@ class CompositeStateReader private(inner: SnapshotStateReader, blockDiff: BlockD
 
   override def accountTransactionIds(a: Address, limit: Int): Seq[ByteStr] = {
     val fromDiff = txDiff.accountTransactionIds.get(a).orEmpty
-    if (fromDiff.length >= limit) {
+    if (fromDiff.lengthCompare(limit) >= 0) {
       fromDiff.take(limit)
     } else {
       fromDiff ++ inner.accountTransactionIds(a, limit - fromDiff.size) // fresh head ++ stale tail
@@ -43,11 +44,6 @@ class CompositeStateReader private(inner: SnapshotStateReader, blockDiff: BlockD
 
   override def snapshotAtHeight(acc: Address, h: Int): Option[Snapshot] =
     blockDiff.snapshots.get(acc).flatMap(_.get(h)).orElse(inner.snapshotAtHeight(acc, h))
-
-  override def paymentTransactionIdByHash(hash: ByteStr): Option[ByteStr]
-  = blockDiff.txsDiff.paymentTransactionIdsByHashes.get(hash)
-    .orElse(inner.paymentTransactionIdByHash(hash))
-
 
   override def aliasesOfAddress(a: Address): Seq[Alias] =
     txDiff.aliases.filter(_._2 == a).keys.toSeq ++ inner.aliasesOfAddress(a)
@@ -82,6 +78,14 @@ class CompositeStateReader private(inner: SnapshotStateReader, blockDiff: BlockD
     val in: Long = inner.assetBalance(a, asset)
     val diffed: Long = blockDiff.txsDiff.portfolios.get(a).orEmpty.assets.getOrElse(asset, 0)
     in + diffed
+  }
+
+  override def accountScript(address: Address): Option[Script] = {
+    blockDiff.txsDiff.scripts.get(address) match {
+      case None => inner.accountScript(address)
+      case Some(None) => None
+      case Some(Some(scr)) => Some(scr)
+    }
   }
 }
 

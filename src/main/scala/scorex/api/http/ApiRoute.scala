@@ -2,11 +2,11 @@ package scorex.api.http
 
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server._
+import io.lunes.crypto
 import io.lunes.http.{ApiMarshallers, PlayJsonException, api_key, deprecated_api_key}
 import io.lunes.settings.RestAPISettings
 import play.api.libs.json.Reads
 import scorex.crypto.encode.Base58
-import scorex.crypto.hash.SecureCryptographicHash
 
 
 trait ApiRoute extends Directives with CommonApiFunctions with ApiMarshallers {
@@ -25,10 +25,10 @@ trait ApiRoute extends Directives with CommonApiFunctions with ApiMarshallers {
 
   def withAuth: Directive0 = apiKeyHash.fold(pass) { hashFromSettings =>
     optionalHeaderValueByType[api_key](()).flatMap {
-      case Some(k) if SecureCryptographicHash(k.value).sameElements(hashFromSettings) => pass
+      case Some(k) if crypto.secureHash(k.value.getBytes()).sameElements(hashFromSettings) => pass
       case _ =>
         optionalHeaderValueByType[deprecated_api_key](()).flatMap {
-          case Some(k) if SecureCryptographicHash(k.value).sameElements(hashFromSettings) => pass
+          case Some(k) if crypto.secureHash(k.value.getBytes()).sameElements(hashFromSettings) => pass
           case _ => complete(ApiKeyNotValid)
         }
     }

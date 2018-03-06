@@ -7,6 +7,7 @@ import cats.implicits._
 import io.lunes.state2._
 import scorex.account.{Address, Alias}
 import io.lunes.transaction.lease.LeaseTransaction
+import io.lunes.transaction.smart.Script
 import io.lunes.transaction.{Transaction, TransactionParser}
 
 class StateReaderImpl(p: StateStorage, val synchronizationToken: ReentrantReadWriteLock) extends SnapshotStateReader {
@@ -37,10 +38,6 @@ class StateReaderImpl(p: StateStorage, val synchronizationToken: ReentrantReadWr
     Range(Math.max(0, totalRecords - limit), totalRecords)
       .map(n => sp().getAccountTransactionIds(a, n).get)
       .reverse
-  }
-
-  override def paymentTransactionIdByHash(hash: ByteStr): Option[ByteStr] = read { implicit l =>
-    sp().getPaymentTransactionHashes(hash)
   }
 
   override def aliasesOfAddress(address: Address): Seq[Alias] = read { implicit l =>
@@ -81,6 +78,10 @@ class StateReaderImpl(p: StateStorage, val synchronizationToken: ReentrantReadWr
 
   override def lunesBalance(a: Address): (Long, LeaseInfo) = read { implicit l =>
     sp().getLunesBalance(a).map { case (v1, v2, v3) => (v1, LeaseInfo(v2, v3)) }.getOrElse((0L, LeaseInfo(0L, 0L)))
+  }
+
+  override def accountScript(address: Address): Option[Script] = read { implicit l =>
+    sp().getScript(address)
   }
 
   override def assetBalance(a: Address, asset: ByteStr): Long = read { implicit l =>

@@ -1,6 +1,5 @@
 package scorex.api.http.swagger
 
-
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.github.swagger.akka.model.{Info, License}
@@ -15,12 +14,12 @@ class SwaggerDocService(val actorSystem: ActorSystem, val materializer: ActorMat
   extends SwaggerHttpService with HasActorSystem {
 
   override val host: String = settings.bindAddress + ":" + settings.port
-  override val info: Info = Info("Interface to the Lunes Node",
+  override val info: Info = Info("The Web Interface to the Lunes Node",
     Constants.VersionStr,
     "Lunes Node",
     "License: Apache License, Version 2.0",
     None,
-    Some(License("Apache License, Version 2.0", "https://github.com/lunesnode/blob/master/LICENSE"))
+    Some(License("Apache License, Version 2.0", "https://github.com/Lunes-platform/LunesNode/blob/master/LICENSE"))
   )
 
   //Let swagger-ui determine the host and port

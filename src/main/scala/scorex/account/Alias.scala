@@ -1,13 +1,13 @@
 package scorex.account
 
 import io.lunes.state2.ByteStr
-import scorex.serialization.BytesSerializable
+import scorex.serialization.Deser
 import io.lunes.transaction.ValidationError
 import io.lunes.transaction.ValidationError.GenericError
 
 sealed trait Alias extends AddressOrAlias {
   lazy val stringRepr: String = Alias.Prefix + networkByte.toChar + ":" + name
-  lazy val bytes: ByteStr = ByteStr(Alias.AddressVersion +: networkByte +: BytesSerializable.arrayWithSize(name.getBytes("UTF-8")))
+  lazy val bytes: ByteStr = ByteStr(Alias.AddressVersion +: networkByte +: Deser.serializeArray(name.getBytes("UTF-8")))
 
   val name: String
   val networkByte: Byte

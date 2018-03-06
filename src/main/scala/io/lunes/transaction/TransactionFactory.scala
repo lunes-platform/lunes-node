@@ -14,7 +14,6 @@ import scorex.wallet.Wallet
 
 object TransactionFactory {
 
-
   def transferAsset(request: TransferRequest, wallet: Wallet, time: Time): Either[ValidationError, TransferTransaction] =
     for {
       senderPrivateKey <- wallet.findWallet(request.sender)
@@ -26,34 +25,22 @@ object TransactionFactory {
           request.amount,
           request.timestamp.getOrElse(time.getTimestamp()),
           request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
-          request.fee)
-    } yield tx
-
-  def registryData(request: RegistryData, wallet: Wallet, time: Time): Either[ValidationError, DataTransaction] =
-    for {
-      senderPrivateKey <- wallet.findWallet(request.sender)
-      recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- DataTransaction
-        .create(request.assetId.map(s => ByteStr.decodeBase58(s).get),
-          senderPrivateKey,
-          recipientAcc,
-          request.amount,
-          request.timestamp.getOrElse(time.getTimestamp()),
-          request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
           request.fee,
-          request.userdata.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
+          request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
     } yield tx
 
   def massTransferAsset(request: MassTransferRequest, wallet: Wallet, time: Time): Either[ValidationError, MassTransferTransaction] =
     for {
       senderPrivateKey <- wallet.findWallet(request.sender)
-      recipients <- MassTransferTransaction.parseTransfersList(request.transfers)
-      tx <- MassTransferTransaction.create(
+      transfers <- MassTransferTransaction.parseTransfersList(request.transfers)
+      tx <- MassTransferTransaction.selfSigned(
+        Proofs.Version,
         request.assetId.map(s => ByteStr.decodeBase58(s).get),
         senderPrivateKey,
-        recipients,
+        transfers,
         request.timestamp.getOrElse(time.getTimestamp()),
-        request.fee)
+        request.fee,
+        request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
     } yield tx
 
   def issueAsset(request: IssueRequest, wallet: Wallet, time: Time): Either[ValidationError, IssueTransaction] =

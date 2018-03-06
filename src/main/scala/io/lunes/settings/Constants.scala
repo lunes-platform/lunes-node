@@ -6,8 +6,8 @@ import scorex.utils.ScorexLogging
   * System constants here.
   */
 object Constants extends ScorexLogging {
-  val VersionStr = "0.0.1"
-  val VersionTuple = (0, 0, 1)
+  val VersionStr = "0.0.2"
+  val VersionTuple = (0, 0, 2)
   val ApplicationName = "lunesnode"
   val CoinName = "LUNES"
   val CoinAbr = "LNS"

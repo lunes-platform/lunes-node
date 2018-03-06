@@ -13,6 +13,7 @@ case class LunesSettings(directory: String,
                          blockchainSettings: BlockchainSettings,
                          checkpointsSettings: CheckpointsSettings,
                          feesSettings: FeesSettings,
+                         //matcherSettings: MatcherSettings,
                          minerSettings: MinerSettings,
                          restAPISettings: RestAPISettings,
                          synchronizationSettings: SynchronizationSettings,
@@ -29,6 +30,7 @@ object LunesSettings {
   def fromConfig(config: Config): LunesSettings = {
     val directory = config.as[String](s"$configPath.directory")
     val dataDirectory = config.as[String](s"$configPath.directory") + s"/data"
+    //val dataDirectory = config.as[String](s"$configPath.data-directory")
     val levelDbCacheSize = config.getBytes(s"$configPath.leveldb-cache-size")
     val networkSettings = config.as[NetworkSettings]("lunes.network")
     val walletSettings = config.as[WalletSettings]("lunes.wallet")

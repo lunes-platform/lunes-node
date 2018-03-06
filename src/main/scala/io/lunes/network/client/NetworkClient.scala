@@ -3,7 +3,6 @@ package io.lunes.network.client
 import java.io.IOException
 import java.net.InetSocketAddress
 
-import io.lunes.settings.Constants
 import io.lunes.network.Handshake
 import io.lunes.settings._
 import io.netty.bootstrap.Bootstrap

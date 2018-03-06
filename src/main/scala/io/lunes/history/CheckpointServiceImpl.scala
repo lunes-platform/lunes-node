@@ -1,10 +1,10 @@
 package io.lunes.history
 
+import io.lunes.crypto
 import io.lunes.db.{CheckpointCodec, PropertiesStorage, SubStorage}
 import io.lunes.network.Checkpoint
 import io.lunes.settings.CheckpointsSettings
 import org.iq80.leveldb.DB
-import scorex.crypto.EllipticCurveImpl
 import io.lunes.transaction.ValidationError.GenericError
 import io.lunes.transaction.{CheckpointService, ValidationError}
 
@@ -17,7 +17,7 @@ class CheckpointServiceImpl(db: DB, settings: CheckpointsSettings)
 
   override def set(cp: Checkpoint): Either[ValidationError, Unit] = for {
     _ <- Either.cond(!get.forall(_.signature sameElements cp.signature), (), GenericError("Checkpoint already applied"))
-    _ <- Either.cond(EllipticCurveImpl.verify(cp.signature, cp.toSign, settings.publicKey.arr),
+    _ <- Either.cond(crypto.verify(cp.signature, cp.toSign, settings.publicKey.arr),
       putProperty(CheckpointProperty, CheckpointCodec.encode(cp), None),
       GenericError("Invalid checkpoint signature"))
   } yield ()

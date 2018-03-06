@@ -7,6 +7,7 @@ import io.lunes.transaction.ValidationError.AliasNotExists
 import io.lunes.transaction._
 import io.lunes.transaction.assets.IssueTransaction
 import io.lunes.transaction.lease.LeaseTransaction
+import io.lunes.transaction.smart.Script
 import scorex.utils.{ScorexLogging, Synchronized}
 
 import scala.annotation.tailrec
@@ -33,8 +34,6 @@ trait SnapshotStateReader extends Synchronized {
 
   def accountTransactionIds(a: Address, limit: Int): Seq[ByteStr]
 
-  def paymentTransactionIdByHash(hash: ByteStr): Option[ByteStr]
-
   def aliasesOfAddress(a: Address): Seq[Alias]
 
   def resolveAlias(a: Alias): Option[Address]
@@ -48,6 +47,8 @@ trait SnapshotStateReader extends Synchronized {
   def snapshotAtHeight(acc: Address, h: Int): Option[Snapshot]
 
   def filledVolumeAndFee(orderId: ByteStr): OrderFillInfo
+
+  def accountScript(address: Address): Option[Script]
 }
 
 object SnapshotStateReader {
@@ -86,7 +87,7 @@ object SnapshotStateReader {
 
 
     def getAccountBalance(account: Address): Map[AssetId, (Long, Boolean, Long, IssueTransaction)] = s.read { _ =>
-      s.accountPortfolio(account).assets.map { case (id, amt) =>
+      s.accountPortfolio(account).assets.collect { case (id, amt) if amt > 0 =>
         val assetInfo = s.assetInfo(id).get
         val issueTransaction = findTransaction[IssueTransaction](id).get
         id -> ((amt, assetInfo.isReissuable, assetInfo.volume, issueTransaction))
@@ -192,10 +193,6 @@ object SnapshotStateReader {
 
 
       loop(s.lastUpdateHeight(acc).getOrElse(0))
-    }
-
-    def accountPortfoliosHash: Int = {
-      Hash.accountPortfolios(s.accountPortfolios)
     }
 
     def partialPortfolio(a: Address, assets: Set[AssetId] = Set.empty): Portfolio = {

@@ -3,8 +3,10 @@ package io.lunes.utx
 import java.util.concurrent.ConcurrentHashMap
 
 import cats._
+import io.lunes.utx.UtxPoolImpl.PessimisticPortfolios
 import io.lunes.features.FeatureProvider
 import io.lunes.metrics.Instrumented
+import io.lunes.mining.TwoDimensionalMiningConstraint
 import io.lunes.settings.{FunctionalitySettings, UtxSettings}
 import io.lunes.state2.diffs.TransactionDiffer
 import io.lunes.state2.reader.CompositeStateReader.composite
@@ -40,7 +42,7 @@ trait UtxPool {
 
   def transactionById(transactionId: ByteStr): Option[Transaction]
 
-  def packUnconfirmed(max: Int, sortInBlock: Boolean): Seq[Transaction]
+  def packUnconfirmed(rest: TwoDimensionalMiningConstraint, sortInBlock: Boolean): (Seq[Transaction], TwoDimensionalMiningConstraint)
 
   def batched(f: UtxBatchOps => Unit): Unit
 
@@ -62,8 +64,7 @@ class UtxPoolImpl(time: Time,
   private implicit val scheduler: Scheduler = Scheduler.singleThread("utx-pool-cleanup")
 
   private val transactions = new ConcurrentHashMap[ByteStr, Transaction]()
-
-  private val pessimisticPortfolios = new UtxPoolImpl.PessimisticPortfolios
+  private val pessimisticPortfolios = new PessimisticPortfolios
 
   private val removeInvalid = Task {
     val state = stateReader()
@@ -100,8 +101,7 @@ class UtxPoolImpl(time: Time,
       Right(())
     } else {
       val sender: Option[String] = tx match {
-        case x: SignedTransaction => Some(x.sender.address)
-        case x: PaymentTransaction => Some(x.sender.address)
+        case x: Authorized => Some(x.sender.address)
         case _ => None
       }
 
@@ -109,12 +109,12 @@ class UtxPoolImpl(time: Time,
         case Some(addr) if utxSettings.blacklistSenderAddresses.contains(addr) =>
           val recipients = tx match {
             case tt: TransferTransaction => Seq(tt.recipient)
-            case mtt: MassTransferTransaction => mtt.transfers.map(_._1)
+            case mtt: MassTransferTransaction => mtt.transfers.map(_.address)
             case _ => Seq()
           }
           val allowed =
             recipients.nonEmpty &&
-            recipients.forall(r => utxSettings.allowBlacklistedTransferTo.contains(r.stringRepr))
+              recipients.forall(r => utxSettings.allowBlacklistedTransferTo.contains(r.stringRepr))
           Either.cond(allowed, (), SenderIsBlacklisted(addr))
         case _ => Right(())
       }
@@ -145,34 +145,33 @@ class UtxPoolImpl(time: Time,
 
   override def transactionById(transactionId: ByteStr): Option[Transaction] = Option(transactions.get(transactionId))
 
-  override def packUnconfirmed(max: Int, sortInBlock: Boolean): Seq[Transaction] = {
+  override def packUnconfirmed(rest: TwoDimensionalMiningConstraint, sortInBlock: Boolean): (Seq[Transaction], TwoDimensionalMiningConstraint) = {
     val currentTs = time.correctedTime()
     removeExpired(currentTs)
     val s = stateReader()
     val differ = TransactionDiffer(fs, history.lastBlockTimestamp(), currentTs, s.height) _
-    val (invalidTxs, reversedValidTxs, _) = transactions
+    val (invalidTxs, reversedValidTxs, _, finalConstraint, _) = transactions
       .values.asScala.toSeq
       .sorted(TransactionsOrdering.InUTXPool)
-      .foldLeft((Seq.empty[ByteStr], Seq.empty[Transaction], Monoid[Diff].empty)) {
-        case ((invalid, valid, diff), tx) if valid.lengthCompare(max) <= 0 =>
+      .foldLeft((Seq.empty[ByteStr], Seq.empty[Transaction], Monoid[Diff].empty, rest, false)) {
+        case (curr@(_, _, _, _, skip), _) if skip => curr
+        case ((invalid, valid, diff, currRest, _), tx) =>
           differ(composite(diff.asBlockDiff, s), featureProvider, tx) match {
-            case Right(newDiff) if valid.lengthCompare(max) < 0 =>
-              (invalid, tx +: valid, Monoid.combine(diff, newDiff))
-            case Right(_) =>
-              (invalid, valid, diff)
+            case Right(newDiff) =>
+              val updatedRest = currRest.put(tx)
+              if (updatedRest.isOverfilled) (invalid, valid, diff, currRest, true)
+              else (invalid, tx +: valid, Monoid.combine(diff, newDiff), updatedRest, updatedRest.isEmpty)
             case Left(_) =>
-              (tx.id() +: invalid, valid, diff)
+              (tx.id() +: invalid, valid, diff, currRest, false)
           }
-        case (r, _) => r
       }
 
     invalidTxs.foreach { itx =>
       transactions.remove(itx)
       pessimisticPortfolios.remove(itx)
     }
-    if (sortInBlock)
-      reversedValidTxs.sorted(TransactionsOrdering.InBlock)
-    else reversedValidTxs.reverse
+    val txs = if (sortInBlock) reversedValidTxs.sorted(TransactionsOrdering.InBlock) else reversedValidTxs.reverse
+    (txs, finalConstraint)
   }
 
   override def batched(f: UtxBatchOps => Unit): Unit = f(new BatchOpsImpl(stateReader()))

@@ -1,5 +1,6 @@
 package io.lunes.transaction.assets.exchange
 
+import io.lunes.settings.Constants
 import io.lunes.state2.ByteStr
 import io.swagger.annotations.ApiModelProperty
 import play.api.libs.json.{JsObject, Json}
@@ -33,7 +34,7 @@ case class AssetPair(@ApiModelProperty(dataType = "java.lang.String") amountAsse
 }
 
 object AssetPair {
-  val LunesName = "WAVES"
+  val LunesName = Constants.CoinName
 
   private def extractAssetId(a: String): Try[Option[AssetId]] = a match {
     case `LunesName` => Success(None)

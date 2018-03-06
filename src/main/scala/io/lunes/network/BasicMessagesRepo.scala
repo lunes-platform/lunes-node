@@ -8,7 +8,6 @@ import io.lunes.mining.Miner.MaxTransactionsPerMicroblock
 import io.lunes.state2.ByteStr
 import scorex.account.PublicKeyAccount
 import scorex.block.{Block, MicroBlock}
-import scorex.crypto.signatures.SigningFunctions.Signature
 import scorex.network.message.Message._
 import scorex.network.message._
 import io.lunes.transaction.TransactionParser._
@@ -76,9 +75,9 @@ trait SignaturesSeqSpec[A <: AnyRef] extends MessageSpec[A] {
 
   private val DataLength = 4
 
-  def wrap(signatures: Seq[Signature]): A
+  def wrap(signatures: Seq[Array[Byte]]): A
 
-  def unwrap(v: A): Seq[Signature]
+  def unwrap(v: A): Seq[Array[Byte]]
 
   override val maxLength: Int = DataLength + (200 * SignatureLength)
 
@@ -105,7 +104,7 @@ trait SignaturesSeqSpec[A <: AnyRef] extends MessageSpec[A] {
 }
 
 object GetSignaturesSpec extends SignaturesSeqSpec[GetSignatures] {
-  override def wrap(signatures: Seq[Signature]): GetSignatures = GetSignatures(signatures.map(ByteStr(_)))
+  override def wrap(signatures: Seq[Array[Byte]]): GetSignatures = GetSignatures(signatures.map(ByteStr(_)))
 
   override def unwrap(v: GetSignatures): Seq[Array[MessageCode]] = v.signatures.map(_.arr)
 
@@ -113,7 +112,7 @@ object GetSignaturesSpec extends SignaturesSeqSpec[GetSignatures] {
 }
 
 object SignaturesSpec extends SignaturesSeqSpec[Signatures] {
-  override def wrap(signatures: Seq[Signature]): Signatures = Signatures(signatures.map(ByteStr(_)))
+  override def wrap(signatures: Seq[Array[Byte]]): Signatures = Signatures(signatures.map(ByteStr(_)))
 
   override def unwrap(v: Signatures): Seq[Array[MessageCode]] = v.signatures.map(_.arr)
 
@@ -193,7 +192,8 @@ object CheckpointSpec extends MessageSpec[Checkpoint] {
 object TransactionSpec extends MessageSpec[Transaction] {
   override val messageCode: MessageCode = 25: Byte
 
-  override val maxLength: Int = 120 + 16 + 1000 + 8
+  // Modeled after MassTransferTransaction https://lunes.atlassian.net/wiki/spaces/MAIN/pages/386171054/Mass+Transfer+Transaction
+  override val maxLength: Int = 5000
 
   override def deserializeData(bytes: Array[Byte]): Try[Transaction] =
     TransactionParser.parseBytes(bytes)

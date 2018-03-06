@@ -1,7 +1,7 @@
 package io.lunes.state2.diffs
 
 import cats._
-import io.lunes.features.{BlockchainFeatures, FeatureProvider}
+import io.lunes.features.{BlockchainFeature, BlockchainFeatures, FeatureProvider}
 import io.lunes.settings.FunctionalitySettings
 import io.lunes.state2.reader.SnapshotStateReader
 import io.lunes.state2.{Portfolio, _}
@@ -11,6 +11,7 @@ import io.lunes.transaction._
 import io.lunes.transaction.assets._
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import io.lunes.transaction.smart.SetScriptTransaction
 
 import scala.concurrent.duration._
 import scala.util.{Left, Right}
@@ -52,13 +53,13 @@ object CommonValidation {
           Left(GenericError(s"Attempt to pay unavailable funds: balance " +
             s"${s.partialPortfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
         case ttx: TransferTransaction => checkTransfer(ttx.sender, ttx.assetId, ttx.amount, ttx.feeAssetId, ttx.fee)
-        case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.assetId, mtx.transfers.map(_._2).sum, None, mtx.fee)
+        case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.assetId, mtx.transfers.map(_.amount).sum, None, mtx.fee)
         case _ => Right(tx)
       }
     } else Right(tx)
 
   def disallowDuplicateIds[T <: Transaction](state: SnapshotStateReader, settings: FunctionalitySettings, height: Int, tx: T): Either[ValidationError, T] = tx match {
-    case ptx: PaymentTransaction if ptx.timestamp < settings.requirePaymentUniqueIdAfter => Right(tx)
+    case ptx: PaymentTransaction => Right(tx)
     case _ =>
       state.transactionInfo(tx.id()) match {
         case Some((txHeight, _)) => Left(AlreadyInTheState(tx.id(), txHeight))
@@ -66,7 +67,12 @@ object CommonValidation {
       }
   }
 
-  def disallowBeforeActivationTime[T <: Transaction](featureProvider: FeatureProvider, height: Int, tx: T): Either[ValidationError, T] =
+  def disallowBeforeActivationTime[T <: Transaction](featureProvider: FeatureProvider, height: Int, tx: T): Either[ValidationError, T] = {
+
+    def activationBarrier(b: BlockchainFeature) =
+      Either.cond(featureProvider.isFeatureActivated(b, height),
+        tx, ValidationError.ActivationError(s"${tx.getClass.getSimpleName} transaction has not been activated yet"))
+
     tx match {
       case _: BurnTransaction => Right(tx)
       case _: PaymentTransaction => Right(tx)
@@ -78,11 +84,12 @@ object CommonValidation {
       case _: LeaseTransaction => Right(tx)
       case _: LeaseCancelTransaction => Right(tx)
       case _: CreateAliasTransaction => Right(tx)
-      case _: MassTransferTransaction =>
-        Either.cond(featureProvider.isFeatureActivated(BlockchainFeatures.MassTransfer, height),
-          tx, ValidationError.ActivationError("MassTransfer transaction has not been activated yet"))
+      case _: MassTransferTransaction => activationBarrier(BlockchainFeatures.MassTransfer)
+      case _: SetScriptTransaction => activationBarrier(BlockchainFeatures.SmartAccounts)
+      case _: ScriptTransferTransaction => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _ => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
+  }
 
   def disallowTxFromFuture[T <: Transaction](settings: FunctionalitySettings, time: Long, tx: T): Either[ValidationError, T] = {
     val allowTransactionsFromFutureByTimestamp = tx.timestamp < settings.allowTransactionsFromFutureUntil
