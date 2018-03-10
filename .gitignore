@@ -35,6 +35,8 @@ Dockerfile
 
 # logs
 *.log
+LOG
+LOG.old
 
 package
 !src/package

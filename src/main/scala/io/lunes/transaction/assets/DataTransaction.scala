@@ -3,14 +3,14 @@ package io.lunes.transaction.assets
 import com.google.common.primitives.{Bytes, Longs}
 import io.lunes.crypto
 import io.lunes.state2.ByteStr
+import io.lunes.transaction.TransactionParser._
+import io.lunes.transaction.{ValidationError, _}
 import io.lunes.utils.base58Length
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import scorex.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
 import scorex.crypto.encode.Base58
 import scorex.serialization.Deser
-import io.lunes.transaction.TransactionParser._
-import io.lunes.transaction.{ValidationError, _}
 
 import scala.util.{Failure, Success, Try}
 
@@ -60,9 +60,8 @@ case class DataTransaction private(assetId: Option[AssetId],
 
 object DataTransaction {
 
-  val MaxAttachmentSize = 140
-  val MaxAttachmentStringSize = base58Length(MaxAttachmentSize)
-
+  val MaxUserdata = 140
+  val MaxUserdataLength = base58Length(MaxUserdata)
 
   def parseTail(bytes: Array[Byte]): Try[DataTransaction] = Try {
 
@@ -93,7 +92,7 @@ object DataTransaction {
              feeAmount: Long,
              userdata: Array[Byte],
              signature: ByteStr): Either[ValidationError, DataTransaction] = {
-    if (userdata.length > DataTransaction.MaxAttachmentSize) {
+    if (userdata.length > DataTransaction.MaxUserdata) {
       Left(ValidationError.TooBigArray)
     } else if (amount <= 0) {
       Left(ValidationError.NegativeAmount(amount, "lunes")) //CHECK IF AMOUNT IS POSITIVE

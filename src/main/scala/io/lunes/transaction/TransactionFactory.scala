@@ -2,17 +2,32 @@ package io.lunes.transaction
 
 import com.google.common.base.Charsets
 import io.lunes.state2.ByteStr
+import io.lunes.transaction.assets._
+import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import scorex.account._
 import scorex.api.http.alias.CreateAliasRequest
 import scorex.api.http.assets._
 import scorex.api.http.leasing.{LeaseCancelRequest, LeaseRequest}
 import scorex.crypto.encode.Base58
-import io.lunes.transaction.assets._
-import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import scorex.utils.Time
 import scorex.wallet.Wallet
 
 object TransactionFactory {
+
+  def registerData(request: TransferRequest, wallet: Wallet, time: Time): Either[ValidationError, DataTransaction] =
+    for {
+      senderPrivateKey <- wallet.findWallet(request.sender)
+      recipientAcc <- AddressOrAlias.fromString(request.recipient)
+      tx <- DataTransaction
+        .create(request.assetId.map(s => ByteStr.decodeBase58(s).get),
+          senderPrivateKey,
+          recipientAcc,
+          request.amount,
+          request.timestamp.getOrElse(time.getTimestamp()),
+          request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
+          request.fee,
+          request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
+    } yield tx
 
   def transferAsset(request: TransferRequest, wallet: Wallet, time: Time): Either[ValidationError, TransferTransaction] =
     for {

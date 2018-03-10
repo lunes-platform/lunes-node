@@ -5,13 +5,13 @@ import io.lunes.features.{BlockchainFeature, BlockchainFeatures, FeatureProvider
 import io.lunes.settings.FunctionalitySettings
 import io.lunes.state2.reader.SnapshotStateReader
 import io.lunes.state2.{Portfolio, _}
-import scorex.account.Address
 import io.lunes.transaction.ValidationError.{AlreadyInTheState, GenericError, Mistiming}
 import io.lunes.transaction._
 import io.lunes.transaction.assets._
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import io.lunes.transaction.smart.SetScriptTransaction
+import scorex.account.Address
 
 import scala.concurrent.duration._
 import scala.util.{Left, Right}
@@ -53,6 +53,7 @@ object CommonValidation {
           Left(GenericError(s"Attempt to pay unavailable funds: balance " +
             s"${s.partialPortfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
         case ttx: TransferTransaction => checkTransfer(ttx.sender, ttx.assetId, ttx.amount, ttx.feeAssetId, ttx.fee)
+        case rdtx: DataTransaction => checkTransfer(rdtx.sender, rdtx.assetId, rdtx.amount, rdtx.feeAssetId, rdtx.fee)
         case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.assetId, mtx.transfers.map(_.amount).sum, None, mtx.fee)
         case _ => Right(tx)
       }
@@ -78,6 +79,7 @@ object CommonValidation {
       case _: PaymentTransaction => Right(tx)
       case _: GenesisTransaction => Right(tx)
       case _: TransferTransaction => Right(tx)
+      case _: DataTransaction => Right(tx)
       case _: IssueTransaction => Right(tx)
       case _: ReissueTransaction => Right(tx)
       case _: ExchangeTransaction => Right(tx)

@@ -5,9 +5,12 @@ import javax.ws.rs.Path
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
-import io.lunes.utx.UtxPool
 import io.lunes.settings.RestAPISettings
 import io.lunes.state2.{ByteStr, StateReader}
+import io.lunes.transaction.TransactionParser.TransactionType
+import io.lunes.transaction.ValidationError.GenericError
+import io.lunes.transaction.{History, Transaction, TransactionFactory}
+import io.lunes.utx.UtxPool
 import io.netty.channel.group.ChannelGroup
 import io.swagger.annotations._
 import play.api.libs.json._
@@ -16,9 +19,6 @@ import scorex.account.Address
 import scorex.api.http.alias.{CreateAliasRequest, SignedCreateAliasRequest}
 import scorex.api.http.assets._
 import scorex.api.http.leasing.{LeaseCancelRequest, LeaseRequest, SignedLeaseCancelRequest, SignedLeaseRequest}
-import io.lunes.transaction.TransactionParser.TransactionType
-import io.lunes.transaction.ValidationError.GenericError
-import io.lunes.transaction.{History, Transaction, TransactionFactory}
 import scorex.utils.Time
 import scorex.wallet.Wallet
 
@@ -150,6 +150,7 @@ case class TransactionsApiRoute(
         import TransactionType._
         val txEi = TransactionType((jsv \ "type").as[Int]) match {
           case IssueTransaction => TransactionFactory.issueAsset(jsv.as[IssueRequest], wallet, time)
+          case DataTransaction => TransactionFactory.registerData(jsv.as[TransferRequest], wallet, time)
           case TransferTransaction => TransactionFactory.transferAsset(jsv.as[TransferRequest], wallet, time)
           case MassTransferTransaction => TransactionFactory.massTransferAsset(jsv.as[MassTransferRequest], wallet, time)
           case ReissueTransaction => TransactionFactory.reissueAsset(jsv.as[ReissueRequest], wallet, time)

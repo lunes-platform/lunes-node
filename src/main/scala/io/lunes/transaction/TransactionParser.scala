@@ -1,10 +1,10 @@
 package io.lunes.transaction
 
-import io.lunes.utils.base58Length
 import io.lunes.transaction.assets._
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import io.lunes.transaction.smart.SetScriptTransaction
+import io.lunes.utils.base58Length
 
 import scala.util.{Failure, Try}
 
@@ -49,6 +49,9 @@ object TransactionParser {
 
       case txType: Byte if txType == TransactionType.TransferTransaction.id =>
         TransferTransaction.parseTail(data.tail)
+
+      case txType: Byte if txType == TransactionType.DataTransaction.id =>
+        DataTransaction.parseTail(data.tail)
 
       case txType: Byte if txType == TransactionType.ReissueTransaction.id =>
         ReissueTransaction.parseTail(data.tail)
