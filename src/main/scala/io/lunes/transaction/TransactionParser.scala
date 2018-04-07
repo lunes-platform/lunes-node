@@ -24,7 +24,7 @@ object TransactionParser {
     val MassTransferTransaction = Value(11)
     val SetScriptTransaction = Value(12)
     val ScriptTransferTransaction = Value(13)
-    val DataTransaction = Value(14)
+    val RegistryTransaction = Value(14)
 
   }
 
@@ -50,8 +50,8 @@ object TransactionParser {
       case txType: Byte if txType == TransactionType.TransferTransaction.id =>
         TransferTransaction.parseTail(data.tail)
 
-      case txType: Byte if txType == TransactionType.DataTransaction.id =>
-        DataTransaction.parseTail(data.tail)
+      case txType: Byte if txType == TransactionType.RegistryTransaction.id =>
+        RegistryTransaction.parseTail(data.tail)
 
       case txType: Byte if txType == TransactionType.ReissueTransaction.id =>
         ReissueTransaction.parseTail(data.tail)
@@ -80,8 +80,8 @@ object TransactionParser {
       case txType: Byte if txType == TransactionType.ScriptTransferTransaction.id =>
         ScriptTransferTransaction.parseTail(data.tail)
 
-      case txType: Byte if txType == TransactionType.DataTransaction.id =>
-        DataTransaction.parseTail(data.tail)
+      case txType: Byte if txType == TransactionType.RegistryTransaction.id =>
+        RegistryTransaction.parseTail(data.tail)
 
       case txType => Failure(new Exception(s"Invalid transaction type: $txType"))
     }

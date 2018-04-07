@@ -13,12 +13,12 @@ import play.api.libs.json.Json
 import scorex.api.http.{ApiRoute, CommonApiFunctions}
 import scorex.utils.ScorexLogging
 
-@Path("/node")
-@Api(value = "node")
+@Path("/manager")
+@Api(value = "manager")
 case class NodeApiRoute(settings: RestAPISettings, heights: Coeval[(HeightInfo, HeightInfo)], application: Shutdownable)
   extends ApiRoute with CommonApiFunctions with ScorexLogging {
 
-  override lazy val route = pathPrefix("node") {
+  override lazy val route = pathPrefix("manager") {
     stop ~ status ~ version
   }
 

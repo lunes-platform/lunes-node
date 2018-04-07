@@ -22,7 +22,7 @@ import io.lunes.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
 import io.lunes.network._
 import io.lunes.settings._
 import io.lunes.state2.appender.{BlockAppender, CheckpointAppender, ExtensionAppender, MicroblockAppender}
-import io.lunes.utils.{SystemInformationReporter, forceStopApplication, fixNTP}
+import io.lunes.utils.{SystemInformationReporter, fixNTP, forceStopApplication}
 import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
@@ -41,9 +41,9 @@ import scorex.api.http.assets.{AssetsApiRoute, AssetsBroadcastApiRoute}
 import scorex.api.http.leasing.{LeaseApiRoute, LeaseBroadcastApiRoute}
 import scorex.consensus.nxt.api.http.NxtConsensusApiRoute
 import io.lunes.transaction._
+import scorex.platform.http.DebugApiRoute
 import scorex.utils.{NTP, ScorexLogging, Time}
 import scorex.wallet.Wallet
-import scorex.platform.http.{DebugApiRoute, LunesApiRoute}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -183,7 +183,6 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
         AddressApiRoute(settings.restAPISettings, wallet, stateReader, settings.blockchainSettings.functionalitySettings),
         DebugApiRoute(settings.restAPISettings, wallet, stateReader, history, peerDatabase, establishedConnections, blockchainUpdater, allChannels,
           utxStorage, blockchainDebugInfo, miner, historyReplier, extLoaderState, mbSyncCacheSizes, scoreStatsReporter, configRoot),
-        LunesApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, time),
         AssetsApiRoute(settings.restAPISettings, wallet, utxStorage, allChannels, stateReader, time),
         ActivationApiRoute(settings.restAPISettings, settings.blockchainSettings.functionalitySettings, settings.featuresSettings, history, featureProvider),
         AssetsBroadcastApiRoute(settings.restAPISettings, utxStorage, allChannels),
@@ -202,7 +201,6 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
         typeOf[PeersApiRoute],
         typeOf[AddressApiRoute],
         typeOf[DebugApiRoute],
-        typeOf[LunesApiRoute],
         typeOf[AssetsApiRoute],
         typeOf[ActivationApiRoute],
         typeOf[AssetsBroadcastApiRoute],

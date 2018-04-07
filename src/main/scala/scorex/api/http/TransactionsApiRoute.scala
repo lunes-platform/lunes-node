@@ -1,8 +1,8 @@
 package scorex.api.http
 
 import java.util.NoSuchElementException
-import javax.ws.rs.Path
 
+import javax.ws.rs.Path
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
 import io.lunes.settings.RestAPISettings
@@ -150,7 +150,7 @@ case class TransactionsApiRoute(
         import TransactionType._
         val txEi = TransactionType((jsv \ "type").as[Int]) match {
           case IssueTransaction => TransactionFactory.issueAsset(jsv.as[IssueRequest], wallet, time)
-          case DataTransaction => TransactionFactory.registerData(jsv.as[TransferRequest], wallet, time)
+          case RegistryTransaction => TransactionFactory.registryData(jsv.as[RegistryRequest], wallet, time)
           case TransferTransaction => TransactionFactory.transferAsset(jsv.as[TransferRequest], wallet, time)
           case MassTransferTransaction => TransactionFactory.massTransferAsset(jsv.as[MassTransferRequest], wallet, time)
           case ReissueTransaction => TransactionFactory.reissueAsset(jsv.as[ReissueRequest], wallet, time)

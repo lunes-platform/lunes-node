@@ -53,7 +53,7 @@ object CommonValidation {
           Left(GenericError(s"Attempt to pay unavailable funds: balance " +
             s"${s.partialPortfolio(ptx.sender).balance} is less than ${ptx.amount + ptx.fee}"))
         case ttx: TransferTransaction => checkTransfer(ttx.sender, ttx.assetId, ttx.amount, ttx.feeAssetId, ttx.fee)
-        case rdtx: DataTransaction => checkTransfer(rdtx.sender, rdtx.assetId, rdtx.amount, rdtx.feeAssetId, rdtx.fee)
+        case rdtx: RegistryTransaction => checkTransfer(rdtx.sender, rdtx.assetId, rdtx.amount, rdtx.feeAssetId, rdtx.fee)
         case mtx: MassTransferTransaction => checkTransfer(mtx.sender, mtx.assetId, mtx.transfers.map(_.amount).sum, None, mtx.fee)
         case _ => Right(tx)
       }
@@ -79,7 +79,7 @@ object CommonValidation {
       case _: PaymentTransaction => Right(tx)
       case _: GenesisTransaction => Right(tx)
       case _: TransferTransaction => Right(tx)
-      case _: DataTransaction => Right(tx)
+      case _: RegistryTransaction => Right(tx)
       case _: IssueTransaction => Right(tx)
       case _: ReissueTransaction => Right(tx)
       case _: ExchangeTransaction => Right(tx)

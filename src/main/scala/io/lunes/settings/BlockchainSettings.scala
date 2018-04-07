@@ -34,7 +34,7 @@ object FunctionalitySettings {
     featureCheckBlocksPeriod = 5000,
     blocksForFeatureActivation = 4000,
     allowTemporaryNegativeUntil = Constants.MainTimestamp,
-    requireSortedTransactionsAfter = Constants.MainTimestamp + 20000000000L,
+    requireSortedTransactionsAfter = Constants.MainTimestamp,
     generationBalanceDepthFrom50To1000AfterHeight = 0,
     minimalGeneratingBalanceAfter = 0,
     allowTransactionsFromFutureUntil = 0,

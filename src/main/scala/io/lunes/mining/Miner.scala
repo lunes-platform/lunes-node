@@ -9,6 +9,8 @@ import io.lunes.settings.LunesSettings
 import io.lunes.state2._
 import io.lunes.state2.appender.{BlockAppender, MicroblockAppender}
 import io.netty.channel.group.ChannelGroup
+import io.lunes.transaction.PoSCalc._
+import io.lunes.transaction._
 import kamon.Kamon
 import kamon.metric.instrument
 import monix.eval.Task
@@ -18,8 +20,6 @@ import scorex.account.{Address, PrivateKeyAccount}
 import scorex.block.Block._
 import scorex.block.{Block, MicroBlock}
 import scorex.consensus.nxt.NxtLikeConsensusBlockData
-import io.lunes.transaction.PoSCalc._
-import io.lunes.transaction._
 import scorex.utils.{ScorexLogging, Time}
 import scorex.wallet.Wallet
 
@@ -285,3 +285,5 @@ object Miner {
   case class Success(b: Block, totalConstraint: MiningConstraint) extends MicroblockMiningResult
 
 }
+
+

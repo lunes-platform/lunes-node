@@ -3,7 +3,9 @@ import sbt.Keys.{sourceGenerators, _}
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
-
+enablePlugins(GitVersioning)
+git.useGitDescribe := true
+git.baseVersion := "0.0.3"
 name := "LunesNode"
 mainClass in Compile := Some("io.lunes.LunesNode")
 
@@ -22,6 +24,10 @@ scalacOptions ++= Seq(
   "-Xlint")
 
 resolvers += Resolver.bintrayRepo("ethereum", "maven")
+
+val network = SettingKey[Network]("network")
+network := { Network(sys.props.get("network")) }
+normalizedName := network.value.name
 
 fork in run := true
 

@@ -30,6 +30,8 @@ case class SignedTransferRequest(@ApiModelProperty(value = "Base58 encoded sende
                                 senderPublicKey: String,
                                  @ApiModelProperty(value = "Base58 encoded Asset ID")
                                 assetId: Option[String],
+
+
                                  @ApiModelProperty(value = "Recipient address", required = true)
                                 recipient: String,
                                  @ApiModelProperty(required = true, example = "1000000")

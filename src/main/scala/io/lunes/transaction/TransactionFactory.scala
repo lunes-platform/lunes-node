@@ -14,11 +14,11 @@ import scorex.wallet.Wallet
 
 object TransactionFactory {
 
-  def registerData(request: TransferRequest, wallet: Wallet, time: Time): Either[ValidationError, DataTransaction] =
+  def registryData(request: RegistryRequest, wallet: Wallet, time: Time): Either[ValidationError, RegistryTransaction] =
     for {
       senderPrivateKey <- wallet.findWallet(request.sender)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- DataTransaction
+      tx <- RegistryTransaction
         .create(request.assetId.map(s => ByteStr.decodeBase58(s).get),
           senderPrivateKey,
           recipientAcc,
@@ -26,7 +26,7 @@ object TransactionFactory {
           request.timestamp.getOrElse(time.getTimestamp()),
           request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
           request.fee,
-          request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
+          request.userdata.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
     } yield tx
 
   def transferAsset(request: TransferRequest, wallet: Wallet, time: Time): Either[ValidationError, TransferTransaction] =
