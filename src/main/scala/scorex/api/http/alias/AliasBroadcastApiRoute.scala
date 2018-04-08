@@ -10,8 +10,8 @@ import io.swagger.annotations._
 import scorex.BroadcastRoute
 import scorex.api.http._
 
-@Path("/alias/broadcast")
-@Api(value = "/alias")
+//@Path("/alias/broadcast")
+//@Api(value = "/alias")
 case class AliasBroadcastApiRoute(
     settings: RestAPISettings,
     utx: UtxPool,

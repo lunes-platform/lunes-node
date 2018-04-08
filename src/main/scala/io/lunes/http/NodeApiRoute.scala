@@ -13,13 +13,13 @@ import play.api.libs.json.Json
 import scorex.api.http.{ApiRoute, CommonApiFunctions}
 import scorex.utils.ScorexLogging
 
-@Path("/manager")
-@Api(value = "manager")
+@Path("/utils/lunesnode")
+@Api(value = "utils")
 case class NodeApiRoute(settings: RestAPISettings, heights: Coeval[(HeightInfo, HeightInfo)], application: Shutdownable)
   extends ApiRoute with CommonApiFunctions with ScorexLogging {
 
-  override lazy val route = pathPrefix("manager") {
-    stop ~ status ~ version
+  override lazy val route = pathPrefix("utils" / "lunesnode") {
+    status ~ version
   }
 
   @Path("/version")
@@ -31,8 +31,8 @@ case class NodeApiRoute(settings: RestAPISettings, heights: Coeval[(HeightInfo, 
     complete(Json.obj("version" -> Constants.AgentName))
   }
 
-  @Path("/stop")
-  @ApiOperation(value = "Stop", notes = "Stop the node", httpMethod = "POST")
+//  @Path("/stop")
+//  @ApiOperation(value = "Stop", notes = "Stop the node", httpMethod = "POST")
   def stop: Route = (post & path("stop") & withAuth) {
     log.info("Request to stop application")
     application.shutdown()

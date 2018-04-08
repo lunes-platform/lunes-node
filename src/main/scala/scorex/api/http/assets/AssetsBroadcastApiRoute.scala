@@ -24,29 +24,7 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings,
                                    allChannels: ChannelGroup) extends ApiRoute with BroadcastRoute {
 
   override val route: Route = pathPrefix("assets" / "broadcast") {
-    issue ~ reissue ~ transfer ~ burnRoute ~ batchTransfer ~ exchange
-  }
-
-  @Path("/issue")
-  @ApiOperation(value = "Broadcast signed Asset issue",
-    notes = "Publish signed Asset issue transaction to the Blockchain",
-    httpMethod = "POST",
-    consumes = "application/json",
-    produces = "application/json")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(
-      name = "body",
-      value = "Json with signed Issue transaction",
-      required = true,
-      paramType = "body",
-      dataType = "scorex.api.http.assets.SignedIssueRequest")))
-  @ApiResponses(Array(
-    new ApiResponse(code = 200, message = "Json with signed Asset issue transaction contained Asset ID"),
-    new ApiResponse(code = 400, message = "Json with error description", response = classOf[ApiErrorResponse])))
-  def issue: Route = (path("issue") & post) {
-    json[SignedIssueRequest] { issueReq =>
-      doBroadcast(issueReq.toTx)
-    }
+    reissue ~ transfer ~ burnRoute ~ batchTransfer ~ exchange
   }
 
   @Path("/reissue")

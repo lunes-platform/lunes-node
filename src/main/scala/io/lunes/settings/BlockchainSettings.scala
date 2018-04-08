@@ -96,7 +96,6 @@ case class BlockchainSettings(addressSchemeCharacter: Char,
 object BlockchainType extends Enumeration {
   val TESTNET = Value("TESTNET")
   val MAINNET = Value("MAINNET")
-  val CUSTOM = Value("CUSTOM")
 }
 
 object BlockchainSettings {
@@ -109,11 +108,6 @@ object BlockchainSettings {
         (Constants.TestSchemeCharacter, FunctionalitySettings.TESTNET, GenesisSettings.TESTNET)
       case BlockchainType.MAINNET =>
         (Constants.MainSchemeCharacter, FunctionalitySettings.MAINNET, GenesisSettings.MAINNET)
-      case BlockchainType.CUSTOM =>
-        val addressSchemeCharacter = config.as[String](s"$configPath.custom.address-scheme-character").charAt(0)
-        val functionalitySettings = config.as[FunctionalitySettings]("lunes.blockchain.custom.functionality")
-        val genesisSettings = config.as[GenesisSettings]("lunes.blockchain.custom.genesis")
-        (addressSchemeCharacter, functionalitySettings, genesisSettings)
     }
 
     BlockchainSettings(

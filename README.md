@@ -16,6 +16,10 @@ Clone this repository and execute the command:
 sbt "run lunes.conf"
 ```
 
+## Test enviroment
+
+Lunes development network is open for tests.
+
 ## Credits
 
 This project is a fork only from source code: [Waves](https://github.com/wavesplatform/Waves/commit/0e0ee641b0fa48344849e4e7eadb3814bb13ae90).
