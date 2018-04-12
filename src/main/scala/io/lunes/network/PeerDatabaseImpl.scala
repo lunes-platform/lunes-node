@@ -37,9 +37,9 @@ class PeerDatabaseImpl(settings: NetworkSettings) extends PeerDatabase with Scor
 
   for (f <- settings.file if f.exists()) try {
     JsonFileStorage.load[PeersPersistenceType](f.getCanonicalPath).foreach(a => touch(inetSocketAddress(a, 6863)))
-    log.info(s"Loaded ${peersPersistence.size} known peer(s) from ${f.getName}")
+    log.debug(s"Loaded ${peersPersistence.size} known peer(s) from ${f.getName}")
   } catch {
-    case NonFatal(_) => log.info("Legacy or corrupted peers.dat, ignoring, starting all over from known-peers...")
+    case NonFatal(_) => log.debug("Legacy or corrupted peers.dat, ignoring, starting all over from known-peers...")
   }
 
   override def addCandidate(socketAddress: InetSocketAddress): Boolean = unverifiedPeers.synchronized {
@@ -109,7 +109,7 @@ class PeerDatabaseImpl(settings: NetworkSettings) extends PeerDatabase with Scor
   }
 
   override def close(): Unit = settings.file.foreach { f =>
-    log.info(s"Saving ${knownPeers.size} known peer(s) to ${f.getName}")
+    log.debug(s"Saving ${knownPeers.size} known peer(s) to ${f.getName}")
     val rawPeers = for {
       inetAddress <- knownPeers.keySet
       address <- Option(inetAddress.getAddress)

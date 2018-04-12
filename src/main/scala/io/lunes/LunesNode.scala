@@ -68,7 +68,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
     val combinedRoute: Route = CompositeHttpService(actorSystem, tags, routes, settings.restAPISettings).compositeRoute
     val httpFuture = Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
     serverBinding = Await.result(httpFuture, 10.seconds)
-    log.info(s"Node REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
+    log.debug(s"Node REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
     (tags, routes)
   }
 
@@ -108,8 +108,11 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
   def run(): Unit = {
     checkGenesis(history, settings, blockchainUpdater)
 
-    if (wallet.privateKeyAccounts.isEmpty)
-      wallet.generateNewAccounts(1)
+    if (wallet.privateKeyAccounts.isEmpty){
+        wallet.generateNewAccounts(1)
+        log.info("ATTENTION: edit the config file and add your seed in wallet section.")
+        forceStopApplication()
+    }
 
     val feeCalculator = new FeeCalculator(settings.feesSettings)
     val time: Time = NTP
@@ -214,7 +217,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
         Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
       }
       serverBinding = Await.result(httpFuture, 20.seconds)
-      log.info(s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
+      log.debug(s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
     }
 
     //on unexpected shutdown
@@ -238,7 +241,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
 
       shutdownAndWait(historyRepliesScheduler, "HistoryReplier", 5.minutes)
 
-      log.info("Closing REST API")
+      log.debug("Closing REST API")
       if (settings.restAPISettings.enable) {
         Try(Await.ready(serverBinding.unbind(), 2.minutes))
           .failed.map(e => log.error("Failed to unbind REST API port", e))
@@ -258,7 +261,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
       blockchainUpdater.shutdown()
       rxExtensionLoaderShutdown.foreach(_.shutdown())
 
-      log.info("Stopping network services")
+      log.debug("Stopping network services")
       network.shutdown()
 
       shutdownAndWait(minerScheduler, "Miner")
@@ -267,7 +270,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
       shutdownAndWait(extensionLoaderScheduler, "ExtensionLoader")
       shutdownAndWait(appenderScheduler, "Appender", 5.minutes)
 
-      log.info("Closing storage")
+      log.debug("Closing storage")
       db.close()
 
       log.info("Shutdown complete")
@@ -278,7 +281,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
     scheduler.shutdown()
     val r = Await.result(scheduler.awaitTermination(timeout, global), Duration.Inf)
     if (r)
-      log.info(s"$name was shutdown successfully")
+      log.debug(s"$name was shutdown successfully")
     else
       log.warn(s"Failed to shutdown $name properly during timeout")
   }

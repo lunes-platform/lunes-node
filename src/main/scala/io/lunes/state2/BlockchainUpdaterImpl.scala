@@ -75,7 +75,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
   }
 
   private[lunes] def syncPersistedAndInMemory(): Unit = write("syncPersistedAndInMemory") { implicit l =>
-    log.info(heights("State rebuild started"))
+    log.debug(heights("State rebuild started"))
 
     val notPersisted = historyWriter.height() - persisted.height
     val inMemSize = Math.min(notPersisted, minBlocksInMemory)
@@ -91,7 +91,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
 
     inMemDiffs.set(unsafeDiffByRange(persisted, historyWriter.height() + 1))
     updateHeightInfo()
-    log.info(heights("State rebuild finished"))
+    log.debug(heights("State rebuild finished"))
   }
 
   private def displayFeatures(s: Set[Short]): String = s"FEATURE${if (s.size > 1) "S"} ${s.mkString(", ")}${if (s.size > 1) "HAVE BEEN" else "HAS BEEN"}"
@@ -108,7 +108,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
         .filter { case (_, votes) => votes >= blocksForFeatureActivation }
         .keySet
 
-      if (approvedFeatures.nonEmpty) log.info(s"${displayFeatures(approvedFeatures)} APPROVED ON BLOCKCHAIN")
+      if (approvedFeatures.nonEmpty) log.debug(s"${displayFeatures(approvedFeatures)} APPROVED ON BLOCKCHAIN")
 
       val unimplementedApproved = approvedFeatures.diff(BlockchainFeatures.implemented)
       if (unimplementedApproved.nonEmpty) {
@@ -186,7 +186,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
                         toPersist.reverse.foreach(persisted.applyBlockDiff)
                         inMem
                       }
-                      log.info(heights("After block application"))
+                      log.debug(heights("After block application"))
                       Some((hardenedDiff, discarded.flatMap(_.transactionData)))
                     }
                 } else {
@@ -203,7 +203,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
           historyReader.lastBlockId().foreach(id =>
             internalLastBlockInfo.onNext(LastBlockInfo(id, historyReader.height(), historyReader.score(), blockchainReady)))
           updateHeightInfo()
-          log.info(s"$block appended. New height: $height)")
+          log.debug(s"$block appended. New height: $height)")
           discarded
         }
       })
@@ -225,7 +225,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
 
           val baseRolledBack = requestedHeight < historyWriter.height()
           val discardedHistoryBlocks = if (baseRolledBack) {
-            log.info(s"Rollback to h=$requestedHeight started")
+            log.debug(s"Rollback to h=$requestedHeight started")
             val discarded = {
               var buf = Seq.empty[Block]
               while (historyWriter.height > requestedHeight)
@@ -233,7 +233,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
               buf
             }
             if (requestedHeight < persisted.height) {
-              log.info(s"Rollback to h=$requestedHeight requested. Persisted height=${persisted.height}, will drop state and reapply blockchain now")
+              log.debug(s"Rollback to h=$requestedHeight requested. Persisted height=${persisted.height}, will drop state and reapply blockchain now")
               persisted.clear()
               syncPersistedAndInMemory()
             } else if (requestedHeight == persisted.height) {
@@ -245,7 +245,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
                 unsafeDiffByRange(composite(remained, persisted), requestedHeight + 1) ++ remained
               }
             }
-            log.info(s"Rollback to h=$requestedHeight completed:")
+            log.debug(s"Rollback to h=$requestedHeight completed:")
             discarded
           } else {
             log.debug(s"No rollback in history is necessary")
@@ -284,7 +284,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
                 historyWriter.lastBlock.map(_.timestamp), microBlock, ng.base.timestamp)
               _ <- Either.cond(ng.append(microBlock, diff, System.currentTimeMillis), (), MicroBlockAppendError("Limit of txs was reached", microBlock))
             } yield {
-              log.info(s"$microBlock appended")
+              log.debug(s"$microBlock appended")
               internalLastBlockInfo.onNext(LastBlockInfo(microBlock.totalResBlockSig, historyReader.height(), historyReader.score(), ready = true))
             }
         }

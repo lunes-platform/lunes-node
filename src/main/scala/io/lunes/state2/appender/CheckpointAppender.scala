@@ -16,7 +16,7 @@ object CheckpointAppender extends ScorexLogging {
             peerDatabase: PeerDatabase, miner: Miner, allChannels: ChannelGroup, scheduler: Scheduler
            )(maybeChannel: Option[Channel], c: Checkpoint): Task[Either[ValidationError, Option[BigInt]]] = {
     val t = Task(checkpointService.set(c).map { _ =>
-      log.info(s"Processing checkpoint $c")
+      log.debug(s"Processing checkpoint $c")
       makeBlockchainCompliantWith(history, blockchainUpdater)(c)
       history.score()
     }).executeOn(scheduler).map(_.map(Some(_)))

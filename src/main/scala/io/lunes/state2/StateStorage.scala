@@ -126,7 +126,7 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
 
   def allPortfolios: Map[Address, Portfolio] = {
     val maxAddressIndex = getIntProperty(MaxAddress).getOrElse(0)
-    log.info(s"Accounts count: $maxAddressIndex")
+    log.debug(s"Accounts count: $maxAddressIndex")
     (0 until maxAddressIndex).flatMap({ i =>
       val maybeAddressBytes = get(makeKey(AddressesIndexPrefix, i))
       val maybeAddress = maybeAddressBytes.flatMap { addressBytes => Address.fromBytes(addressBytes).toOption }

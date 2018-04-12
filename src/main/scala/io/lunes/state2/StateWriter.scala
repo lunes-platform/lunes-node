@@ -37,7 +37,7 @@ class StateWriterImpl(p: StateStorage, synchronizationToken: ReentrantReadWriteL
 
     sp().commit(b)
 
-    log.info(s"BlockDiff commit complete. Persisted height = $newHeight")
+    log.debug(s"BlockDiff commit complete. Persisted height = $newHeight")
   }
 
   override def clear(): Unit = write("clear") { implicit l =>

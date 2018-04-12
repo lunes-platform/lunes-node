@@ -13,6 +13,6 @@ package object lunes extends ScorexLogging {
       log.error(value.toString)
       forceStopApplication()
     }
-    log.info("Genesis block has been added to the state")
+    log.debug("Genesis block has been added to the state")
   }
 }
