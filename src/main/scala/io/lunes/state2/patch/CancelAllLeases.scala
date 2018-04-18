@@ -18,8 +18,7 @@ object CancelAllLeases {
       issuedAssets = Map.empty,
       aliases = Map.empty,
       orderFills = Map.empty,
-      leaseState = s.activeLeases().map(_ -> false).toMap,
-      scripts = Map.empty)
+      leaseState = s.activeLeases().map(_ -> false).toMap)
   }
 
 }

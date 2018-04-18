@@ -69,6 +69,26 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
       complete(fullAccountAssetsInfo(address))
     }
 
+  @Path("/registry")
+  @ApiOperation(value = "Registry data",
+    notes = "Registry data in blockchain",
+    httpMethod = "POST",
+    produces = "application/json",
+    consumes = "application/json")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(
+      name = "body",
+      value = "Json with data",
+      required = true,
+      paramType = "body",
+      dataType = "scorex.api.http.assets.RegistryRequest",
+      defaultValue = "{\"sender\":\"3Mn6xomsZZepJj1GL1QaW6CaCJAq8B3oPef\",\"recipient\":\"3Mciuup51AxRrpSz7XhutnQYTkNT9691HAk\",\"assetId\":null,\"amount\":5813874260609385500,\"feeAssetId\":\"3Z7T9SwMbcBuZgcn3mGu7MMp619CTgSWBT7wvEkPwYXGnoYzLeTyh3EqZu1ibUhbUHAsGK5tdv9vJL9pk4fzv9Gc\",\"fee\":1579331567487095949,\"timestamp\":4231642878298810008}"
+    )
+  ))
+  def registry: Route =
+    processRequest("registry", (t: RegistryRequest) => doBroadcast(TransactionFactory.registryData(t, wallet, time)))
+
+
   @Path("/transfer")
   @ApiOperation(value = "Transfer asset",
     notes = "Transfer asset to new address",

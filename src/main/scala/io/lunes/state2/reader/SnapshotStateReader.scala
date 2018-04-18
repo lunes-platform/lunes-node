@@ -7,7 +7,6 @@ import io.lunes.transaction.ValidationError.AliasNotExists
 import io.lunes.transaction._
 import io.lunes.transaction.assets.IssueTransaction
 import io.lunes.transaction.lease.LeaseTransaction
-import io.lunes.transaction.smart.Script
 import scorex.utils.{ScorexLogging, Synchronized}
 
 import scala.annotation.tailrec
@@ -47,8 +46,6 @@ trait SnapshotStateReader extends Synchronized {
   def snapshotAtHeight(acc: Address, h: Int): Option[Snapshot]
 
   def filledVolumeAndFee(orderId: ByteStr): OrderFillInfo
-
-  def accountScript(address: Address): Option[Script]
 }
 
 object SnapshotStateReader {

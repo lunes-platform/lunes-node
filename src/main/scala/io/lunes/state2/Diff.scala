@@ -4,7 +4,6 @@ import cats.Monoid
 import cats.implicits._
 import scorex.account.{Address, Alias}
 import io.lunes.transaction.Transaction
-import io.lunes.transaction.smart.Script
 
 case class Snapshot(prevHeight: Int, balance: Long, effectiveBalance: Long)
 
@@ -45,8 +44,7 @@ case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
                 issuedAssets: Map[ByteStr, AssetInfo],
                 aliases: Map[Alias, Address],
                 orderFills: Map[ByteStr, OrderFillInfo],
-                leaseState: Map[ByteStr, Boolean],
-                scripts: Map[Address,Option[Script]]) {
+                leaseState: Map[ByteStr, Boolean]) {
 
   lazy val accountTransactionIds: Map[Address, List[ByteStr]] = {
     val map: List[(Address, Set[(Int, Long, ByteStr)])] = transactions.toList
@@ -66,18 +64,16 @@ object Diff {
             assetInfos: Map[ByteStr, AssetInfo] = Map.empty,
             aliases: Map[Alias, Address] = Map.empty,
             orderFills: Map[ByteStr, OrderFillInfo] = Map.empty,
-            leaseState: Map[ByteStr, Boolean] = Map.empty,
-            scripts : Map[Address, Option[Script]] = Map.empty
+            leaseState: Map[ByteStr, Boolean] = Map.empty
            ): Diff = Diff(
     transactions = Map((tx.id(), (height, tx, portfolios.keys.toSet))),
     portfolios = portfolios,
     issuedAssets = assetInfos,
     aliases = aliases,
     orderFills = orderFills,
-    leaseState = leaseState,
-    scripts = scripts)
+    leaseState = leaseState)
 
-  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
+  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
 
   implicit class DiffExt(d: Diff) {
     def asBlockDiff: BlockDiff = BlockDiff(d, 0, Map.empty)
@@ -93,7 +89,6 @@ object Diff {
       aliases = older.aliases ++ newer.aliases,
       orderFills = older.orderFills.combine(newer.orderFills),
       leaseState = older.leaseState ++ newer.leaseState,
-      scripts = older.scripts ++ newer.scripts
     )
   }
 }

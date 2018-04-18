@@ -110,9 +110,11 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
 
     if (wallet.privateKeyAccounts.isEmpty){
         wallet.generateNewAccounts(1)
-        log.info("ATTENTION: edit the config file and add your seed in wallet section.")
+        log.error("ATTENTION: edit the config file and add your seed in wallet section.")
         forceStopApplication()
     }
+
+    log.info("wallet: {} ", wallet.privateKeyAccounts.mkString("[",",","]"))
 
     val feeCalculator = new FeeCalculator(settings.feesSettings)
     val time: Time = NTP
@@ -298,7 +300,6 @@ object LunesNode extends ScorexLogging {
     } yield file
 
     val config = maybeConfigFile match {
-      // if no user config is supplied, the library will handle overrides/application/reference automatically
       case None =>
         log.error("No configuration file was provided!")
         forceStopApplication()

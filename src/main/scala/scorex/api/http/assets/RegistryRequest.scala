@@ -10,6 +10,7 @@ case class RegistryRequest(assetId: Option[String],
                            userdata: Option[String],
                            recipient: String,
                            timestamp: Option[Long] = None)
+
 object RegistryRequest {
   implicit val transferFormat: Format[RegistryRequest] = Json.format
 }

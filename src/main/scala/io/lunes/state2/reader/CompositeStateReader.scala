@@ -10,7 +10,6 @@ import monix.eval.Coeval
 import scorex.account.{Address, Alias}
 import io.lunes.transaction.Transaction
 import io.lunes.transaction.lease.LeaseTransaction
-import io.lunes.transaction.smart.Script
 
 class CompositeStateReader private(inner: SnapshotStateReader, blockDiff: BlockDiff) extends SnapshotStateReader {
 
@@ -78,14 +77,6 @@ class CompositeStateReader private(inner: SnapshotStateReader, blockDiff: BlockD
     val in: Long = inner.assetBalance(a, asset)
     val diffed: Long = blockDiff.txsDiff.portfolios.get(a).orEmpty.assets.getOrElse(asset, 0)
     in + diffed
-  }
-
-  override def accountScript(address: Address): Option[Script] = {
-    blockDiff.txsDiff.scripts.get(address) match {
-      case None => inner.accountScript(address)
-      case Some(None) => None
-      case Some(Some(scr)) => Some(scr)
-    }
   }
 }
 

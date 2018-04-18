@@ -10,7 +10,6 @@ import io.lunes.transaction._
 import io.lunes.transaction.assets._
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
-import io.lunes.transaction.smart.{SetScriptTransaction, Verifier}
 
 object TransactionDiffer {
 
@@ -38,8 +37,6 @@ object TransactionDiffer {
         case ltx: LeaseCancelTransaction => LeaseTransactionsDiff.leaseCancel(s, settings, currentBlockTimestamp, currentBlockHeight)(ltx)
         case etx: ExchangeTransaction => ExchangeTransactionDiff(s, currentBlockHeight)(etx)
         case atx: CreateAliasTransaction => CreateAliasTransactionDiff(currentBlockHeight)(atx)
-        case sstx: SetScriptTransaction => SetScriptTransactionDiff(currentBlockHeight)(sstx)
-        case sttx: ScriptTransferTransaction => ScriptTransferTransactionDiff(s, currentBlockHeight)(sttx)
         case _ => Left(UnsupportedTransactionType)
       }
       positiveDiff <- BalanceDiffValidation(s, settings)(diff)

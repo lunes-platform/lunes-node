@@ -10,7 +10,6 @@ import io.lunes.transaction._
 import io.lunes.transaction.assets._
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
-import io.lunes.transaction.smart.SetScriptTransaction
 import scorex.account.Address
 
 import scala.concurrent.duration._
@@ -87,8 +86,6 @@ object CommonValidation {
       case _: LeaseCancelTransaction => Right(tx)
       case _: CreateAliasTransaction => Right(tx)
       case _: MassTransferTransaction => activationBarrier(BlockchainFeatures.MassTransfer)
-      case _: SetScriptTransaction => activationBarrier(BlockchainFeatures.SmartAccounts)
-      case _: ScriptTransferTransaction => activationBarrier(BlockchainFeatures.SmartAccounts)
       case _ => Left(GenericError("Unknown transaction must be explicitly activated"))
     }
   }

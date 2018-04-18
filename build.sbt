@@ -31,34 +31,6 @@ normalizedName := network.value.name
 
 fork in run := true
 
-
-lazy val lang =
-  crossProject(JSPlatform, JVMPlatform)
-    .withoutSuffixFor(JVMPlatform)
-    .settings(
-      version := "0.0.1",
-      test in assembly := {},
-      libraryDependencies ++=
-        Dependencies.cats ++
-        Dependencies.scalacheck ++
-        Dependencies.scorex ++
-        Dependencies.scalatest ++
-        Dependencies.scalactic ++
-        Dependencies.monix.value ++
-        Dependencies.scodec.value ++
-        Dependencies.fastparse.value,
-      resolvers += Resolver.bintrayIvyRepo("portable-scala", "sbt-plugins")
-    )
-    .jsSettings(
-      scalaJSLinkerConfig ~= {
-        _.withModuleKind(ModuleKind.CommonJSModule)
-      }
-    )
-    .jvmSettings(libraryDependencies += "org.scala-js" %% "scalajs-stubs" % "0.6.22" % "provided")
-
-lazy val langJS = lang.js
-lazy val langJVM = lang.jvm
-
 lazy val node = project.in(file("."))
   .settings(
     libraryDependencies ++=
@@ -77,10 +49,6 @@ lazy val node = project.in(file("."))
       Dependencies.commons_net ++
       Dependencies.monix.value
   )
-  .aggregate(langJVM)
-  .dependsOn(langJVM)
-
-
 
 //assembly settings
 assemblyJarName in assembly := s"LunesNode-all-${version.value}.jar"
