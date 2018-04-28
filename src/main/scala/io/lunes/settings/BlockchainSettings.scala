@@ -8,6 +8,8 @@ import net.ceedubs.ficus.readers.EnumerationReader._
 
 import scala.concurrent.duration._
 
+import io.lunes.features.BlockchainFeatures
+
 case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  blocksForFeatureActivation: Int,
                                  allowTemporaryNegativeUntil: Long,
@@ -43,7 +45,7 @@ object FunctionalitySettings {
     allowMultipleLeaseCancelTransactionUntilTimestamp = 0,
     resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
-    preActivatedFeatures = Map.empty,
+    preActivatedFeatures = BlockchainFeatures.preActivated,
     doubleFeaturesPeriodsAfterHeight = 810000)
 
   val TESTNET = apply(

@@ -16,16 +16,16 @@ import io.lunes.transaction._
 import scorex.utils.Time
 import scorex.wallet.Wallet
 
-//@Path("/alias")
-//@Api(value = "/alias")
+@Path("/addresses/alias")
+@Api(value = "addresses")
 case class AliasApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPool, allChannels: ChannelGroup, time: Time, state: StateReader)
   extends ApiRoute with BroadcastRoute {
 
-  override val route = pathPrefix("alias") {
+  override val route = pathPrefix("addresses" / "alias") {
     alias ~ addressOfAlias ~ aliasOfAddress
   }
 
-//  @Path("/create")
+  @Path("/alias-create")
   @ApiOperation(value = "Creates an alias",
     httpMethod = "POST",
     produces = "application/json",

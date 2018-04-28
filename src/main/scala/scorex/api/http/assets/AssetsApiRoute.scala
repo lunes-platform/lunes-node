@@ -29,7 +29,7 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
 
   override lazy val route =
     pathPrefix("assets") {
-      balance ~ balances ~  reissue ~ burnRoute ~ transfer ~ massTransfer ~ signOrder ~ balanceDistribution
+      balance ~ balances ~ reissue ~ registry ~ burnRoute ~ transfer ~ massTransfer ~ signOrder ~ balanceDistribution
     }
 
   @Path("/balance/{address}/{assetId}")

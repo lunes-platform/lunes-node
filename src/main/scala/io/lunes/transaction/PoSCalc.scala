@@ -2,7 +2,7 @@ package io.lunes.transaction
 
 import com.google.common.base.Throwables
 import io.lunes.crypto
-import io.lunes.features.{BlockchainFeatures, FeatureProvider}
+import io.lunes.features.FeatureProvider
 import io.lunes.settings.FunctionalitySettings
 import io.lunes.state2.StateReader
 import io.lunes.state2.reader.SnapshotStateReader
@@ -16,8 +16,7 @@ import scala.util.{Failure, Success, Try}
 
 object PoSCalc extends ScorexLogging {
 
-  val MinimalEffectiveBalanceForGenerator1: Long = 1000000000000L
-  val MinimalEffectiveBalanceForGenerator2: Long = 100000000000L
+  val MinimalEffectiveBalanceForGenerator: Long = 500000000000L
 
   private val AvgBlockTimeDepth: Int = 3
 
@@ -73,8 +72,7 @@ object PoSCalc extends ScorexLogging {
                               account: PublicKeyAccount, featureProvider: FeatureProvider): Either[String, (Long, Long)] = {
     generatingBalance(state(), fs, account, height) match {
       case Success(balance) => for {
-        _ <- Either.cond((!featureProvider.isFeatureActivated(BlockchainFeatures.SmallerMinimalGeneratingBalance, height) && balance >= MinimalEffectiveBalanceForGenerator1) ||
-          (featureProvider.isFeatureActivated(BlockchainFeatures.SmallerMinimalGeneratingBalance, height) && balance >= MinimalEffectiveBalanceForGenerator2), (),
+        _ <- Either.cond(balance >= MinimalEffectiveBalanceForGenerator, (),
           s"Balance $balance of ${account.address} is lower than required for generation")
         cData = block.consensusData
         hit = calcHit(cData, account)

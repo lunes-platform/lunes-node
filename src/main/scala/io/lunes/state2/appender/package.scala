@@ -1,7 +1,7 @@
 package io.lunes.state2
 
 import io.lunes.utx.UtxPool
-import io.lunes.features.{BlockchainFeatures, FeatureProvider}
+import io.lunes.features.FeatureProvider
 import io.lunes.mining._
 import io.lunes.network._
 import io.lunes.settings.{FunctionalitySettings, LunesSettings}
@@ -46,10 +46,8 @@ package object appender extends ScorexLogging {
 
   private def validateEffectiveBalance(fp: FeatureProvider, fs: FunctionalitySettings, block: Block, baseHeight: Int)(effectiveBalance: Long): Either[String, Long] =
     Either.cond(block.timestamp < fs.minimalGeneratingBalanceAfter ||
-      (block.timestamp >= fs.minimalGeneratingBalanceAfter && effectiveBalance >= MinimalEffectiveBalanceForGenerator1) ||
-      fp.featureActivationHeight(BlockchainFeatures.SmallerMinimalGeneratingBalance.id).exists(baseHeight >= _)
-        && effectiveBalance >= MinimalEffectiveBalanceForGenerator2, effectiveBalance,
-      s"generator's effective balance $effectiveBalance is less that required for generation")
+      (block.timestamp >= fs.minimalGeneratingBalanceAfter && effectiveBalance >= MinimalEffectiveBalanceForGenerator), 
+      effectiveBalance, s"generator's effective balance $effectiveBalance is less that required for generation")
 
   private[appender] def appendBlock(checkpoint: CheckpointService, history: History, blockchainUpdater: BlockchainUpdater,
                                     stateReader: SnapshotStateReader, utxStorage: UtxPool, time: Time, settings: LunesSettings,
