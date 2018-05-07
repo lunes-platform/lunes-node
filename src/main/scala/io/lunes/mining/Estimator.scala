@@ -32,17 +32,14 @@ object MiningEstimators {
 
   def apply(minerSettings: MinerSettings, featureProvider: FeatureProvider, height: Int): MiningEstimators = {
     val activatedFeatures = featureProvider.activatedFeatures(height)
-    val isNgEnabled = activatedFeatures.contains(BlockchainFeatures.NG.id)
     val isMassTransferEnabled = activatedFeatures.contains(BlockchainFeatures.MassTransfer.id)
 
     MiningEstimators(
       total = if (isMassTransferEnabled) SizeEstimator(MaxTxsSizeInBytes) else {
-        val maxTxs = if (isNgEnabled) Block.MaxTransactionsPerBlockVer3 else ClassicAmountOfTxsInBlock
-        TxNumberEstimator(maxTxs)
+        TxNumberEstimator(Block.MaxTransactionsPerBlockVer3)
       },
       keyBlock = if (isMassTransferEnabled) TxNumberEstimator(0) else {
-        val maxTxsForKeyBlock = if (isNgEnabled) minerSettings.maxTransactionsInKeyBlock else ClassicAmountOfTxsInBlock
-        TxNumberEstimator(maxTxsForKeyBlock)
+        TxNumberEstimator(minerSettings.maxTransactionsInKeyBlock)
       },
       micro = TxNumberEstimator(minerSettings.maxTransactionsInMicroBlock)
     )

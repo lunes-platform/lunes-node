@@ -90,8 +90,6 @@ class MinerImpl(allChannels: ChannelGroup,
       s"BlockChain is too old (last block timestamp is $parentTimestamp generated $blockAge ago)"
     ))
 
-  private def ngEnabled: Boolean = featureProvider.featureActivationHeight(BlockchainFeatures.NG.id).exists(history.height > _ + 1)
-
   private def generateOneBlockTask(account: PrivateKeyAccount, balance: Long)(delay: FiniteDuration): Task[Either[String, (MiningEstimators, Block, MiningConstraint)]] = Task {
     history.read { implicit l =>
       // should take last block right at the time of mining since microblocks might have been added
@@ -225,7 +223,7 @@ class MinerImpl(allChannels: ChannelGroup,
                 BlockStats.mined(block, history.height())
                 allChannels.broadcast(BlockForged(block))
                 scheduleMining()
-                if (ngEnabled && !totalConstraint.isEmpty) startMicroBlockMining(account, block, estimators.micro, totalConstraint)
+                if (!totalConstraint.isEmpty) startMicroBlockMining(account, block, estimators.micro, totalConstraint)
               case Right(None) => log.warn("Newly created block has already been appended, should not happen")
             }
           case Left(err) =>
