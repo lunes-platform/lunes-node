@@ -21,8 +21,21 @@ import scorex.utils.{ScorexLogging, Time}
 
 import scala.util.Right
 
+/** BlockAppender logging Object */
 object BlockAppender extends ScorexLogging with Instrumented {
-
+  /** Factory method for [[monix.eval.Task]] object of Either an Option for [[BlockchainScore]] (case Success) or a ValidationError (case Failure).
+    * @param checkpoint Inputs a Checkpoint Service.
+    * @param history Inputs the History Object.
+    * @param blockchainUpdater The Blockchain Updater.
+    * @param time the Time Object.
+    * @param stateReader Inputs a StateReader.
+    * @param utxStorage The Transcation Pool.
+    * @param settings The Lunes Settings.
+    * @param featureProvider The Feature Provider.
+    * @param scheduler Informs the Scheduler.
+    * @param newBlock The Block to Append.
+    * @return Returns the Task.
+    */
   def apply(checkpoint: CheckpointService, history: History, blockchainUpdater: BlockchainUpdater, time: Time,
             stateReader: StateReader, utxStorage: UtxPool, settings: LunesSettings,
             featureProvider: FeatureProvider, scheduler: Scheduler)(newBlock: Block): Task[Either[ValidationError, Option[BlockchainScore]]] = Task {
@@ -35,6 +48,23 @@ object BlockAppender extends ScorexLogging with Instrumented {
     })
   }.executeOn(scheduler)
 
+  /** Alternative Factory for a [[monix.eval.Task]] of Unit with Channel inputs.
+    * @param checkpoint Inputs a Checkpoint Service.
+    * @param history Inputs the History Object.
+    * @param blockchainUpdater The Blockchain Updater.
+    * @param time the Time Object.
+    * @param stateReader Inputs a StateReader.
+    * @param utxStorage The Transcation Pool.
+    * @param settings The Lunes Settings.
+    * @param featureProvider The Feature Provider.
+    * @param allChannels Inputs the ChannelGroup.
+    * @param peerDatabase Informs the Peer Database.
+    * @param miner Sets a Miner.
+    * @param scheduler Informs the Scheduler.
+    * @param ch The Channel.
+    * @param newBlock The Block to Append.
+    * @return Returns the Task.
+    */
   def apply(checkpoint: CheckpointService, history: History, blockchainUpdater: BlockchainUpdater, time: Time,
             stateReader: StateReader, utxStorage: UtxPool, settings: LunesSettings,
             featureProvider: FeatureProvider, allChannels: ChannelGroup, peerDatabase: PeerDatabase, miner: Miner,

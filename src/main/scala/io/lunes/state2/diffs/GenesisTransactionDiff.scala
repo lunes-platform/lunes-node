@@ -6,6 +6,9 @@ import io.lunes.transaction.{GenesisTransaction, ValidationError}
 
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 object GenesisTransactionDiff {
   def apply(height: Int)(tx: GenesisTransaction): Either[ValidationError, Diff] = {
     if (height != 1) Left(GenericError("GenesisTransaction cannot appear in non-initial block"))

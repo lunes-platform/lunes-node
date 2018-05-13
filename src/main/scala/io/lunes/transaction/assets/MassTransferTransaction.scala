@@ -16,6 +16,17 @@ import io.lunes.transaction.assets.MassTransferTransaction.{ParsedTransfer, toJs
 
 import scala.util.{Either, Failure, Success, Try}
 
+/**
+  *
+  * @param version
+  * @param assetId
+  * @param sender
+  * @param transfers
+  * @param timestamp
+  * @param fee
+  * @param attachment
+  * @param proofs
+  */
 case class MassTransferTransaction private(version: Byte,
                                            assetId: Option[AssetId],
                                            sender: PublicKeyAccount,
@@ -64,15 +75,33 @@ case class MassTransferTransaction private(version: Byte,
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(bodyBytes(), proofs.bytes()))
 }
 
+/**
+  *
+  */
 object MassTransferTransaction {
   val MaxTransferCount = 100
 
+  /**
+    *
+    * @param recipient
+    * @param amount
+    */
   case class Transfer(recipient: String, amount: Long)
 
+  /**
+    *
+    * @param address
+    * @param amount
+    */
   case class ParsedTransfer(address: AddressOrAlias, amount: Long)
 
   implicit val transferFormat: Format[Transfer] = Json.format
 
+  /**
+    *
+    * @param bytes
+    * @return
+    */
   def parseTail(bytes: Array[Byte]): Try[MassTransferTransaction] = Try {
     val version = bytes(0)
     val sender = PublicKeyAccount(bytes.slice(1, KeyLength + 1))
@@ -103,6 +132,17 @@ object MassTransferTransaction {
     tx.fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
+  /**
+    * @param version
+    * @param assetId
+    * @param sender
+    * @param transfers
+    * @param timestamp
+    * @param feeAmount
+    * @param attachment
+    * @param proofs
+    * @return
+    */
   def create(version: Byte,
              assetId: Option[AssetId],
              sender: PublicKeyAccount,
@@ -130,6 +170,17 @@ object MassTransferTransaction {
     )
   }
 
+  /**
+    *
+    * @param version
+    * @param assetId
+    * @param sender
+    * @param transfers
+    * @param timestamp
+    * @param feeAmount
+    * @param attachment
+    * @return
+    */
   def selfSigned(version: Byte,
                  assetId: Option[AssetId],
                  sender: PrivateKeyAccount,
@@ -142,6 +193,11 @@ object MassTransferTransaction {
     }
   }
 
+  /**
+    *
+    * @param transfers
+    * @return
+    */
   def parseTransfersList(transfers: List[Transfer]): Validation[List[ParsedTransfer]] = {
     transfers.traverse { case Transfer(recipient, amount) =>
       AddressOrAlias.fromString(recipient).map(ParsedTransfer(_, amount))

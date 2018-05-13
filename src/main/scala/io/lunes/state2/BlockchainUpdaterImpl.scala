@@ -25,6 +25,15 @@ import scorex.utils.ScorexLogging
 
 import scala.collection.immutable
 
+/**
+  *
+  * @param persisted
+  * @param settings
+  * @param time
+  * @param featureProvider
+  * @param historyWriter
+  * @param synchronizationToken
+  */
 class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateReader,
                                     settings: LunesSettings,
                                     time: scorex.utils.Time,
@@ -58,8 +67,16 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
 
   private def currentPersistedBlocksState: StateReader = Coeval(read { implicit l => composite(inMemDiffs(), persisted) })
 
+  /**
+    *
+    * @return
+    */
   def bestLiquidState: StateReader = composite(Coeval(read { implicit l => ngState().map(_.bestLiquidDiff).orEmpty }), currentPersistedBlocksState)
 
+  /**
+    *
+    * @return
+    */
   def blockchainReady: Boolean = {
     val lastBlock = historyReader.lastBlockTimestamp().get
     lastBlock + maxBlockReadinessAge > time.correctedTime()

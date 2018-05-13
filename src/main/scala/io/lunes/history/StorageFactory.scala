@@ -13,11 +13,21 @@ import scorex.utils.{NTP, Time}
 
 import scala.util.{Success, Try}
 
+/**
+  *
+  */
 object StorageFactory {
 
   type Storage = Coeval[(NgHistory with DebugNgHistory, FeatureProvider, StateReader, BlockchainUpdater, BlockchainDebugInfo)]
   type HeightInfos = Coeval[(HeightInfo, HeightInfo)]
 
+  /**
+    *
+    * @param history
+    * @param db
+    * @param time
+    * @return
+    */
   private def createStateStorage(history: History with FeatureProvider, db: DB, time: Time): Try[StateStorage] =
     StateStorage(db, dropExisting = false).flatMap { ss =>
       if (ss.getHeight <= history.height()) Success(ss) else {
@@ -25,6 +35,14 @@ object StorageFactory {
       }
     }
 
+  /**
+    *
+    * @param db
+    * @param settings
+    * @param time
+    * @tparam T
+    * @return
+    */
   def apply[T](db: DB, settings: LunesSettings, time: Time = NTP): Try[(Storage, HeightInfos)] = {
     val lock = new RWL(true)
     for {

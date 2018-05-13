@@ -11,6 +11,9 @@ import io.lunes.transaction.assets.TransferTransaction
 
 import scala.util.Right
 
+/**
+  *
+  */
 object TransferTransactionDiff {
   def apply(state: SnapshotStateReader, s: FunctionalitySettings, blockTime: Long, height: Int)(tx: TransferTransaction): Either[ValidationError, Diff] = {
     val sender = Address.fromPublicKey(tx.sender.publicKey)

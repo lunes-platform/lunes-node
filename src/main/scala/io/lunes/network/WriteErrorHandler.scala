@@ -6,8 +6,17 @@ import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel._
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  */
 @Sharable
 class WriteErrorHandler extends ChannelOutboundHandlerAdapter with ScorexLogging {
+  /**
+    *
+    * @param ctx
+    * @param msg
+    * @param promise
+    */
   override def write(ctx: ChannelHandlerContext, msg: AnyRef, promise: ChannelPromise): Unit =
     ctx.write(msg, promise.unvoid().addListener { (chf: ChannelFuture) =>
       if (!chf.isSuccess) {

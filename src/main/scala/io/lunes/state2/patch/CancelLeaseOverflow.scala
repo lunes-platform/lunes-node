@@ -5,6 +5,9 @@ import io.lunes.state2.{Diff, LeaseInfo, Portfolio}
 import scorex.account.Address
 import io.lunes.transaction.lease.LeaseTransaction
 
+/**
+  *
+  */
 object CancelLeaseOverflow {
   def apply(s: SnapshotStateReader): Diff = {
 

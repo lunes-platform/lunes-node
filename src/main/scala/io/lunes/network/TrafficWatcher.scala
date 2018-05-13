@@ -6,6 +6,9 @@ import kamon.Kamon
 import kamon.metric.instrument.{Histogram, Memory}
 import scorex.network.message.{Message => ScorexMessage}
 
+/**
+  *
+  */
 @Sharable
 class TrafficWatcher extends ChannelDuplexHandler {
 
@@ -24,6 +27,12 @@ class TrafficWatcher extends ChannelDuplexHandler {
     "dir" -> dir
   ), Memory.Bytes)
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    * @param promise
+    */
   override def write(ctx: ChannelHandlerContext, msg: AnyRef, promise: ChannelPromise): Unit = {
     msg match {
       case x: RawBytes => outgoing.get(x.code).foreach(_.record(x.data.length))
@@ -33,6 +42,11 @@ class TrafficWatcher extends ChannelDuplexHandler {
     super.write(ctx, msg, promise)
   }
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
     msg match {
       case x: RawBytes => incoming.get(x.code).foreach(_.record(x.data.length))

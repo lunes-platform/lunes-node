@@ -9,6 +9,9 @@ import io.lunes.transaction.{AssetId, SignedTransaction, ValidationError}
 
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 object AssetTransactionsDiff {
 
   def issue(height: Int)(tx: IssueTransaction): Either[ValidationError, Diff] = {

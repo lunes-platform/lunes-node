@@ -11,6 +11,11 @@ import scorex.utils.ScorexLogging
 import scala.concurrent.Promise
 import scala.concurrent.duration._
 
+/**
+  *
+  * @param handshake
+  * @param promise
+  */
 class ClientHandshakeHandler(handshake: Handshake, promise: Promise[Channel]) extends ChannelInboundHandlerAdapter with ScorexLogging {
 
   private def removeHandlers(ctx: ChannelHandlerContext): Unit = {
@@ -18,6 +23,11 @@ class ClientHandshakeHandler(handshake: Handshake, promise: Promise[Channel]) ex
     ctx.pipeline().remove(this)
   }
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match {
     case HandshakeTimeoutExpired =>
       log.error("Timeout expired while waiting for handshake")
@@ -35,6 +45,10 @@ class ClientHandshakeHandler(handshake: Handshake, promise: Promise[Channel]) ex
     case _ => super.channelRead(ctx, msg)
   }
 
+  /**
+    *
+    * @param ctx
+    */
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
     ctx.writeAndFlush(handshake.encode(ctx.alloc().buffer()))
     super.channelActive(ctx)

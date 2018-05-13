@@ -9,6 +9,9 @@ import io.lunes.transaction.ValidationError.{GenericError, Validation}
 import io.lunes.transaction.assets.MassTransferTransaction
 import io.lunes.transaction.assets.MassTransferTransaction.ParsedTransfer
 
+/**
+  *
+  */
 object MassTransferTransactionDiff {
 
   def apply(state: SnapshotStateReader, blockTime: Long, height: Int)(tx: MassTransferTransaction): Either[ValidationError, Diff] = {

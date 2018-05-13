@@ -7,6 +7,10 @@ import scorex.network.message.{Message => ScorexMessage}
 import io.lunes.transaction.Transaction
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  * @param settings
+  */
 @Sharable
 class TrafficLogger(settings: TrafficLogger.Settings) extends ChannelDuplexHandler with ScorexLogging {
 
@@ -25,6 +29,12 @@ class TrafficLogger(settings: TrafficLogger.Settings) extends ChannelDuplexHandl
     aux.lift
   }
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    * @param promise
+    */
   override def write(ctx: ChannelHandlerContext, msg: AnyRef, promise: ChannelPromise): Unit = {
     codeOf(msg).filterNot(settings.ignoreTxMessages).foreach { code =>
       log.trace(s"${id(ctx)} <-- transmitted($code): $msg")
@@ -33,6 +43,11 @@ class TrafficLogger(settings: TrafficLogger.Settings) extends ChannelDuplexHandl
     super.write(ctx, msg, promise)
   }
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
     codeOf(msg).filterNot(settings.ignoreRxMessages).foreach { code =>
       log.trace(s"${id(ctx)} --> received($code): $msg")
@@ -43,8 +58,16 @@ class TrafficLogger(settings: TrafficLogger.Settings) extends ChannelDuplexHandl
 
 }
 
+/**
+  *
+  */
 object TrafficLogger {
 
+  /**
+    *
+    * @param ignoreTxMessages
+    * @param ignoreRxMessages
+    */
   case class Settings(ignoreTxMessages: Set[ScorexMessage.MessageCode],
                       ignoreRxMessages: Set[ScorexMessage.MessageCode])
 

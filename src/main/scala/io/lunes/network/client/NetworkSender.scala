@@ -13,15 +13,32 @@ import scorex.utils.ScorexLogging
 
 import scala.concurrent.{Future, Promise}
 
+/**
+  *
+  * @param chainId
+  * @param name
+  * @param nonce
+  */
 class NetworkSender(chainId: Char, name: String, nonce: Long) extends ScorexLogging {
 
   private val allChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
   private val client = new NetworkClient(chainId, name, nonce, allChannels)
 
+  /**
+    *
+    * @param address
+    * @return
+    */
   def connect(address: InetSocketAddress): Future[Channel] = {
     client.connect(address)
   }
 
+  /**
+    *
+    * @param channel
+    * @param messages
+    * @return
+    */
   def send(channel: Channel, messages: RawBytes*): Future[Unit] = {
     if (channel.isOpen) {
       val p = Promise[Unit]
@@ -47,5 +64,8 @@ class NetworkSender(chainId: Char, name: String, nonce: Long) extends ScorexLogg
     }
   }
 
+  /**
+    *
+    */
   def close(): Unit = client.shutdown()
 }

@@ -6,10 +6,16 @@ import io.netty.channel.Channel
 import org.influxdb.dto.Point
 import scorex.block.{Block, MicroBlock}
 
+/**
+  *
+  */
 object BlockStats {
 
   private val StringIdLength = 6
 
+  /**
+    *
+    */
   trait Named {
     private[BlockStats] val name: String = {
       val className = getClass.getName
@@ -34,13 +40,33 @@ object BlockStats {
     case object Micro extends Type
   }
 
+  /**
+    *
+    */
   sealed abstract class Source extends Named
 
+  /**
+    *
+    */
   object Source {
+
+    /**
+      *
+      */
     case object Broadcast extends Source
+
+    /**
+      *
+      */
     case object Ext extends Source
   }
 
+  /**
+    *
+    * @param b
+    * @param source
+    * @param ch
+    */
   def received(b: Block, source: Source, ch: Channel): Unit = write(
     block(b, source)
       .addField("from", nodeName(ch))
@@ -50,6 +76,12 @@ object BlockStats {
     Seq.empty
   )
 
+  /**
+    *
+    * @param b
+    * @param source
+    * @param newHeight
+    */
   def applied(b: Block, source: Source, newHeight: Int): Unit = write(
     block(b, source)
       .addField("txs", b.transactionData.size)
@@ -58,12 +90,22 @@ object BlockStats {
     Seq.empty
   )
 
+  /**
+    *
+    * @param b
+    * @param source
+    */
   def declined(b: Block, source: Source): Unit = write(
     block(b, source),
     Event.Declined,
     Seq.empty
   )
 
+  /**
+    *
+    * @param b
+    * @param baseHeight
+    */
   def mined(b: Block, baseHeight: Int): Unit = write(
     block(b, Source.Broadcast)
       .tag("parent-id", id(b.reference))
@@ -74,7 +116,11 @@ object BlockStats {
     Seq.empty
   )
 
-
+  /**
+    *
+    * @param m
+    * @param ch
+    */
   def inv(m: MicroBlockInv, ch: Channel): Unit = write(
     measurement(Type.Micro)
       .tag("id", id(m.totalBlockSig))
@@ -84,6 +130,11 @@ object BlockStats {
     Seq.empty
   )
 
+  /**
+    *
+    * @param m
+    * @param ch
+    */
   def received(m: MicroBlock, ch: Channel): Unit = write(
     micro(m)
       .tag("parent-id", id(m.prevResBlockSig))
@@ -92,6 +143,10 @@ object BlockStats {
     Seq.empty
   )
 
+  /**
+    *
+    * @param m
+    */
   def applied(m: MicroBlock): Unit = write(
     micro(m)
       .addField("txs", m.transactionData.size),
@@ -99,12 +154,20 @@ object BlockStats {
     Seq.empty
   )
 
+  /**
+    *
+    * @param m
+    */
   def declined(m: MicroBlock): Unit = write(
     micro(m),
     Event.Declined,
     Seq.empty
   )
 
+  /**
+    *
+    * @param m
+    */
   def mined(m: MicroBlock): Unit = write(
     micro(m)
       .tag("parent-id", id(m.prevResBlockSig))

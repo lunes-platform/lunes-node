@@ -11,6 +11,9 @@ import scorex.account.Address
 
 import scala.util.Right
 
+/**
+  *
+  */
 object RegistryTransactionDiff {
   def apply(state: SnapshotStateReader, s: FunctionalitySettings, blockTime: Long, height: Int)(tx: RegistryTransaction): Either[ValidationError, Diff] = {
     val sender = Address.fromPublicKey(tx.sender.publicKey)

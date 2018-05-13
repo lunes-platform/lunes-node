@@ -1,7 +1,14 @@
 package io.lunes.features
 
+/**
+  *
+  * @param id
+  */
 case class BlockchainFeature private(id: Short)
 
+/**
+  *
+  */
 object BlockchainFeatures {
 
   val NG = BlockchainFeature(2)

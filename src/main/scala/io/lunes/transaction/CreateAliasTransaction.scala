@@ -11,7 +11,14 @@ import io.lunes.transaction.TransactionParser._
 
 import scala.util.{Failure, Success, Try}
 
-
+/**
+  *
+  * @param sender
+  * @param alias
+  * @param fee
+  * @param timestamp
+  * @param signature
+  */
 case class CreateAliasTransaction private(sender: PublicKeyAccount,
                                           alias: Alias,
                                           fee: Long,
@@ -41,8 +48,15 @@ case class CreateAliasTransaction private(sender: PublicKeyAccount,
 
 }
 
+/**
+  *
+  */
 object CreateAliasTransaction {
-
+  /**
+    *
+    * @param bytes
+    * @return
+    */
   def parseTail(bytes: Array[Byte]): Try[CreateAliasTransaction] = Try {
     val sender = PublicKeyAccount(bytes.slice(0, KeyLength))
     val (aliasBytes, aliasEnd) = Deser.parseArraySize(bytes, KeyLength)
@@ -55,6 +69,15 @@ object CreateAliasTransaction {
     } yield tx).fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
+  /**
+    *
+    * @param sender
+    * @param alias
+    * @param fee
+    * @param timestamp
+    * @param signature
+    * @return
+    */
   def create(sender: PublicKeyAccount,
              alias: Alias,
              fee: Long,
@@ -66,6 +89,14 @@ object CreateAliasTransaction {
       Right(CreateAliasTransaction(sender, alias, fee, timestamp, signature))
     }
 
+  /**
+    *
+    * @param sender
+    * @param alias
+    * @param fee
+    * @param timestamp
+    * @return
+    */
   def create(sender: PrivateKeyAccount,
              alias: Alias,
              fee: Long,

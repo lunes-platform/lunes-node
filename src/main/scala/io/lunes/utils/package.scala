@@ -12,7 +12,9 @@ import scorex.utils.ScorexLogging
 import scala.util.Try
 
 package object utils extends ScorexLogging {
-
+  /**
+    *
+    */
   type HeightInfo = (Int, Long)
 
   private val BytesMaxValue = 256
@@ -23,8 +25,19 @@ package object utils extends ScorexLogging {
 
   val UncaughtExceptionsToLogReporter = UncaughtExceptionReporter(exc => log.error(Throwables.getStackTraceAsString(exc)))
 
+  /**
+    *
+    * @param byteArrayLength
+    * @return
+    */
   def base58Length(byteArrayLength: Int): Int = math.ceil(BytesLog / BaseLog * byteArrayLength).toInt
 
+  /**
+    *
+    * @param storage
+    * @tparam A
+    * @return
+    */
   def createWithVerification[A <: Storage with VersionedStorage](storage: => A): Try[A] = Try {
     if (storage.isVersionValid) storage else {
       log.debug(s"Re-creating storage")
@@ -35,10 +48,20 @@ package object utils extends ScorexLogging {
     }
   }
 
+  /**
+    *
+    * @param reason
+    */
   def forceStopApplication(reason: ApplicationStopReason = Default): Unit = new Thread(() => {
     System.exit(reason.code)
   }, "lunes-platform-shutdown-thread").start()
 
+  /**
+    *
+    * @param bytes
+    * @param si
+    * @return
+    */
   def humanReadableSize(bytes: Long, si: Boolean = true): String = {
     val (baseValue, unitStrings) =
       if (si)
@@ -60,11 +83,19 @@ package object utils extends ScorexLogging {
     f"${bytes / divisor}%.1f $unitString"
   }
 
+  /**
+    *
+    * @param duration
+    * @return
+    */
   def humanReadableDuration(duration: Long): String = {
     val d = new Duration(duration)
     PeriodFormat.getDefault.print(d.toPeriod)
   }
 
+  /**
+    *
+    */
   //TODO: check
   def fixNTP(): Unit ={
     System.setProperty("sun.net.inetaddr.ttl", "0")
@@ -73,6 +104,11 @@ package object utils extends ScorexLogging {
     Security.setProperty("networkaddress.cache.negative.ttl", "0")
   }
 
+  /**
+    *
+    * @param a
+    * @tparam A
+    */
   implicit class Tap[A](a: A) {
     def tap(g: A => Unit): A = {
       g(a)

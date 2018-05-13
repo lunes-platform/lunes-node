@@ -7,9 +7,16 @@ import scorex.utils.ScorexLogging
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+/**
+  * Root
+  */
+
 object RootActorSystem extends ScorexLogging {
   @volatile private var failed = false
 
+  /**
+    *
+    */
   final class EscalatingStrategy extends SupervisorStrategyConfigurator {
     override def create(): SupervisorStrategy = AllForOneStrategy(loggingEnabled = false) {
       case t: Throwable =>
@@ -19,6 +26,12 @@ object RootActorSystem extends ScorexLogging {
     }
   }
 
+  /**
+    *
+    * @param id
+    * @param config
+    * @param init
+    */
   def start(id: String, config: Config)(init: ActorSystem => Unit): Unit = {
     val system = ActorSystem(id, config)
     try {

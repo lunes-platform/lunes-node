@@ -8,6 +8,18 @@ import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
 import scala.concurrent.duration.FiniteDuration
 
+/**
+  *
+  * @param maxRollback
+  * @param maxChainLength
+  * @param synchronizationTimeout
+  * @param scoreTTL
+  * @param remoteScoreDebounce
+  * @param invalidBlocksStorage
+  * @param microBlockSynchronizer
+  * @param historyReplierSettings
+  * @param utxSynchronizerSettings
+  */
 case class SynchronizationSettings(maxRollback: Int,
                                    maxChainLength: Int,
                                    synchronizationTimeout: FiniteDuration,
@@ -18,15 +30,36 @@ case class SynchronizationSettings(maxRollback: Int,
                                    historyReplierSettings: HistoryReplierSettings,
                                    utxSynchronizerSettings: UtxSynchronizerSettings)
 
+/**
+  *
+  */
 object SynchronizationSettings {
 
+  /**
+    *
+    * @param waitResponseTimeout
+    * @param processedMicroBlocksCacheTimeout
+    * @param invCacheTimeout
+    */
   case class MicroblockSynchronizerSettings(waitResponseTimeout: FiniteDuration,
                                             processedMicroBlocksCacheTimeout: FiniteDuration,
                                             invCacheTimeout: FiniteDuration)
 
+  /**
+    *
+    * @param maxMicroBlockCacheSize
+    * @param maxBlockCacheSize
+    */
   case class HistoryReplierSettings(maxMicroBlockCacheSize: Int,
                                     maxBlockCacheSize: Int)
 
+  /**
+    *
+    * @param networkTxCacheSize
+    * @param networkTxCacheTime
+    * @param maxBufferSize
+    * @param maxBufferTime
+    */
   case class UtxSynchronizerSettings(networkTxCacheSize: Int,
                                      networkTxCacheTime: FiniteDuration,
                                      maxBufferSize: Int,
@@ -34,6 +67,11 @@ object SynchronizationSettings {
 
   val configPath: String = "lunes.synchronization"
 
+  /**
+    *
+    * @param config
+    * @return
+    */
   def fromConfig(config: Config): SynchronizationSettings = {
     val maxRollback = config.as[Int](s"$configPath.max-rollback")
     val maxChainLength = config.as[Int](s"$configPath.max-chain-length")

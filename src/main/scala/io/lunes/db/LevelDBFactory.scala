@@ -3,11 +3,18 @@ package io.lunes.db
 import org.iq80.leveldb.DBFactory
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  */
 object LevelDBFactory extends ScorexLogging {
   private val factory_names = "org.fusesource.leveldbjni.JniDBFactory, org.iq80.leveldb.impl.Iq80DBFactory"
 
   lazy val factory: DBFactory = load
 
+  /**
+    *
+    * @return
+    */
   private def load: DBFactory = {
     val testing = sys.props.get("sbt-testing")
     val loaders = Seq(ClassLoader.getSystemClassLoader, this.getClass.getClassLoader)

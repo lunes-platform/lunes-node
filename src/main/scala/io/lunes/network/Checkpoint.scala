@@ -8,11 +8,25 @@ import scorex.crypto.encode.Base58
 import scala.collection.immutable.Stream
 import scala.util.{Failure, Success}
 
+/**
+  *
+  * @param height
+  * @param signature
+  */
 case class BlockCheckpoint(height: Int,
                            @ApiModelProperty(dataType = "java.lang.String") signature: Array[Byte])
 
+/**
+  *
+  * @param items
+  * @param signature
+  */
 case class Checkpoint(items: Seq[BlockCheckpoint],
                       @ApiModelProperty(dataType = "java.lang.String")signature: Array[Byte]) {
+  /**
+    *
+     * @return
+    */
   def toSign: Array[Byte] = {
     val length = items.size
     val lengthBytes = Ints.toByteArray(length)
@@ -23,6 +37,9 @@ case class Checkpoint(items: Seq[BlockCheckpoint],
   }
 }
 
+/**
+  *
+  */
 object Checkpoint {
   def historyPoints(n: Int, maxRollback: Int, resultSize: Int = MaxCheckpoints): Seq[Int] =
     mult(maxRollback, 2).map(n - _).takeWhile(_ > 0).take(resultSize)

@@ -1,5 +1,9 @@
 package io.lunes
-
+/** lunes.io main package
+  * = Overview =
+  *
+  *
+  */
 import java.io.File
 import java.util.concurrent._
 
@@ -50,6 +54,10 @@ import scala.concurrent.duration._
 import scala.reflect.runtime.universe._
 import scala.util.Try
 
+/** Lunes Node 
+ *  @param actorSystem Akka ActorSystem sign in descriptor
+ *  @param settings [[io.lunes.settings.LunesSettings]] configurations
+ */
 class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, configRoot: ConfigObject) extends ScorexLogging {
 
   import monix.execution.Scheduler.Implicits.{global => scheduler}
@@ -98,6 +106,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
   private var maybeUtx: Option[UtxPoolImpl] = None
   private var maybeNetwork: Option[NS] = None
 
+  /** API shutdown method with no returning type. */
   def apiShutdown(): Unit = {
     for {
       u <- maybeUtx
@@ -105,8 +114,9 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
     } yield shutdown(u, n)
   }
 
+  /** Run the Node. */
   def run(): Unit = {
-    checkGenesis(history, settings, blockchainUpdater)
+    checkGenesis(history, settings, blockchainUpdater)  // chamada desnecessária.
 
     if (wallet.privateKeyAccounts.isEmpty){
         wallet.generateNewAccounts(1)
@@ -235,6 +245,11 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
   @volatile var shutdownInProgress = false
   @volatile var serverBinding: ServerBinding = _
 
+
+  /** Shutdown
+    * @param utx informs the [[io.lunes.utx.UtxPoolImpl]] transaction pool object.
+    * @param network sets the network.
+ */
   def shutdown(utx: UtxPoolImpl, network: NS): Unit = {
     if (!shutdownInProgress) {
       shutdownInProgress = true
@@ -289,9 +304,12 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
   }
 
 }
-
+/** LunesNode companion object executable */
 object LunesNode extends ScorexLogging {
 
+  /** Configuration Reader
+   *  @param userConfigPath informs the filepath for the configuration file.
+   */
   private def readConfig(userConfigPath: Option[String]): Config = {
     val maybeConfigFile = for {
       maybeFilename <- userConfigPath
@@ -318,6 +336,9 @@ object LunesNode extends ScorexLogging {
     config
   }
 
+  /** Main executable method
+   * @param args - Command Line arguments
+   */
   def main(args: Array[String]): Unit = {
     fixNTP()
 

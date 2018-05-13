@@ -14,6 +14,9 @@ import scorex.utils.ScorexLogging
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
 
+/**
+  *
+  */
 object PoSCalc extends ScorexLogging {
 
   val MinimalEffectiveBalanceForGenerator: Long = 500000000000L
@@ -28,17 +31,47 @@ object PoSCalc extends ScorexLogging {
   private val MaxBlockDelaySeconds = 67
   private val BaseTargetGamma = 64
 
+  /**
+    *
+    * @param prevBlockTimestamp
+    * @param prevBlockBaseTarget
+    * @param timestamp
+    * @param balance
+    * @return
+    */
   def calcTarget(prevBlockTimestamp: Long, prevBlockBaseTarget: Long, timestamp: Long, balance: Long): BigInt = {
     val eta = (timestamp - prevBlockTimestamp) / 1000
     BigInt(prevBlockBaseTarget) * eta * balance
   }
 
+  /**
+    *
+    * @param lastBlockData
+    * @param generator
+    * @return
+    */
   def calcHit(lastBlockData: NxtLikeConsensusBlockData, generator: PublicKeyAccount): BigInt =
     BigInt(1, calcGeneratorSignature(lastBlockData, generator).take(8).reverse)
 
+  /**
+    *
+    * @param lastBlockData
+    * @param generator
+    * @return
+    */
   def calcGeneratorSignature(lastBlockData: NxtLikeConsensusBlockData, generator: PublicKeyAccount): Array[Byte] =
     crypto.fastHash(lastBlockData.generationSignature.arr ++ generator.publicKey)
 
+  /**
+    *
+    * @param avgBlockDelay
+    * @param parentHeight
+    * @param parentBaseTarget
+    * @param parentTimestamp
+    * @param maybeGreatGrandParentTimestamp
+    * @param timestamp
+    * @return
+    */
   def calcBaseTarget(avgBlockDelay: FiniteDuration, parentHeight: Int, parentBaseTarget: Long,
                      parentTimestamp: Long, maybeGreatGrandParentTimestamp: Option[Long], timestamp: Long): Long = {
     val avgDelayInSeconds = avgBlockDelay.toSeconds
@@ -63,11 +96,29 @@ object PoSCalc extends ScorexLogging {
     }
   }
 
+  /**
+    *
+    * @param state
+    * @param fs
+    * @param account
+    * @param atHeight
+    * @return
+    */
   def generatingBalance(state: SnapshotStateReader, fs: FunctionalitySettings, account: Address, atHeight: Int): Try[Long] = {
     val generatingBalanceDepth = if (atHeight >= fs.generationBalanceDepthFrom50To1000AfterHeight) 1000 else 50
     state.effectiveBalanceAtHeightWithConfirmations(account, atHeight, generatingBalanceDepth)
   }
 
+  /**
+    *
+    * @param height
+    * @param state
+    * @param fs
+    * @param block
+    * @param account
+    * @param featureProvider
+    * @return
+    */
   def nextBlockGenerationTime(height: Int, state: StateReader, fs: FunctionalitySettings, block: Block,
                               account: PublicKeyAccount, featureProvider: FeatureProvider): Either[String, (Long, Long)] = {
     generatingBalance(state(), fs, account, height) match {

@@ -14,6 +14,18 @@ import io.lunes.transaction.{ValidationError, _}
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  *
+  * @param assetId
+  * @param sender
+  * @param recipient
+  * @param amount
+  * @param timestamp
+  * @param feeAssetId
+  * @param fee
+  * @param attachment
+  * @param signature
+  */
 case class TransferTransaction private(assetId: Option[AssetId],
                                        sender: PublicKeyAccount,
                                        recipient: AddressOrAlias,
@@ -58,12 +70,19 @@ case class TransferTransaction private(assetId: Option[AssetId],
 
 }
 
+/**
+  *
+  */
 object TransferTransaction {
 
   val MaxAttachmentSize = 140
   val MaxAttachmentStringSize = base58Length(MaxAttachmentSize)
 
-
+  /**
+    *
+    * @param bytes
+    * @return
+    */
   def parseTail(bytes: Array[Byte]): Try[TransferTransaction] = Try {
 
     val signature = ByteStr(bytes.slice(0, SignatureLength))
@@ -84,6 +103,19 @@ object TransferTransaction {
     } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
+  /**
+    *
+    * @param assetId
+    * @param sender
+    * @param recipient
+    * @param amount
+    * @param timestamp
+    * @param feeAssetId
+    * @param feeAmount
+    * @param attachment
+    * @param signature
+    * @return
+    */
   def create(assetId: Option[AssetId],
              sender: PublicKeyAccount,
              recipient: AddressOrAlias,
@@ -106,6 +138,18 @@ object TransferTransaction {
     }
   }
 
+  /**
+    *
+    * @param assetId
+    * @param sender
+    * @param recipient
+    * @param amount
+    * @param timestamp
+    * @param feeAssetId
+    * @param feeAmount
+    * @param attachment
+    * @return
+    */
   def create(assetId: Option[AssetId],
              sender: PrivateKeyAccount,
              recipient: AddressOrAlias,

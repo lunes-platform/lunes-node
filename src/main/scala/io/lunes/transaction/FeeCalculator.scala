@@ -10,6 +10,7 @@ import io.lunes.transaction.assets.MassTransferTransaction
 
 /**
   * Class to check, that transaction contains enough fee to put it to UTX pool
+  * @param settings
   */
 class FeeCalculator(settings: FeesSettings) {
 
@@ -25,6 +26,12 @@ class FeeCalculator(settings: FeesSettings) {
     }
   }
 
+  /**
+    *
+    * @param tx
+    * @tparam T
+    * @return
+    */
   def enoughFee[T <: Transaction](tx: T): Either[ValidationError, T] = {
     val feeSpec = map.get(TransactionAssetFee(tx.transactionType.id, tx.assetFee._1).key)
     val feeValue = tx match {
@@ -47,6 +54,11 @@ class FeeCalculator(settings: FeesSettings) {
   }
 }
 
+/**
+  *
+  * @param txType
+  * @param assetId
+  */
 case class TransactionAssetFee(txType: Int, assetId: Option[AssetId]) {
 
   val key = s"TransactionAssetFee($txType, ${assetId.map(_.base58)})"

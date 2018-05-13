@@ -1,5 +1,8 @@
 package io.lunes.db
 
+/**
+  *
+  */
 trait VersionedStorage {
   this: PropertiesStorage =>
 
@@ -7,6 +10,10 @@ trait VersionedStorage {
 
   protected val Version: Int
 
+  /**
+    *
+    * @return
+    */
   def isVersionValid: Boolean = getIntProperty(VersionProperty) match {
     case None =>
       putIntProperty(VersionProperty, Version, None)

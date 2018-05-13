@@ -19,6 +19,9 @@ import scorex.utils.{ScorexLogging, Time}
 
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 object ExtensionAppender extends ScorexLogging with Instrumented {
 
   def apply(checkpoint: CheckpointService, history: History, blockchainUpdater: BlockchainUpdater,

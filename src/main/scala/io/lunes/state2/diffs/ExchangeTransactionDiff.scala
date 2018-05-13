@@ -10,6 +10,9 @@ import io.lunes.transaction.assets.exchange.ExchangeTransaction
 
 import scala.util.Right
 
+/**
+  *
+  */
 object ExchangeTransactionDiff {
 
   def apply(s: SnapshotStateReader, height: Int)(tx: ExchangeTransaction): Either[ValidationError, Diff] = {

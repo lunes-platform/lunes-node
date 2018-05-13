@@ -11,6 +11,9 @@ import io.lunes.transaction.assets._
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 
+/**
+  *
+  */
 object TransactionDiffer {
 
   case class TransactionValidationError(cause: ValidationError, tx: Transaction) extends ValidationError

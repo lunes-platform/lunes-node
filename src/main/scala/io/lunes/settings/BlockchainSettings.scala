@@ -10,6 +10,23 @@ import scala.concurrent.duration._
 
 import io.lunes.features.BlockchainFeatures
 
+/**
+  *
+  * @param featureCheckBlocksPeriod
+  * @param blocksForFeatureActivation
+  * @param allowTemporaryNegativeUntil
+  * @param requireSortedTransactionsAfter
+  * @param generationBalanceDepthFrom50To1000AfterHeight
+  * @param minimalGeneratingBalanceAfter
+  * @param allowTransactionsFromFutureUntil
+  * @param allowUnissuedAssetsUntil
+  * @param allowInvalidReissueInSameBlockUntilTimestamp
+  * @param allowMultipleLeaseCancelTransactionUntilTimestamp
+  * @param resetEffectiveBalancesAtHeight
+  * @param blockVersion3AfterHeight
+  * @param preActivatedFeatures
+  * @param doubleFeaturesPeriodsAfterHeight
+  */
 case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
                                  blocksForFeatureActivation: Int,
                                  allowTemporaryNegativeUntil: Long,
@@ -31,6 +48,9 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
   require((blocksForFeatureActivation > 0) && (blocksForFeatureActivation <= featureCheckBlocksPeriod), s"blocksForFeatureActivation must be in range 1 to $featureCheckBlocksPeriod")
 }
 
+/**
+  *
+  */
 object FunctionalitySettings {
   val MAINNET = apply(
     featureCheckBlocksPeriod = 5000,
@@ -67,8 +87,23 @@ object FunctionalitySettings {
   val configPath = "lunes.blockchain.custom.functionality"
 }
 
+/**
+  *
+  * @param recipient
+  * @param amount
+  */
 case class GenesisTransactionSettings(recipient: String, amount: Long)
 
+/**
+  *
+  * @param blockTimestamp
+  * @param timestamp
+  * @param initialBalance
+  * @param signature
+  * @param transactions
+  * @param initialBaseTarget
+  * @param averageBlockDelay
+  */
 case class GenesisSettings(
                             blockTimestamp: Long,
                             timestamp: Long,
@@ -78,6 +113,9 @@ case class GenesisSettings(
                             initialBaseTarget: Long,
                             averageBlockDelay: FiniteDuration)
 
+/**
+  *
+  */
 object GenesisSettings {
   val MAINNET = GenesisSettings(Constants.MainTimestamp, Constants.MainTimestamp,
     Constants.InitialBalance,
@@ -89,20 +127,39 @@ object GenesisSettings {
     Constants.TestTransactions, 153722867L, Constants.TestDelay.seconds)
 }
 
+/**
+  *
+  * @param addressSchemeCharacter
+  * @param maxTransactionsPerBlockDiff
+  * @param minBlocksInMemory
+  * @param functionalitySettings
+  * @param genesisSettings
+  */
 case class BlockchainSettings(addressSchemeCharacter: Char,
                               maxTransactionsPerBlockDiff: Int,
                               minBlocksInMemory: Int,
                               functionalitySettings: FunctionalitySettings,
                               genesisSettings: GenesisSettings)
 
+/**
+  *
+  */
 object BlockchainType extends Enumeration {
   val TESTNET = Value("TESTNET")
   val MAINNET = Value("MAINNET")
 }
 
+/**
+  *
+  */
 object BlockchainSettings {
   val configPath: String = "lunes.blockchain"
 
+  /**
+    *
+    * @param config
+    * @return
+    */
   def fromConfig(config: Config): BlockchainSettings = {
     val blockchainType = config.as[BlockchainType.Value](s"$configPath.type")
     val (addressSchemeCharacter, functionalitySettings, genesisSettings) = blockchainType match {

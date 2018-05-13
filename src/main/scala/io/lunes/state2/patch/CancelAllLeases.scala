@@ -3,6 +3,9 @@ package io.lunes.state2.patch
 import io.lunes.state2.reader.SnapshotStateReader
 import io.lunes.state2.{Diff, LeaseInfo, Portfolio}
 
+/**
+  *
+  */
 object CancelAllLeases {
   def apply(s: SnapshotStateReader): Diff = {
 

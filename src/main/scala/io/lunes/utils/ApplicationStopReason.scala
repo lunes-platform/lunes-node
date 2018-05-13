@@ -1,5 +1,17 @@
 package io.lunes.utils
 
-sealed abstract class ApplicationStopReason(val code: Int)
+/**
+	*
+	* @param code
+	*/
+sealed abstract class ApplicationStopReason(val code: Int)//poderia ser sealed trait
+
+/**
+	*
+	*/
 case object Default extends ApplicationStopReason(1)
+
+/**
+	*
+	*/
 case object UnsupportedFeature extends ApplicationStopReason(38)
