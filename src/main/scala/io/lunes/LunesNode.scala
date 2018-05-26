@@ -116,7 +116,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
 
   /** Run the Node. */
   def run(): Unit = {
-    checkGenesis(history, settings, blockchainUpdater)  // chamada desnecessária.
+    checkGenesis(history, settings, blockchainUpdater)  // chamada 
 
     if (wallet.privateKeyAccounts.isEmpty){
         wallet.generateNewAccounts(1)

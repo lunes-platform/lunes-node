@@ -39,7 +39,7 @@ class ClientHandshakeHandler(handshake: Handshake, promise: Promise[Channel]) ex
         ctx.close()
       } else {
         promise.success(ctx.channel())
-        log.debug(s"Accepted handshake $remoteHandshake")
+        log.info(s"Accepted handshake $remoteHandshake")
         removeHandlers(ctx)
       }
     case _ => super.channelRead(ctx, msg)

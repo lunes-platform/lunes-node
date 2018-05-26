@@ -169,7 +169,7 @@ object HandshakeHandler extends ScorexLogging {
     * @return
     */
   def versionIsSupported(remoteVersion: (Int, Int, Int)): Boolean =
-    remoteVersion._1 == Constants.MinimalVersion._1 && remoteVersion._2 >= Constants.MinimalVersion._2 && remoteVersion._3 >= Constants.MinimalVersion._3
+    remoteVersion._1 == Constants.MinimalVersion._1 && remoteVersion._2 >= Constants.MinimalVersion._2 // && remoteVersion._3 >= Constants.MinimalVersion._3
 
   /**
     *

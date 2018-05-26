@@ -65,7 +65,7 @@ object FunctionalitySettings {
     allowMultipleLeaseCancelTransactionUntilTimestamp = 0,
     resetEffectiveBalancesAtHeight = 1,
     blockVersion3AfterHeight = 0,
-    preActivatedFeatures = BlockchainFeatures.preActivated,
+    preActivatedFeatures = Map.empty,
     doubleFeaturesPeriodsAfterHeight = 810000)
 
   val TESTNET = apply(

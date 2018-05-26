@@ -40,7 +40,7 @@ package object utils extends ScorexLogging {
     */
   def createWithVerification[A <: Storage with VersionedStorage](storage: => A): Try[A] = Try {
     if (storage.isVersionValid) storage else {
-      log.debug(s"Re-creating storage")
+      log.info(s"Re-creating storage")
       val b = storage.createBatch()
       storage.removeEverything(b)
       storage.commit(b)

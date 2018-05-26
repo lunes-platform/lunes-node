@@ -92,7 +92,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
   }
 
   private[lunes] def syncPersistedAndInMemory(): Unit = write("syncPersistedAndInMemory") { implicit l =>
-    log.debug(heights("State rebuild started"))
+    log.info(heights("State rebuild started"))
 
     val notPersisted = historyWriter.height() - persisted.height
     val inMemSize = Math.min(notPersisted, minBlocksInMemory)
@@ -108,7 +108,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
 
     inMemDiffs.set(unsafeDiffByRange(persisted, historyWriter.height() + 1))
     updateHeightInfo()
-    log.debug(heights("State rebuild finished"))
+    log.info(heights("State rebuild finished"))
   }
 
   private def displayFeatures(s: Set[Short]): String = s"FEATURE${if (s.size > 1) "S"} ${s.mkString(", ")}${if (s.size > 1) "HAVE BEEN" else "HAS BEEN"}"
@@ -220,7 +220,7 @@ class BlockchainUpdaterImpl private(persisted: StateWriter with SnapshotStateRea
           historyReader.lastBlockId().foreach(id =>
             internalLastBlockInfo.onNext(LastBlockInfo(id, historyReader.height(), historyReader.score(), blockchainReady)))
           updateHeightInfo()
-          log.debug(s"$block appended. New height: $height)")
+          log.info(s"$block appended. New height: $height)")
           discarded
         }
       })

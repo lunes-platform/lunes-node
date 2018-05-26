@@ -41,9 +41,9 @@ class PeerDatabaseImpl(settings: NetworkSettings) extends PeerDatabase with Scor
 
   for (f <- settings.file if f.exists()) try {
     JsonFileStorage.load[PeersPersistenceType](f.getCanonicalPath).foreach(a => touch(inetSocketAddress(a, 6863)))
-    log.debug(s"Loaded ${peersPersistence.size} known peer(s) from ${f.getName}")
+    log.info(s"Loaded ${peersPersistence.size} known peer(s) from ${f.getName}")
   } catch {
-    case NonFatal(_) => log.debug("Legacy or corrupted peers.dat, ignoring, starting all over from known-peers...")
+    case NonFatal(_) => log.info("Legacy or corrupted peers.dat, ignoring, starting all over from known-peers...")
   }
 
   /**

@@ -55,7 +55,7 @@ class StateWriterImpl(p: StateStorage, synchronizationToken: ReentrantReadWriteL
 
     sp().commit(b)
 
-    log.debug(s"BlockDiff commit complete. Persisted height = $newHeight")
+    log.info(s"BlockDiff commit complete. Persisted height = $newHeight")
   }
 
   /**
