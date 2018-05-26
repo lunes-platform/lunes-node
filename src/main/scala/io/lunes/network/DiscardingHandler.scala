@@ -6,12 +6,21 @@ import monix.execution.schedulers.SchedulerService
 import monix.reactive.Observable
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  * @param blockchainReadiness
+  */
 @Sharable
 class DiscardingHandler(blockchainReadiness: Observable[Boolean]) extends ChannelDuplexHandler with ScorexLogging {
 
   private implicit val scheduler: SchedulerService = monix.execution.Scheduler.fixedPool("discarding-handler", 2)
   private val lastReadiness = lastObserved(blockchainReadiness)
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match {
     case RawBytes(code, _) if code == TransactionSpec.messageCode && !lastReadiness().contains(true) =>
       log.trace(s"${id(ctx)} Discarding incoming message $code")

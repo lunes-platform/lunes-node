@@ -15,22 +15,37 @@ import scorex.utils.ScorexLogging
 import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 
+/** Rx Score Observer Object. */
 object RxScoreObserver extends ScorexLogging {
 
+  /** Holds data for the Best Channel
+    * @param channel Netty Channel
+    * @param score Inputs [[io.lunes.transaction.History.BlockchainScore]].
+    */
   case class BestChannel(channel: Channel, score: BlockchainScore) {
     override def toString: String = s"BestChannel(${id(channel)},score: $score)"
   }
 
   implicit val bestChannelEq: Eq[BestChannel] = { (x, y) => x.channel == y.channel && x.score == y.score }
-
+  /** Type for a Option for BestChannel */
   type SyncWith = Option[BestChannel]
 
+  /** Holds data for Channel Close and Sync With
+    * @param closed Inputs a Option for Netty Channel.
+    * @param syncWith Inputs the SyncWith object.
+    */
   case class ChannelClosedAndSyncWith(closed: Option[Channel], syncWith: SyncWith)
 
   implicit val channelClosedAndSyncWith: Eq[ChannelClosedAndSyncWith] = { (x, y) =>
     x.closed == y.closed && x.syncWith == y.syncWith
   }
 
+  /** Calculate Sync
+    * @param bestChannel Inputs a Option Channel.
+    * @param localScore Local Blockchain Score.
+    * @param scoreMap Maps a Channel to a BlockchainScore.
+    * @return
+    */
   private def calcSyncWith(bestChannel: Option[Channel], localScore: BlockchainScore, scoreMap: scala.collection.Map[Channel, BlockchainScore]): SyncWith = {
     val (bestScore, bestScoreChannels) = scoreMap.foldLeft(BigInt(0) -> List.empty[Channel]) {
       case (r@(maxScore, maxScoreChannels), (currScoreChannel, currScore)) =>
@@ -48,6 +63,17 @@ object RxScoreObserver extends ScorexLogging {
     } else None
   }
 
+  /** Application function of the RxScoreOberver.
+    * @param scoreTtl Input Score.
+    * @param remoteScoreDebounce Input Remote Score.
+    * @param initalLocalScore Initial Local Score.
+    * @param localScores Observes local Blockchain Scores.
+    * @param remoteScores Channel Observer Blockchain Scores.
+    * @param channelClosed Channel Closed Observable.
+    * @param channelTimeout Channel Timeout Observable.
+    * @param scheduler Object Scheduler.
+    * @return
+    */
   def apply(scoreTtl: FiniteDuration,
             remoteScoreDebounce: FiniteDuration,
             initalLocalScore: BigInt,
@@ -66,6 +92,10 @@ object RxScoreObserver extends ScorexLogging {
       Stats(localScore, currentBestChannel.toString, scores.size())
     }
 
+    /**
+      *
+      * @return
+      */
     def ls: Observable[Option[Channel]] = localScores
       .observeOn(scheduler)
       .distinctUntilChanged
@@ -76,6 +106,10 @@ object RxScoreObserver extends ScorexLogging {
       }
 
     // Make a stream of unique scores in each channel
+    /**
+      *
+      * @return
+      */
     def rs: Observable[Option[Channel]] = remoteScores
       .observeOn(scheduler)
       .groupBy(_._1)
@@ -90,6 +124,10 @@ object RxScoreObserver extends ScorexLogging {
         None
       }
 
+    /**
+      *
+      * @return
+      */
     def cc: Observable[Option[Channel]] = Observable.merge(channelClosed, channelTimeout)
       .observeOn(scheduler)
       .map { ch =>
@@ -115,6 +153,11 @@ object RxScoreObserver extends ScorexLogging {
     (observable, statsReporter)
   }
 
+  /** Holds data for Statistics
+    * @param localScore Local Blockchain Score.
+    * @param currentBestChannel String for current Best Channel.
+    * @param scoresCacheSize Score Cache Size.
+    */
   case class Stats(localScore: BlockchainScore, currentBestChannel: String, scoresCacheSize: Long)
 
 }

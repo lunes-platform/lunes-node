@@ -15,6 +15,9 @@ import scorex.account.Address
 import scala.concurrent.duration._
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 object CommonValidation {
 
   val MaxTimeTransactionOverBlockDiff: FiniteDuration = 90.minutes

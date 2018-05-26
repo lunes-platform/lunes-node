@@ -6,6 +6,12 @@ import scorex.account.Address
 
 import scala.collection.SortedMap
 
+/** Class for holding Blocks Differences data.
+  * @constructor Creates a Block Difference Object.
+  * @param txsDiff Transaction Differences.
+  * @param heightDiff Height Difference.
+  * @param snapshots Snapshot Mapping [[scorex.account.Address]] into a Sorted Map of Int into [[io.lunes.state2.Snapshot]].
+  */
 case class BlockDiff(txsDiff: Diff,
                      heightDiff: Int,
                      snapshots: Map[Address, SortedMap[Int, Snapshot]]){
@@ -13,10 +19,16 @@ case class BlockDiff(txsDiff: Diff,
 
 }
 
+/** BlockDiff Companion Object. */
 object BlockDiff {
 
   val empty: BlockDiff = BlockDiff(Monoid[Diff].empty, 0, Map.empty)
 
+  /** Generates a Monoid of Sorted Map of A into S
+    * @tparam A Parametrized Type inherited from Ordering.
+    * @tparam S Second Parametrized Type.
+    * @return Returns the SortedMap.
+    */
   implicit def sortedMapForSnapshotsMonoid[A: Ordering, S]: Monoid[SortedMap[A, S]] = new Monoid[SortedMap[A, S]] {
     def empty: SortedMap[A, S] = SortedMap.empty[A, S]
 

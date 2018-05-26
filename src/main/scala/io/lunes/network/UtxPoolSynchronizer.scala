@@ -11,7 +11,18 @@ import io.netty.channel.group.{ChannelGroup, ChannelMatcher}
 import monix.execution.{CancelableFuture, Scheduler}
 import io.lunes.transaction.Transaction
 
+/**
+  *
+  */
 object UtxPoolSynchronizer {
+  /**
+    *
+    * @param utx
+    * @param settings
+    * @param allChannels
+    * @param txSource
+    * @return
+    */
   def start(utx: UtxPool, settings: UtxSynchronizerSettings, allChannels: ChannelGroup, txSource: ChannelObservable[Transaction]): CancelableFuture[Unit] = {
     implicit val scheduler: Scheduler = Scheduler.singleThread("utx-pool-sync")
 

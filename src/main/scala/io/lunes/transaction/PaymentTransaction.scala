@@ -12,6 +12,15 @@ import io.lunes.transaction.TransactionParser._
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  *
+  * @param sender
+  * @param recipient
+  * @param amount
+  * @param fee
+  * @param timestamp
+  * @param signature
+  */
 case class PaymentTransaction private(sender: PublicKeyAccount,
                                       recipient: Address,
                                       amount: Long,
@@ -38,6 +47,9 @@ case class PaymentTransaction private(sender: PublicKeyAccount,
 
 }
 
+/**
+  *
+  */
 object PaymentTransaction {
 
   val RecipientLength: Int = Address.AddressLength
@@ -46,12 +58,31 @@ object PaymentTransaction {
   private val FeeLength = 8
   private val BaseLength = TimestampLength + SenderLength + RecipientLength + AmountLength + FeeLength + SignatureLength
 
+  /**
+    *
+    * @param sender
+    * @param recipient
+    * @param amount
+    * @param fee
+    * @param timestamp
+    * @return
+    */
   def create(sender: PrivateKeyAccount, recipient: Address, amount: Long, fee: Long, timestamp: Long): Either[ValidationError, PaymentTransaction] = {
     create(sender, recipient, amount, fee, timestamp, ByteStr.empty).right.map(unsigned => {
       unsigned.copy(signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
     })
   }
 
+  /**
+    *
+    * @param sender
+    * @param recipient
+    * @param amount
+    * @param fee
+    * @param timestamp
+    * @param signature
+    * @return
+    */
   def create(sender: PublicKeyAccount,
              recipient: Address,
              amount: Long,
@@ -69,6 +100,11 @@ object PaymentTransaction {
     }
   }
 
+  /**
+    *
+    * @param data
+    * @return
+    */
   def parseTail(data: Array[Byte]): Try[PaymentTransaction] = Try {
     require(data.length >= BaseLength, "Data does not match base length")
 

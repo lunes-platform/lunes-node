@@ -18,10 +18,29 @@ import scorex.utils.ScorexLogging
 
 import scala.concurrent.duration._
 
+/**
+  *
+  */
 object RxExtensionLoader extends ScorexLogging {
 
+  /** 
+    */
   type ApplyExtensionResult = Either[ValidationError, Option[BlockchainScore]]
 
+  /** 
+    * @param maxRollback
+    * @param syncTimeOut
+    * @param history
+    * @param peerDatabase
+    * @param invalidBlocks
+    * @param blocks
+    * @param signatures
+    * @param syncWithChannelClosed
+    * @param scheduler
+    * @param timeoutSubject
+    * @param extensionApplier
+    * @return
+    */
   def apply(maxRollback: Int, syncTimeOut: FiniteDuration,
             history: NgHistory,
             peerDatabase: PeerDatabase,
@@ -40,11 +59,22 @@ object RxExtensionLoader extends ScorexLogging {
     @volatile var s: State = State(LoaderState.Idle, ApplierState.Idle)
     val lastSyncWith: Coeval[Option[SyncWith]] = lastObserved(syncWithChannelClosed.map(_.syncWith))
 
+    /**
+      *
+      * @param ch
+      * @param reason
+      * @return
+      */
     def scheduleBlacklist(ch: Channel, reason: String): Task[Unit] = Task {
       timeoutSubject.onNext(ch)
       peerDatabase.blacklistAndClose(ch, reason)
     }.delayExecution(syncTimeOut)
 
+    /**
+      * @param state
+      * @param syncWith
+      * @return
+      */
     def syncNext(state: State, syncWith: SyncWith = lastSyncWith().flatten): State =
       syncWith match {
         case None =>
@@ -75,6 +105,12 @@ object RxExtensionLoader extends ScorexLogging {
           }
       }
 
+    /**
+      *
+      * @param state
+      * @param cc
+      * @return
+      */
     def onNewSyncWithChannelClosed(state: State, cc: ChannelClosedAndSyncWith): State = {
       cc match {
         case ChannelClosedAndSyncWith(_, None) =>
@@ -93,6 +129,13 @@ object RxExtensionLoader extends ScorexLogging {
       }
     }
 
+    /**
+      *
+      * @param state
+      * @param ch
+      * @param sigs
+      * @return
+      */
     def onNewSignatures(state: State, ch: Channel, sigs: Signatures): State = {
       state.loaderState match {
         case LoaderState.ExpectingSignatures(c, known, _) if c == ch =>
@@ -125,6 +168,13 @@ object RxExtensionLoader extends ScorexLogging {
       }
     }
 
+    /**
+      *
+      * @param state
+      * @param ch
+      * @param block
+      * @return
+      */
     def onBlock(state: State, ch: Channel, block: Block): State = {
       state.loaderState match {
         case LoaderState.ExpectingBlocks(c, requested, expected, recieved, _) if c == ch && expected.contains(block.uniqueId) =>
@@ -148,6 +198,13 @@ object RxExtensionLoader extends ScorexLogging {
       }
     }
 
+    /**
+      *
+      * @param state
+      * @param extension
+      * @param ch
+      * @return
+      */
     def extensionLoadingFinished(state: State, extension: ExtensionBlocks, ch: Channel): State = {
       state.applierState match {
         case ApplierState.Idle =>
@@ -162,6 +219,14 @@ object RxExtensionLoader extends ScorexLogging {
       }
     }
 
+    /**
+      *
+      * @param state
+      * @param extension
+      * @param ch
+      * @param applicationResult
+      * @return
+      */
     def onExtensionApplied(state: State, extension: ExtensionBlocks, ch: Channel, applicationResult: ApplyExtensionResult): State = {
       log.trace(s"Applying $extension finished with $applicationResult")
       state.applierState match {
@@ -185,9 +250,16 @@ object RxExtensionLoader extends ScorexLogging {
       }
     }
 
+    /**
+      *
+      * @return
+      */
     def appliedExtensions: Observable[(Channel, ExtensionBlocks, ApplyExtensionResult)] = {
       def apply(x: (Channel, ExtensionBlocks)): Task[ApplyExtensionResult] = Function.tupled(extensionApplier)(x)
 
+      /**
+        *
+        */
       extensions.mapTask { x =>
         apply(x)
           .asyncBoundary(scheduler)
@@ -213,44 +285,94 @@ object RxExtensionLoader extends ScorexLogging {
     (simpleBlocks, Coeval.eval(s), RxExtensionLoaderShutdownHook(extensions, simpleBlocks))
   }
 
+  /** 
+    */
   sealed trait LoaderState
 
+  /** 
+    */
   object LoaderState {
 
+    /**
+      *
+      */
     sealed trait WithPeer extends LoaderState {
+      /**
+        *
+        * @return
+        */
       def channel: Channel
 
+      /**
+        *
+        * @return
+        */
       def timeout: CancelableFuture[Unit]
     }
 
+    /**
+      *
+      */
     case object Idle extends LoaderState
 
+    /**
+      *
+      * @param channel
+      * @param known
+      * @param timeout
+      */
     case class ExpectingSignatures(channel: Channel, known: Seq[BlockId], timeout: CancelableFuture[Unit]) extends WithPeer {
       override def toString: String = s"ExpectingSignatures(channel=${id(channel)})"
     }
 
+    /**
+      *
+      * @param channel
+      * @param allBlocks
+      * @param expected
+      * @param received
+      * @param timeout
+      */
     case class ExpectingBlocks(channel: Channel, allBlocks: Seq[BlockId],
                                expected: Set[BlockId],
                                received: Set[Block],
                                timeout: CancelableFuture[Unit]) extends WithPeer {
+      /**
+        *
+        * @return
+        */
       override def toString: String = s"ExpectingBlocks(channel=${id(channel)}, totalBlocks=${allBlocks.size}, " +
         s"received=${received.size}, expected=${if (expected.size == 1) expected.head.trim else expected.size})"
     }
 
   }
 
+  /** 
+    * @param extensionChannel
+    * @param simpleBlocksChannel
+    */
   case class RxExtensionLoaderShutdownHook(extensionChannel: Observer[(Channel, ExtensionBlocks)],
                                            simpleBlocksChannel: Observer[(Channel, Block)]) {
+    /**
+      *
+      */
     def shutdown(): Unit = {
       extensionChannel.onComplete()
       simpleBlocksChannel.onComplete()
     }
   }
 
+  /** 
+    * @param blocks
+    */
   case class ExtensionBlocks(blocks: Seq[Block]) {
     override def toString: String = s"ExtensionBlocks(${formatSignatures(blocks.map(_.uniqueId))}"
   }
 
+  /** 
+    * @param loaderState
+    * @param applierState
+    */
   case class State(loaderState: LoaderState, applierState: ApplierState) {
     def withLoaderState(newLoaderState: LoaderState): State = {
       loaderState match {
@@ -263,16 +385,37 @@ object RxExtensionLoader extends ScorexLogging {
     def withIdleLoader: State = withLoaderState(LoaderState.Idle)
   }
 
+  /** 
+    */
   sealed trait ApplierState
 
+  /** 
+    */
   object ApplierState {
 
+    /**
+      *
+      */
     case object Idle extends ApplierState
 
+    /**
+      *
+      * @param ch
+      * @param ext
+      */
     case class Buffer(ch: Channel, ext: ExtensionBlocks) {
+      /**
+        *
+        * @return
+        */
       override def toString: String = s"Buffer($ext from ${id(ch)})"
     }
 
+    /**
+      *
+      * @param buf
+      * @param applying
+      */
     case class Applying(buf: Option[Buffer], applying: ExtensionBlocks) extends ApplierState
 
   }

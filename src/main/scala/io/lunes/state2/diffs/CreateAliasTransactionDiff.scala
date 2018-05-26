@@ -5,6 +5,9 @@ import io.lunes.transaction.{CreateAliasTransaction, ValidationError}
 
 import scala.util.Right
 
+/**
+  *
+  */
 object CreateAliasTransactionDiff {
   def apply(height: Int)(tx: CreateAliasTransaction): Either[ValidationError, Diff] = {
     Right(Diff(height = height, tx = tx,

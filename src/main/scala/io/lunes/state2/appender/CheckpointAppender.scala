@@ -11,6 +11,9 @@ import monix.execution.Scheduler
 import io.lunes.transaction.{BlockchainUpdater, CheckpointService, History, ValidationError}
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  */
 object CheckpointAppender extends ScorexLogging {
   def apply(checkpointService: CheckpointService, history: History, blockchainUpdater: BlockchainUpdater,
             peerDatabase: PeerDatabase, miner: Miner, allChannels: ChannelGroup, scheduler: Scheduler

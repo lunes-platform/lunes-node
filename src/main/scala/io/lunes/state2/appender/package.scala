@@ -18,6 +18,9 @@ import scorex.utils.{ScorexLogging, Time}
 
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 package object appender extends ScorexLogging {
 
   private val MaxTimeDrift: Long = 100 // millis

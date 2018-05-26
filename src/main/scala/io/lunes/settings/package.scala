@@ -9,6 +9,9 @@ import collection.JavaConverters._
 import net.ceedubs.ficus.readers.namemappers.HyphenNameMapper
 import net.ceedubs.ficus.readers.{NameMapper, ValueReader}
 
+/**
+  *
+  */
 package object settings {
   implicit val hyphenCase: NameMapper = HyphenNameMapper
 
@@ -23,6 +26,11 @@ package object settings {
     }.toMap
   }
 
+  /**
+    *
+    * @param userConfig
+    * @return
+    */
   def loadConfig(userConfig: Config): Config = {
     ConfigFactory
       .defaultOverrides()

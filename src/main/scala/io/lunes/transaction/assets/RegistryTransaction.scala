@@ -14,6 +14,18 @@ import scorex.serialization.Deser
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  *
+  * @param assetId
+  * @param sender
+  * @param recipient
+  * @param amount
+  * @param timestamp
+  * @param feeAssetId
+  * @param fee
+  * @param userdata
+  * @param signature
+  */
 case class RegistryTransaction private(assetId: Option[AssetId],
                                        sender: PublicKeyAccount,
                                        recipient: AddressOrAlias,
@@ -58,11 +70,19 @@ case class RegistryTransaction private(assetId: Option[AssetId],
 
 }
 
+/**
+  *
+  */
 object RegistryTransaction {
 
   val MaxUserdata = 140
   val MaxUserdataLength = base58Length(MaxUserdata)
 
+  /**
+    *
+    * @param bytes
+    * @return
+    */
   def parseTail(bytes: Array[Byte]): Try[RegistryTransaction] = Try {
 
     val signature = ByteStr(bytes.slice(0, SignatureLength))
@@ -83,6 +103,19 @@ object RegistryTransaction {
     } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
+  /**
+    *
+    * @param assetId
+    * @param sender
+    * @param recipient
+    * @param amount
+    * @param timestamp
+    * @param feeAssetId
+    * @param feeAmount
+    * @param userdata
+    * @param signature
+    * @return
+    */
   def create(assetId: Option[AssetId],
              sender: PublicKeyAccount,
              recipient: AddressOrAlias,
@@ -105,6 +138,18 @@ object RegistryTransaction {
     }
   }
 
+  /**
+    *
+    * @param assetId
+    * @param sender
+    * @param recipient
+    * @param amount
+    * @param timestamp
+    * @param feeAssetId
+    * @param feeAmount
+    * @param userdata
+    * @return
+    */
   def create(assetId: Option[AssetId],
              sender: PrivateKeyAccount,
              recipient: AddressOrAlias,

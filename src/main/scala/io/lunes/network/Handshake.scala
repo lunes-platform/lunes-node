@@ -5,12 +5,25 @@ import java.net.{InetAddress, InetSocketAddress}
 import com.google.common.base.Charsets
 import io.netty.buffer.ByteBuf
 
+/**
+  *
+  * @param applicationName
+  * @param applicationVersion
+  * @param nodeName
+  * @param nodeNonce
+  * @param declaredAddress
+  */
 case class Handshake(
     applicationName: String,
     applicationVersion: (Int, Int, Int),
     nodeName: String,
     nodeNonce: Long,
     declaredAddress: Option[InetSocketAddress]) {
+  /**
+    *
+    * @param out
+    * @return
+    */
   def encode(out: ByteBuf): out.type = {
     val applicationNameBytes = applicationName.getBytes(Charsets.UTF_8)
     require(applicationNameBytes.length <= Byte.MaxValue, "The application name is too long!")
@@ -46,9 +59,17 @@ case class Handshake(
   }
 }
 
+/**
+  *
+  */
 object Handshake {
   class InvalidHandshakeException(msg: String) extends IllegalArgumentException(msg)
 
+  /**
+    *
+    * @param in
+    * @return
+    */
   def decode(in: ByteBuf): Handshake = {
     val appNameSize = in.readByte()
 

@@ -1,5 +1,12 @@
 package io.lunes.utx
 
+/**
+  * Transactions Pool Package
+  * = Overview =
+  *
+  * This package provides Transactions interfaces for the Lunes.io platform.
+  */
+
 import java.util.concurrent.ConcurrentHashMap
 
 import cats._
@@ -27,31 +34,88 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.{Left, Right}
 
-
+/**
+  * Transactions Pool.
+  */
 trait UtxPool {
 
+  /**
+    * Put New Transaction in a Pool.
+    *
+    * @param tx provides a [[io.lunes.transaction.Transaction]] input interface.
+    * @return Returns Either a true or false value case the transaction is valid or a validation Error otherwise.
+    */
   def putIfNew(tx: Transaction): Either[ValidationError, Boolean]
 
+  /**
+    * Remove all transactions in the Pool.
+    *
+    * @param txs provide a interface for [[scala.collection.mutable.Traversable]] of [[io.lunes.transaction.Transaction]].
+    */
   def removeAll(txs: Traversable[Transaction]): Unit
 
+  /**
+    * Returns a [[io.lunes.state2.Portfolio]] given a Scorex [[scorex.account.Address]].
+    * @param addr Scorex [[scorex.account.Address]].
+    * @return the [[io.lunes.state2.Portfolio]].
+    */
   def portfolio(addr: Address): Portfolio
 
+  /**
+    * List all Transactions in the Pool.
+    * @return returns a [[scala.collection.immutable.Seq]] of [[io.lunes.transaction.Transaction]].
+    */
   def all: Seq[Transaction]
 
+  /**
+    * @return returns the Pool size.
+    */
   def size: Int
 
+  /**
+    * Provides a transaction based on its Id.
+    * @param transactionId provides a ByteStr
+    * @return returns a Option for a [[io.lunes.transaction.Transaction]].
+    */
   def transactionById(transactionId: ByteStr): Option[Transaction]
 
+  /**
+    * Package Unconfirmed Constraints in a Tuple of Transactions and Constraints.
+    * @param rest [[io.lunes.mining.TwoDimensionalMiningConstraint]] input
+    * @param sortInBlock True if Sort for Block.
+    * @return Returns a Tuple of a [[scala.collection.immutable.Seq]] of [[io.lunes.transaction.Transaction]] and a [[io.lunes.mining.TwoDimensionalMiningConstraint]].
+    */
   def packUnconfirmed(rest: TwoDimensionalMiningConstraint, sortInBlock: Boolean): (Seq[Transaction], TwoDimensionalMiningConstraint)
 
+  /**
+    * Provides a interface for batched operations.
+    * @param f Annonymous function for processing [[io.lunes.utx.UtxBatchOps]].
+    */
   def batched(f: UtxBatchOps => Unit): Unit
 
 }
 
+/**
+  * Transaction Batch Operations.
+  */
 trait UtxBatchOps {
+  /** Insert in Batch Transaction if it is new.
+    * @param tx Input Transaction.
+    * @return Returns Eiher Boolean (case Success) or ValidationError (case Failure).
+    */
   def putIfNew(tx: Transaction): Either[ValidationError, Boolean]
 }
 
+/** Transaction Pool with Implicit Scheduler.
+  * @constructor Creates a Transaction Pool with Implicit Scheduler
+  * @param time Sets Time o
+  * @param stateReader Sets the StateReader object.
+  * @param history Sets the Transaction History.
+  * @param featureProvider Sets the FeatureProvider object.
+  * @param feeCalculator Sets the FeeCalculator.
+  * @param fs Sets the FuncionalitySettings.
+  * @param utxSettings Sets Transaction Settings.
+  */
 class UtxPoolImpl(time: Time,
                   stateReader: StateReader,
                   history: History,
@@ -74,12 +138,18 @@ class UtxPoolImpl(time: Time,
 
   private val cleanup = removeInvalid.flatMap(_ => removeInvalid).runAsyncLogErr
 
+  /**
+    *
+    */
   override def close(): Unit = cleanup.cancel()
 
   private val utxPoolSizeStats = Kamon.metrics.minMaxCounter("utx-pool-size", 500.millis)
   private val processingTimeStats = Kamon.metrics.histogram("utx-transaction-processing-time", KamonTime.Milliseconds)
   private val putRequestStats = Kamon.metrics.counter("utx-pool-put-if-new")
 
+  /** Remove Expired Transactions from the Pool.
+    * @param currentTs Sets Current Time Stamp.
+    */
   private def removeExpired(currentTs: Long): Unit = {
     def isExpired(tx: Transaction) = (currentTs - tx.timestamp).millis > utxSettings.maxTransactionAge
 
@@ -94,8 +164,16 @@ class UtxPoolImpl(time: Time,
       }
   }
 
+  /** Inserts if New Transaction.
+    * @param tx provides a [[io.lunes.transaction.Transaction]] input interface.
+    * @return Returns Either a Boolean for the Transaction validity (case Success) or a [[io.lunes.transaction.ValidationError]] (case Failure).
+    */
   override def putIfNew(tx: Transaction): Either[ValidationError, Boolean] = putIfNew(stateReader(), tx)
 
+  /** Check if the Transaction is not blacklisted.
+    * @param tx Inputs Transaction
+    * @return Returns Either a Unit (case Success) or a [[io.lunes.transaction.ValidationError]] (case Failure).
+    */
   private def checkNotBlacklisted(tx: Transaction): Either[ValidationError, Unit] = {
     if (utxSettings.blacklistSenderAddresses.isEmpty) {
       Right(())
@@ -121,6 +199,9 @@ class UtxPoolImpl(time: Time,
     }
   }
 
+  /** Remove All Transactions in the Pool.
+    * @param txs provide a interface for Transversable of [[io.lunes.transaction.Transaction]].
+    */
   override def removeAll(txs: Traversable[Transaction]): Unit = {
     txs.view.map(_.id()).foreach { id =>
       Option(transactions.remove(id)).foreach(_ => utxPoolSizeStats.decrement())
@@ -130,6 +211,10 @@ class UtxPoolImpl(time: Time,
     removeExpired(time.correctedTime())
   }
 
+  /** C
+    * @param addr Scorex [[scorex.account.Address]].
+    * @return the [[io.lunes.state2.Portfolio]].
+    */
   override def portfolio(addr: Address): Portfolio = {
     val base = stateReader().accountPortfolio(addr)
     val foundInUtx = pessimisticPortfolios.getAggregated(addr)
@@ -137,6 +222,10 @@ class UtxPoolImpl(time: Time,
     Monoid.combine(base, foundInUtx)
   }
 
+  /**
+    *
+    * @return returns a [[scala.collection.immutable.Seq]] of [[io.lunes.transaction.Transaction]].
+    */
   override def all: Seq[Transaction] = {
     transactions.values.asScala.toSeq.sorted(TransactionsOrdering.InUTXPool)
   }

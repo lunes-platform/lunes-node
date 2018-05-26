@@ -12,6 +12,12 @@ import monix.execution.schedulers.SchedulerService
 import io.lunes.transaction.NgHistory
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  * @param history
+  * @param settings
+  * @param scheduler
+  */
 @Sharable
 class HistoryReplier(history: NgHistory, settings: SynchronizationSettings, scheduler: SchedulerService) extends ChannelInboundHandlerAdapter with ScorexLogging {
   private lazy val historyReplierSettings = settings.historyReplierSettings
@@ -32,6 +38,11 @@ class HistoryReplier(history: NgHistory, settings: SynchronizationSettings, sche
       override def load(key: ByteStr) = history.heightOf(key).flatMap(history.blockBytes).get
     })
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match {
     case GetSignatures(otherSigs) => Task {
       otherSigs.view
@@ -69,11 +80,23 @@ class HistoryReplier(history: NgHistory, settings: SynchronizationSettings, sche
     case _ => super.channelRead(ctx, msg)
   }
 
+  /**
+    *
+    * @return
+    */
   def cacheSizes: CacheSizes = CacheSizes(knownBlocks.size(), knownMicroBlocks.size())
 }
 
+/**
+  *
+  */
 object HistoryReplier {
 
+  /**
+    *
+    * @param blocks
+    * @param microBlocks
+    */
   case class CacheSizes(blocks: Long, microBlocks: Long)
 
 }
