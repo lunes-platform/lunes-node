@@ -10,18 +10,18 @@ import io.swagger.annotations._
 import scorex.BroadcastRoute
 import scorex.api.http._
 
-//@Path("/alias/broadcast")
-//@Api(value = "/alias")
+@Path("/addresses/broadcast")
+@Api(value = "/addresses")
 case class AliasBroadcastApiRoute(
     settings: RestAPISettings,
     utx: UtxPool,
     allChannels: ChannelGroup)
   extends ApiRoute with BroadcastRoute {
-  override val route = pathPrefix("alias" / "broadcast") {
+  override val route = pathPrefix("addresses" / "broadcast") {
     signedCreate
   }
 
-  @Path("/create")
+  @Path("/alias-create")
   @ApiOperation(value = "Broadcasts a signed alias transaction",
     httpMethod = "POST",
     produces = "application/json",
@@ -37,7 +37,7 @@ case class AliasBroadcastApiRoute(
     )
   ))
   @ApiResponses(Array(new ApiResponse(code = 200, message = "Json with response or error")))
-  def signedCreate: Route = (path("create") & post) {
+  def signedCreate: Route = (path("alias-create") & post) {
     json[SignedCreateAliasRequest] { aliasReq =>
       doBroadcast(aliasReq.toTx)
     }
