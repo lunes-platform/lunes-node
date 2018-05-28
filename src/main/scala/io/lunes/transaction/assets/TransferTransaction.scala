@@ -7,7 +7,6 @@ import io.lunes.utils.base58Length
 import monix.eval.Coeval
 import play.api.libs.json.{JsObject, Json}
 import scorex.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
-import scorex.crypto.encode.Base58
 import scorex.serialization.Deser
 import io.lunes.transaction.TransactionParser._
 import io.lunes.transaction.{ValidationError, _}
@@ -32,7 +31,6 @@ case class TransferTransaction private(assetId: Option[AssetId],
                                        timestamp: Long,
                                        feeAssetId: Option[AssetId],
                                        fee: Long,
-//                                       attachment: Array[Byte],
                                        signature: ByteStr)
   extends SignedTransaction with FastHashId {
   override val transactionType: TransactionType.Value = TransactionType.TransferTransaction
@@ -53,8 +51,7 @@ case class TransferTransaction private(assetId: Option[AssetId],
       timestampBytes,
       amountBytes,
       feeBytes,
-      recipient.bytes.arr //,
-//      Deser.serializeArray(attachment)
+      recipient.bytes.arr
     )
   }
 
@@ -62,8 +59,7 @@ case class TransferTransaction private(assetId: Option[AssetId],
     "recipient" -> recipient.stringRepr,
     "assetId" -> assetId.map(_.base58),
     "amount" -> amount,
-    "feeAsset" -> feeAssetId.map(_.base58)//,
-//    "attachment" -> Base58.encode(attachment)
+    "feeAsset" -> feeAssetId.map(_.base58)
   ))
 
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(transactionType.id.toByte), signature.arr, bodyBytes()))
@@ -98,8 +94,7 @@ object TransferTransaction {
     (for {
       recRes <- AddressOrAlias.fromBytes(bytes, s1 + 24)
       (recipient, recipientEnd) = recRes
-//      (attachment, _) = Deser.parseArraySize(bytes, recipientEnd)
-      tt <- TransferTransaction.create(assetIdOpt.map(ByteStr(_)), sender, recipient, amount, timestamp, feeAssetIdOpt.map(ByteStr(_)), feeAmount, /*attachment,*/ signature)
+      tt <- TransferTransaction.create(assetIdOpt.map(ByteStr(_)), sender, recipient, amount, timestamp, feeAssetIdOpt.map(ByteStr(_)), feeAmount, signature)
     } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
@@ -122,11 +117,7 @@ object TransferTransaction {
              timestamp: Long,
              feeAssetId: Option[AssetId],
              feeAmount: Long,
-//             attachment: Array[Byte],
              signature: ByteStr): Either[ValidationError, TransferTransaction] = {
-//    if (attachment.length > TransferTransaction.MaxAttachmentSize) {
-//      Left(ValidationError.TooBigArray)
-//    } else
     if (amount <= 0) {
       Left(ValidationError.NegativeAmount(amount, "lunes")) //CHECK IF AMOUNT IS POSITIVE
     } else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
@@ -134,7 +125,7 @@ object TransferTransaction {
     } else if (feeAmount <= 0) {
       Left(ValidationError.InsufficientFee)
     } else {
-      Right(TransferTransaction(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, /*attachment,*/ signature))
+      Right(TransferTransaction(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, signature))
     }
   }
 
@@ -155,10 +146,9 @@ object TransferTransaction {
              amount: Long,
              timestamp: Long,
              feeAssetId: Option[AssetId],
-             feeAmount: Long//,
-//             attachment: Array[Byte]
+             feeAmount: Long
             ): Either[ValidationError, TransferTransaction] = {
-    create(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, /*attachment,*/ ByteStr.empty).right.map { unsigned =>
+    create(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, ByteStr.empty).right.map { unsigned =>
       unsigned.copy(signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
     }
   }
