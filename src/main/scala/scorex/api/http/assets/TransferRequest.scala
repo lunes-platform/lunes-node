@@ -7,7 +7,7 @@ case class TransferRequest(assetId: Option[String],
                            amount: Long,
                            fee: Long,
                            sender: String,
-                           attachment: Option[String],
+//                           attachment: Option[String],
                            recipient: String,
                            timestamp: Option[Long] = None)
 

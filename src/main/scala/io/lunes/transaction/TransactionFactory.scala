@@ -56,8 +56,8 @@ object TransactionFactory {
           request.amount,
           request.timestamp.getOrElse(time.getTimestamp()),
           request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
-          request.fee,
-          request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
+          request.fee)//,
+//          request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
     } yield tx
 
   /**
@@ -77,8 +77,8 @@ object TransactionFactory {
         senderPrivateKey,
         transfers,
         request.timestamp.getOrElse(time.getTimestamp()),
-        request.fee,
-        request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
+        request.fee)//,
+//        request.attachment.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
     } yield tx
 
   /**

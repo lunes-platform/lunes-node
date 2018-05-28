@@ -8,7 +8,7 @@ import net.ceedubs.ficus.readers.EnumerationReader._
 
 import scala.concurrent.duration._
 
-import io.lunes.features.BlockchainFeatures
+//import io.lunes.features.BlockchainFeatures
 
 /**
   *

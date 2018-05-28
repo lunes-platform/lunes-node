@@ -7,7 +7,7 @@ import io.lunes.state2._
 import monix.eval.Coeval
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import scorex.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
-import scorex.crypto.encode.Base58
+//import scorex.crypto.encode.Base58
 import scorex.serialization.Deser
 import io.lunes.transaction.TransactionParser._
 import io.lunes.transaction.ValidationError.Validation
@@ -24,7 +24,6 @@ import scala.util.{Either, Failure, Success, Try}
   * @param transfers
   * @param timestamp
   * @param fee
-  * @param attachment
   * @param proofs
   */
 case class MassTransferTransaction private(version: Byte,
@@ -33,7 +32,7 @@ case class MassTransferTransaction private(version: Byte,
                                            transfers: List[ParsedTransfer],
                                            timestamp: Long,
                                            fee: Long,
-                                           attachment: Array[Byte],
+//                                           attachment: Array[Byte],
                                            proofs: Proofs) extends ProvenTransaction with FastHashId {
   override val transactionType: TransactionType.Value = TransactionType.MassTransferTransaction
 
@@ -53,14 +52,14 @@ case class MassTransferTransaction private(version: Byte,
       Shorts.toByteArray(transfers.size.toShort),
       transferBytes,
       Longs.toByteArray(timestamp),
-      Longs.toByteArray(fee),
-      Deser.serializeArray(attachment))
+      Longs.toByteArray(fee))//,
+//      Deser.serializeArray(attachment))
   }
 
   override def jsonBase(): JsObject = super.jsonBase() ++ Json.obj(
     "version" -> version,
     "assetId" -> assetId.map(_.base58),
-    "attachment" -> Base58.encode(attachment),
+//    "attachment" -> Base58.encode(attachment),
     "transferCount" -> transfers.size,
     "totalAmount" -> transfers.map(_.amount).sum)
 
@@ -125,9 +124,9 @@ object MassTransferTransaction {
       transfers <- transfersList.map { case (ei, _) => ei }.sequence
       timestamp = Longs.fromByteArray(bytes.slice(s1, s1 + 8))
       feeAmount = Longs.fromByteArray(bytes.slice(s1 + 8, s1 + 16))
-      (attachment, attachEnd) = Deser.parseArraySize(bytes, s1 + 16)
+      (attachment, attachEnd) = Deser.parseArraySize(bytes, s1 + 16)   // attachment kept only as  ignorable variable.
       proofs <- Proofs.fromBytes(bytes.drop(attachEnd))
-      mtt <- MassTransferTransaction.create(version, assetIdOpt.map(ByteStr(_)), sender, transfers, timestamp, feeAmount, attachment, proofs)
+      mtt <- MassTransferTransaction.create(version, assetIdOpt.map(ByteStr(_)), sender, transfers, timestamp, feeAmount, /*attachment,*/ proofs)
     } yield mtt
     tx.fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
@@ -139,7 +138,6 @@ object MassTransferTransaction {
     * @param transfers
     * @param timestamp
     * @param feeAmount
-    * @param attachment
     * @param proofs
     * @return
     */
@@ -149,7 +147,7 @@ object MassTransferTransaction {
              transfers: List[ParsedTransfer],
              timestamp: Long,
              feeAmount: Long,
-             attachment: Array[Byte],
+//             attachment: Array[Byte],
              proofs: Proofs): Either[ValidationError, MassTransferTransaction] = {
     Try {
       transfers.map(_.amount).fold(feeAmount)(Math.addExact)
@@ -160,12 +158,12 @@ object MassTransferTransaction {
           Left(ValidationError.GenericError(s"Number of transfers is greater than $MaxTransferCount"))
         } else if (transfers.exists(_.amount < 0)) {
           Left(ValidationError.GenericError("One of the transfers has negative amount"))
-        } else if (attachment.length > TransferTransaction.MaxAttachmentSize) {
-          Left(ValidationError.TooBigArray)
+//        } else if (attachment.length > TransferTransaction.MaxAttachmentSize) {
+//          Left(ValidationError.TooBigArray)
         } else if (feeAmount <= 0) {
           Left(ValidationError.InsufficientFee)
         } else {
-          Right(MassTransferTransaction(version, assetId, sender, transfers, timestamp, feeAmount, attachment, proofs))
+          Right(MassTransferTransaction(version, assetId, sender, transfers, timestamp, feeAmount, /*attachment,*/ proofs))
         }
     )
   }
@@ -178,7 +176,6 @@ object MassTransferTransaction {
     * @param transfers
     * @param timestamp
     * @param feeAmount
-    * @param attachment
     * @return
     */
   def selfSigned(version: Byte,
@@ -186,9 +183,10 @@ object MassTransferTransaction {
                  sender: PrivateKeyAccount,
                  transfers: List[ParsedTransfer],
                  timestamp: Long,
-                 feeAmount: Long,
-                 attachment: Array[Byte]): Either[ValidationError, MassTransferTransaction] = {
-    create(version, assetId, sender, transfers, timestamp, feeAmount, attachment, Proofs.empty).right.map { unsigned =>
+                 feeAmount: Long//,
+//                 attachment: Array[Byte]
+                ): Either[ValidationError, MassTransferTransaction] = {
+    create(version, assetId, sender, transfers, timestamp, feeAmount, /*attachment,*/ Proofs.empty).right.map { unsigned =>
       unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(sender, unsigned.bodyBytes())))).explicitGet())
     }
   }
