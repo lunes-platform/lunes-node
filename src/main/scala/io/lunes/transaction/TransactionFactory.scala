@@ -27,13 +27,13 @@ object TransactionFactory {
     for {
       senderPrivateKey <- wallet.findWallet(request.sender)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
-      tx <- RegistryTransaction
-        .create(request.assetId.map(s => ByteStr.decodeBase58(s).get),
+      tx <- RegistryTransaction.create(
+        //          request.assetId.map(s => ByteStr.decodeBase58(s).get),
           senderPrivateKey,
-          recipientAcc,
-          request.amount,
+//          recipientAcc,
+//          request.amount,
           request.timestamp.getOrElse(time.getTimestamp()),
-          request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
+//          request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
           request.fee,
           request.userdata.filter(_.nonEmpty).map(Base58.decode(_).get).getOrElse(Array.emptyByteArray))
     } yield tx
