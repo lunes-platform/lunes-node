@@ -23,12 +23,8 @@ import scala.util.{Failure, Success, Try}
   * @param signature
   */
 case class RegistryTransaction private(
-//                                        assetId: Option[AssetId],
                                        sender: PublicKeyAccount,
-//                                       recipient: AddressOrAlias,
-//                                       amount: Long,
                                        timestamp: Long,
-//                                       feeAssetId: Option[AssetId],
                                        fee: Long,
                                        userdata: Array[Byte],
                                        signature: ByteStr)
@@ -42,15 +38,11 @@ case class RegistryTransaction private(
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     val timestampBytes = Longs.toByteArray(timestamp)
-//    val assetIdBytes = assetId.map(a => (1: Byte) +: a.arr).getOrElse(Array(0: Byte))
     val amountBytes = Longs.toByteArray(amount)
-//    val feeAssetIdBytes = feeAssetId.map(a => (1: Byte) +: a.arr).getOrElse(Array(0: Byte))
     val feeBytes = Longs.toByteArray(fee)
 
     Bytes.concat(Array(transactionType.id.toByte),
       sender.publicKey,
-//      assetIdBytes,
-//      feeAssetIdBytes,
       timestampBytes,
       amountBytes,
       feeBytes,
@@ -59,10 +51,8 @@ case class RegistryTransaction private(
   }
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase() ++ Json.obj(
-    "recipient" -> recipient.stringRepr,  // remover?
-//    "assetId" -> assetId.map(_.base58),
-    "amount" -> amount,                   // remover?
-//    "feeAsset" -> feeAssetId.map(_.base58),
+    "recipient" -> recipient.stringRepr,
+    "amount" -> amount,
     "userdata" -> Base58.encode(userdata)
   ))
 
@@ -92,14 +82,13 @@ object RegistryTransaction {
     val (assetIdOpt, s0) = Deser.parseByteArrayOption(bytes, SignatureLength + KeyLength + 1, AssetIdLength)
     val (feeAssetIdOpt, s1) = Deser.parseByteArrayOption(bytes, s0, AssetIdLength)
     val timestamp = Longs.fromByteArray(bytes.slice(s1, s1 + 8))
-//    val amount = Longs.fromByteArray(bytes.slice(s1 + 8, s1 + 16))   //TODO: Check if there is some impact of removing ammount from input serial data
     val feeAmount = Longs.fromByteArray(bytes.slice(s1 + 16, s1 + 24))
 
     (for {
       recRes <- AddressOrAlias.fromBytes(bytes, s1 + 24)
       (recipient, recipientEnd) = recRes
       (userdata, _) = Deser.parseArraySize(bytes, recipientEnd)
-      tt <- RegistryTransaction.create(/*assetIdOpt.map(ByteStr(_)),*/ sender, /*recipient, amount,*/ timestamp, /*feeAssetIdOpt.map(ByteStr(_)),*/ feeAmount, userdata, signature)
+      tt <- RegistryTransaction.create( sender, timestamp, feeAmount, userdata, signature)
     } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
@@ -113,12 +102,8 @@ object RegistryTransaction {
     * @return
     */
   def create(
-//              assetId: Option[AssetId],
              sender: PublicKeyAccount,
-//             recipient: AddressOrAlias,
-//             amount: Long,
              timestamp: Long,
-//             feeAssetId: Option[AssetId],
              feeAmount: Long,
              userdata: Array[Byte],
              signature: ByteStr): Either[ValidationError, RegistryTransaction] = {
@@ -126,41 +111,30 @@ object RegistryTransaction {
     if (userdata.length > RegistryTransaction.MaxUserdata) {
       Left(ValidationError.TooBigArray)
     }
-//    else if (amount <= 0) {
-//      Left(ValidationError.NegativeAmount(amount, "lunes")) //CHECK IF AMOUNT IS POSITIVE
-//    }
     else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
       Left(ValidationError.OverflowError) // CHECK THAT fee+amount won't overflow Long
     }
     else if (feeAmount <= 0) {
       Left(ValidationError.InsufficientFee)
     } else {
-      Right(RegistryTransaction(/*assetId, */sender, /*recipient, amount, */timestamp, /*feeAssetId, */ feeAmount, userdata, signature))
+      Right(RegistryTransaction(sender, timestamp, feeAmount, userdata, signature))
     }
   }
 
   /**
     *
-    * @param assetId
     * @param sender
-    * @param recipient
-    * @param amount
     * @param timestamp
-    * @param feeAssetId
     * @param feeAmount
     * @param userdata
     * @return
     */
   def create(
-//              assetId: Option[AssetId],
              sender: PrivateKeyAccount,
-//             recipient: AddressOrAlias,
-//             amount: Long,
              timestamp: Long,
-//             feeAssetId: Option[AssetId],
              feeAmount: Long,
              userdata: Array[Byte]): Either[ValidationError, RegistryTransaction] = {
-    create(/*assetId,*/ sender, /*recipient, amount,*/ timestamp, /*feeAssetId, */feeAmount, userdata, ByteStr.empty).right.map { unsigned =>
+    create(sender,  timestamp, feeAmount, userdata, ByteStr.empty).right.map { unsigned =>
       unsigned.copy(signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
     }
   }
