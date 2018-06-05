@@ -34,6 +34,6 @@ case class SignedRegistryRequest(@ApiModelProperty(value = "Base58 encoded sende
     _signature <- parseBase58(signature, "invalid.signature", SignatureStringLength)
     _userdata <- parseBase58(userdata.filter(_.length > 0), "invalid.userdata", RegistryTransaction.MaxUserdataLength)
     _account <- AddressOrAlias.fromString(recipient)
-    t <- RegistryTransaction.create(_assetId, _sender, _account, amount, timestamp, _feeAssetId, fee, _userdata.arr, _signature)
+    t <- RegistryTransaction.create(_sender, timestamp, fee, _userdata.arr, _signature)
   } yield t
 }

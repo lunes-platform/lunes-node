@@ -5,10 +5,8 @@ import io.lunes.state2.ByteStr
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.ceedubs.ficus.readers.EnumerationReader._
-
 import scala.concurrent.duration._
 
-import io.lunes.features.BlockchainFeatures
 
 /**
   *

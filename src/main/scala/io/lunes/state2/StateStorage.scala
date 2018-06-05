@@ -7,7 +7,6 @@ import io.lunes.db._
 import io.lunes.utils._
 import org.iq80.leveldb.{DB, WriteBatch}
 import scorex.account.{Address, Alias}
-import scorex.serialization.Deser
 import scorex.utils.{NTP, Time}
 
 import scala.util.Try
