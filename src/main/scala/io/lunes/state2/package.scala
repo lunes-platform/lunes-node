@@ -7,7 +7,7 @@ import monix.eval.Coeval
 import io.lunes.transaction.ValidationError.GenericError
 import io.lunes.transaction.{Transaction, ValidationError}
 
-import scala.annotation.tailrec
+// import scala.annotation.tailrec
 import scala.reflect.ClassTag
 import scala.util.{Left, Right, Try}
 
@@ -44,14 +44,14 @@ package object state2 {
     * @tparam A
     * @return
     */
-  @tailrec // adicionado
+  //@tailrec // adicionado
   def dropLeftIf[A](list: List[A])(cond: List[A] => Boolean): List[A] = list match {
     case l@(x :: xs) => if (cond(l)) dropLeftIf(xs)(cond) else l
     case Nil => Nil
   }
 
   def splitAfterThreshold[A](list: NEL[A], threshold: Int)(count: A => Int): (NEL[A], List[A]) = {
-    @tailrec
+    //@tailrec
     def splitR(agg: NEL[A], aggCount: Int, rest: List[A]): (NEL[A], List[A]) =
       if (aggCount >= threshold) (agg, rest)
       else rest match {

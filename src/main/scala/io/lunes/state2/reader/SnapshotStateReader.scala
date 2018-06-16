@@ -9,7 +9,7 @@ import io.lunes.transaction.assets.IssueTransaction
 import io.lunes.transaction.lease.LeaseTransaction
 import scorex.utils.{ScorexLogging, Synchronized}
 
-import scala.annotation.tailrec
+// import scala.annotation.tailrec
 import scala.reflect.ClassTag
 import scala.util.{Right, Try}
 
@@ -259,7 +259,7 @@ object SnapshotStateReader {
     private def minBySnapshot(acc: Address, atHeight: Int, confirmations: Int)(extractor: Snapshot => Long): Long = s.read { _ =>
       val bottomNotIncluded = atHeight - confirmations
 
-      @tailrec
+      // @tailrec
       def loop(deeperHeight: Int, list: Seq[Snapshot]): Seq[Snapshot] = {
         if (deeperHeight == 0) {
           s.snapshotAtHeight(acc, 1) match {
@@ -322,7 +322,7 @@ object SnapshotStateReader {
       * @return Returns the Balance.
       */
     def balanceAtHeight(acc: Address, height: Int): Long = s.read { _ =>
-      @tailrec
+      // @tailrec
       def loop(lookupHeight: Int): Long = s.snapshotAtHeight(acc, lookupHeight) match {
         case None if lookupHeight == 0 => 0
         case Some(snapshot) if lookupHeight <= height => snapshot.balance
