@@ -2,14 +2,14 @@ package scorex
 
 import java.security.SecureRandom
 
-import scala.annotation.tailrec
+// import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.reflect.runtime.universe
 import scala.util._
 
 package object utils {
 
-  @tailrec
+  //@tailrec
   final def untilTimeout[T](timeout: FiniteDuration,
                             delay: FiniteDuration = 100.milliseconds,
                             onFailure: => Unit = {})(fn: => T): T = {

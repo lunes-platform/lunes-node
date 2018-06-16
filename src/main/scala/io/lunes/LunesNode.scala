@@ -5,6 +5,7 @@ package io.lunes
   *
   */
 import java.io.File
+import java.security.Security
 import java.util.concurrent._
 
 import akka.actor.ActorSystem
@@ -340,7 +341,12 @@ object LunesNode extends ScorexLogging {
    * @param args - Command Line arguments
    */
   def main(args: Array[String]): Unit = {
-    fixNTP()
+    //fixNTP()
+
+    System.setProperty("sun.net.inetaddr.ttl", "0")
+    System.setProperty("sun.net.inetaddr.negative.ttl", "0")
+    Security.setProperty("networkaddress.cache.ttl", "0")
+    Security.setProperty("networkaddress.cache.negative.ttl", "0")
 
     SLF4JBridgeHandler.removeHandlersForRootLogger()
     SLF4JBridgeHandler.install()
