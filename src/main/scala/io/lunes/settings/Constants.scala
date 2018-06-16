@@ -12,7 +12,7 @@ object Constants extends ScorexLogging {
   val ApplicationName = "lunesnode"
   val CoinName = "LUNES"
   val CoinAbr = "LNS"
-  val AgentName = s"lunesnode"
+  val AgentName = s"${ApplicationName} v${VersionStr}"
   val InitialBalance = 15072853761500800L
 
   val MainSchemeCharacter = '1'
