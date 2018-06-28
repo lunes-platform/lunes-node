@@ -5,7 +5,7 @@ import cats.implicits._
 import io.lunes.state2._
 import io.lunes.state2.reader.SnapshotStateReader
 import io.lunes.transaction.ValidationError
-import io.lunes.transaction.ValidationError.{GenericError, OrderValidationError}
+import io.lunes.transaction.ValidationError.OrderValidationError
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
 
 import scala.util.Right
