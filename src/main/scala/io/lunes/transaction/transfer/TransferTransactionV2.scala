@@ -1,0 +1,93 @@
+package io.lunes.transaction.transfer
+
+import com.google.common.primitives.Bytes
+import io.lunes.crypto
+import io.lunes.state._
+import monix.eval.Coeval
+import scorex.account.{AddressOrAlias, PrivateKeyAccount, PublicKeyAccount}
+import io.lunes.transaction._
+
+import scala.util.{Failure, Success, Try}
+
+case class TransferTransactionV2 private (version: Byte,
+                                          sender: PublicKeyAccount,
+                                          recipient: AddressOrAlias,
+                                          assetId: Option[AssetId],
+                                          amount: Long,
+                                          timestamp: Long,
+                                          feeAssetId: Option[AssetId],
+                                          fee: Long,
+                                          proofs: Proofs)
+    extends TransferTransaction
+    with ProvenTransaction
+    with FastHashId {
+
+  override val builder: TransactionParser     = TransferTransactionV2
+  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array(builder.typeId, version) ++ bytesBase())
+  override val bytes: Coeval[Array[Byte]]     = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
+
+}
+
+object TransferTransactionV2 extends TransactionParserFor[TransferTransactionV2] with TransactionParser.MultipleVersions {
+
+  override val typeId: Byte                 = 4
+  override val supportedVersions: Set[Byte] = Set(2)
+
+  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+    Try {
+      (for {
+        parsed <- TransferTransaction.parseBase(bytes, 0)
+        (sender, assetIdOpt, feeAssetIdOpt, timestamp, amount, feeAmount, recipient, end) = parsed
+        proofs <- Proofs.fromBytes(bytes.drop(end))
+        tt <- TransferTransactionV2.create(version,
+                                           assetIdOpt.map(ByteStr(_)),
+                                           sender,
+                                           recipient,
+                                           amount,
+                                           timestamp,
+                                           feeAssetIdOpt.map(ByteStr(_)),
+                                           feeAmount,
+                                           proofs)
+      } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+    }.flatten
+
+  def create(version: Byte,
+             assetId: Option[AssetId],
+             sender: PublicKeyAccount,
+             recipient: AddressOrAlias,
+             amount: Long,
+             timestamp: Long,
+             feeAssetId: Option[AssetId],
+             feeAmount: Long,
+             proofs: Proofs): Either[ValidationError, TransactionT] = {
+    for {
+      _ <- Either.cond(supportedVersions.contains(version), (), ValidationError.UnsupportedVersion(version))
+      _ <- TransferTransaction.validate(amount, feeAmount)
+    } yield TransferTransactionV2(version, sender, recipient, assetId, amount, timestamp, feeAssetId, feeAmount, proofs)
+  }
+
+  def signed(version: Byte,
+             assetId: Option[AssetId],
+             sender: PublicKeyAccount,
+             recipient: AddressOrAlias,
+             amount: Long,
+             timestamp: Long,
+             feeAssetId: Option[AssetId],
+             feeAmount: Long,
+             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
+    create(version, assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, Proofs.empty).right.map { unsigned =>
+      unsigned.copy(proofs = Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes())))).explicitGet())
+    }
+  }
+
+  def selfSigned(version: Byte,
+                 assetId: Option[AssetId],
+                 sender: PrivateKeyAccount,
+                 recipient: AddressOrAlias,
+                 amount: Long,
+                 timestamp: Long,
+                 feeAssetId: Option[AssetId],
+                 feeAmount: Long): Either[ValidationError, TransactionT] = {
+    signed(version, assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, sender)
+  }
+}
