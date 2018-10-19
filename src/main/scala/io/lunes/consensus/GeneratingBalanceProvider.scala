@@ -1,6 +1,6 @@
 package io.lunes.consensus
 
-import io.lunes.features.BlockchainFeatures
+//import io.lunes.features.BlockchainFeatures
 import io.lunes.settings.FunctionalitySettings
 import io.lunes.state.Blockchain
 import scorex.account.Address

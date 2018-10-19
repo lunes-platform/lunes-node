@@ -345,15 +345,14 @@ object LunesNode extends ScorexLogging {
     val config = maybeConfigFile match {
       // if no user config is supplied, the library will handle overrides/application/reference automatically
       case None =>
-        log.warn("NO CONFIGURATION FILE WAS PROVIDED. STARTING WITH DEFAULT SETTINGS FOR TESTNET!")
+        log.error("No configuration file was provided!")
+        forceStopApplication()
         ConfigFactory.load()
       // application config needs to be resolved wrt both system properties *and* user-supplied config.
       case Some(file) =>
         val cfg = ConfigFactory.parseFile(file)
         if (!cfg.hasPath("lunes")) {
-          log.error("Malformed configuration file was provided! Aborting!")
-          log.error("Please, read following article about configuration file format:")
-          log.error("https://github.io.lunes/Lunes/wiki/Lunes-Node-configuration-file")
+          log.error("Malformed configuration file was provided!")
           forceStopApplication()
         }
         loadConfig(cfg)

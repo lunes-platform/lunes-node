@@ -17,7 +17,7 @@ import scorex.utils.ScorexLogging
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-object Explorer extends ScorexLogging {
+object qExplorer extends ScorexLogging {
   case class Stats(entryCount: Long, totalKeySize: Long, totalValueSize: Long)
 
   private val keys = Array(
