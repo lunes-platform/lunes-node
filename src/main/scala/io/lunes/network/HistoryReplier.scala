@@ -12,7 +12,11 @@ import monix.execution.schedulers.SchedulerService
 import scorex.utils.ScorexLogging
 
 @Sharable
-class HistoryReplier(ng: NG, settings: SynchronizationSettings, scheduler: SchedulerService) extends ChannelInboundHandlerAdapter with ScorexLogging {
+class HistoryReplier(ng: NG,
+                     settings: SynchronizationSettings,
+                     scheduler: SchedulerService)
+    extends ChannelInboundHandlerAdapter
+    with ScorexLogging {
   private lazy val historyReplierSettings = settings.historyReplierSettings
 
   private implicit val s: SchedulerService = scheduler
@@ -34,45 +38,54 @@ class HistoryReplier(ng: NG, settings: SynchronizationSettings, scheduler: Sched
       override def load(key: ByteStr) = ng.blockBytes(key).get
     })
 
-  override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match {
-    case GetSignatures(otherSigs) =>
-      Task {
-        val nextIds = otherSigs.view
-          .map(id => id -> ng.blockIdsAfter(id, settings.maxChainLength))
-          .collectFirst { case (parent, Some(ids)) => parent +: ids }
+  override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit =
+    msg match {
+      case GetSignatures(otherSigs) =>
+        Task {
+          val nextIds = otherSigs.view
+            .map(id => id -> ng.blockIdsAfter(id, settings.maxChainLength))
+            .collectFirst { case (parent, Some(ids)) => parent +: ids }
 
-        nextIds match {
-          case Some(extension) =>
-            log.debug(
-              s"${id(ctx)} Got GetSignatures with ${otherSigs.length}, found common parent ${extension.head} and sending total of ${extension.length} signatures")
-            ctx.writeAndFlush(Signatures(extension))
-          case None =>
-            log.debug(s"${id(ctx)} Got GetSignatures with ${otherSigs.length} signatures, but could not find an extension")
-        }
-      }.runAsyncLogErr
+          nextIds match {
+            case Some(extension) =>
+              log.debug(
+                s"${id(ctx)} Got GetSignatures with ${otherSigs.length}, found common parent ${extension.head} and sending total of ${extension.length} signatures")
+              ctx.writeAndFlush(Signatures(extension))
+            case None =>
+              log.debug(
+                s"${id(ctx)} Got GetSignatures with ${otherSigs.length} signatures, but could not find an extension")
+          }
+        }.runAsyncLogErr
 
-    case GetBlock(sig) =>
-      Task(knownBlocks.get(sig)).map(bytes => ctx.writeAndFlush(RawBytes(BlockSpec.messageCode, bytes))).logErrDiscardNoSuchElementException.runAsync
+      case GetBlock(sig) =>
+        Task(knownBlocks.get(sig))
+          .map(bytes =>
+            ctx.writeAndFlush(RawBytes(BlockSpec.messageCode, bytes)))
+          .logErrDiscardNoSuchElementException
+          .runAsync
 
-    case mbr @ MicroBlockRequest(totalResBlockSig) =>
-      Task(knownMicroBlocks.get(totalResBlockSig))
-        .map { bytes =>
-          ctx.writeAndFlush(RawBytes(MicroBlockResponseSpec.messageCode, bytes))
-          log.trace(id(ctx) + s"Sent MicroBlockResponse(total=${totalResBlockSig.trim})")
-        }
-        .logErrDiscardNoSuchElementException
-        .runAsync
+      case mbr @ MicroBlockRequest(totalResBlockSig) =>
+        Task(knownMicroBlocks.get(totalResBlockSig))
+          .map { bytes =>
+            ctx.writeAndFlush(
+              RawBytes(MicroBlockResponseSpec.messageCode, bytes))
+            log.trace(
+              id(ctx) + s"Sent MicroBlockResponse(total=${totalResBlockSig.trim})")
+          }
+          .logErrDiscardNoSuchElementException
+          .runAsync
 
-    case _: Handshake =>
-      Task {
-        if (ctx.channel().isOpen)
-          ctx.writeAndFlush(LocalScoreChanged(ng.score))
-      }.runAsyncLogErr
+      case _: Handshake =>
+        Task {
+          if (ctx.channel().isOpen)
+            ctx.writeAndFlush(LocalScoreChanged(ng.score))
+        }.runAsyncLogErr
 
-    case _ => super.channelRead(ctx, msg)
-  }
+      case _ => super.channelRead(ctx, msg)
+    }
 
-  def cacheSizes: CacheSizes = CacheSizes(knownBlocks.size(), knownMicroBlocks.size())
+  def cacheSizes: CacheSizes =
+    CacheSizes(knownBlocks.size(), knownMicroBlocks.size())
 }
 
 object HistoryReplier {

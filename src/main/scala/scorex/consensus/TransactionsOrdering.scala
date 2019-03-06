@@ -6,14 +6,15 @@ object TransactionsOrdering {
   trait LunesOrdering extends Ordering[Transaction] {
     def txTimestampOrder(ts: Long): Long
     private def orderBy(t: Transaction): (Long, Long, String) = {
-      val byFee       = if (t.assetFee._1.nonEmpty) 0 else -t.assetFee._2
+      val byFee = if (t.assetFee._1.nonEmpty) 0 else -t.assetFee._2
       val byTimestamp = txTimestampOrder(t.timestamp)
-      val byTxId      = t.id().base58
+      val byTxId = t.id().base58
 
       (byFee, byTimestamp, byTxId)
     }
     override def compare(first: Transaction, second: Transaction): Int = {
-      implicitly[Ordering[(Long, Long, String)]].compare(orderBy(first), orderBy(second))
+      implicitly[Ordering[(Long, Long, String)]]
+        .compare(orderBy(first), orderBy(second))
     }
   }
 

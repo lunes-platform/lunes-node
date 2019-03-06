@@ -20,21 +20,34 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
     if (fairPosActivated(height)) FairPoSCalculator
     else NxtPoSCalculator
 
-  def consensusData(accountPublicKey: Array[Byte],
-                    height: Int,
-                    targetBlockDelay: FiniteDuration,
-                    refBlockBT: Long,
-                    refBlockTS: Long,
-                    greatGrandParentTS: Option[Long],
-                    currentTime: Long): Either[ValidationError, NxtLikeConsensusBlockData] = {
-    val bt = pos(height).calculateBaseTarget(targetBlockDelay.toSeconds, height, refBlockBT, refBlockTS, greatGrandParentTS, currentTime)
+  def consensusData(
+      accountPublicKey: Array[Byte],
+      height: Int,
+      targetBlockDelay: FiniteDuration,
+      refBlockBT: Long,
+      refBlockTS: Long,
+      greatGrandParentTS: Option[Long],
+      currentTime: Long): Either[ValidationError, NxtLikeConsensusBlockData] = {
+    val bt = pos(height).calculateBaseTarget(targetBlockDelay.toSeconds,
+                                             height,
+                                             refBlockBT,
+                                             refBlockTS,
+                                             greatGrandParentTS,
+                                             currentTime)
     blockchain.lastBlock
       .map(_.consensusData.generationSignature.arr)
-      .map(gs => NxtLikeConsensusBlockData(bt, ByteStr(generatorSignature(gs, accountPublicKey))))
+      .map(
+        gs =>
+          NxtLikeConsensusBlockData(
+            bt,
+            ByteStr(generatorSignature(gs, accountPublicKey))))
       .toRight(GenericError("No blocks in blockchain"))
   }
 
-  def getValidBlockDelay(height: Int, accountPublicKey: Array[Byte], refBlockBT: Long, balance: Long): Either[ValidationError, Long] = {
+  def getValidBlockDelay(height: Int,
+                         accountPublicKey: Array[Byte],
+                         refBlockBT: Long,
+                         balance: Long): Either[ValidationError, Long] = {
     val pc = pos(height)
 
     getHit(height, accountPublicKey)
@@ -42,23 +55,44 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
       .toRight(GenericError("No blocks in blockchain"))
   }
 
-  def validateBlockDelay(height: Int, block: Block, parent: Block, effectiveBalance: Long): Either[ValidationError, Unit] = {
-    getValidBlockDelay(height, block.signerData.generator.publicKey, parent.consensusData.baseTarget, effectiveBalance)
+  def validateBlockDelay(
+      height: Int,
+      block: Block,
+      parent: Block,
+      effectiveBalance: Long): Either[ValidationError, Unit] = {
+    getValidBlockDelay(height,
+                       block.signerData.generator.publicKey,
+                       parent.consensusData.baseTarget,
+                       effectiveBalance)
       .map(_ + parent.timestamp)
-      .ensureOr(mvt => GenericError(s"Block timestamp ${block.timestamp} less than min valid timestamp $mvt"))(ts => ts <= block.timestamp)
+      .ensureOr(mvt =>
+        GenericError(
+          s"Block timestamp ${block.timestamp} less than min valid timestamp $mvt"))(
+        ts => ts <= block.timestamp)
       .map(_ => ())
   }
 
-  def validateGeneratorSignature(height: Int, block: Block): Either[ValidationError, Unit] = {
+  def validateGeneratorSignature(
+      height: Int,
+      block: Block): Either[ValidationError, Unit] = {
     val blockGS = block.consensusData.generationSignature.arr
     blockchain.lastBlock
-      .map(b => generatorSignature(b.consensusData.generationSignature.arr, block.signerData.generator.publicKey))
-      .ensureOr(vgs => GenericError(s"Generation signatures does not match: Expected = $vgs; Found = $blockGS"))(_ sameElements blockGS)
+      .map(b =>
+        generatorSignature(b.consensusData.generationSignature.arr,
+                           block.signerData.generator.publicKey))
+      .ensureOr(vgs =>
+        GenericError(
+          s"Generation signatures does not match: Expected = $vgs; Found = $blockGS"))(
+        _ sameElements blockGS)
       .map(_ => ())
       .toRight(GenericError("No blocks in blockchain"))
   }
 
-  def validateBaseTarget(height: Int, block: Block, parent: Block, grandParent: Option[Block]): Either[ValidationError, Unit] = {
+  def validateBaseTarget(
+      height: Int,
+      block: Block,
+      parent: Block,
+      grandParent: Option[Block]): Either[ValidationError, Unit] = {
     val blockBT = block.consensusData.baseTarget
     val blockTS = block.timestamp
 
@@ -74,13 +108,16 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
     Either.cond(
       expectedBT == blockBT,
       (),
-      GenericError(s"declared baseTarget $blockBT does not match calculated baseTarget $expectedBT")
+      GenericError(
+        s"declared baseTarget $blockBT does not match calculated baseTarget $expectedBT")
     )
   }
 
-  private def getHit(height: Int, accountPublicKey: Array[Byte]): Option[BigInt] = {
+  private def getHit(height: Int,
+                     accountPublicKey: Array[Byte]): Option[BigInt] = {
     val blockForHit =
-      if (fairPosActivated(height) && height > 100) blockchain.blockAt(height - 100)
+      if (fairPosActivated(height) && height > 100)
+        blockchain.blockAt(height - 100)
       else blockchain.lastBlock
 
     blockForHit.map(b => {
@@ -89,5 +126,8 @@ class PoSSelector(blockchain: Blockchain, settings: BlockchainSettings) {
     })
   }
 
-  private def fairPosActivated(height: Int): Boolean = blockchain.activatedFeaturesAt(height).contains(BlockchainFeatures.FairPoS.id)
+  private def fairPosActivated(height: Int): Boolean =
+    blockchain
+      .activatedFeaturesAt(height)
+      .contains(BlockchainFeatures.FairPoS.id)
 }

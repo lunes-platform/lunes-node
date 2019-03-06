@@ -22,11 +22,14 @@ object PublicKeyAccount {
 
   val KeyStringLength: Int = base58Length(Curve25519.KeyLength)
 
-  private case class PublicKeyAccountImpl(publicKey: Array[Byte]) extends PublicKeyAccount
+  private case class PublicKeyAccountImpl(publicKey: Array[Byte])
+      extends PublicKeyAccount
 
-  def apply(publicKey: Array[Byte]): PublicKeyAccount = PublicKeyAccountImpl(publicKey)
+  def apply(publicKey: Array[Byte]): PublicKeyAccount =
+    PublicKeyAccountImpl(publicKey)
 
-  implicit def toAddress(publicKeyAccount: PublicKeyAccount): Address = Address.fromPublicKey(publicKeyAccount.publicKey)
+  implicit def toAddress(publicKeyAccount: PublicKeyAccount): Address =
+    Address.fromPublicKey(publicKeyAccount.publicKey)
 
   implicit class PublicKeyAccountExt(pk: PublicKeyAccount) {
     def toAddress: Address = PublicKeyAccount.toAddress(pk)
@@ -34,7 +37,14 @@ object PublicKeyAccount {
 
   def fromBase58String(s: String): Either[InvalidAddress, PublicKeyAccount] =
     (for {
-      _     <- Either.cond(s.length <= KeyStringLength, (), "Bad public key string length")
-      bytes <- Base58.decode(s).toEither.left.map(ex => s"Unable to decode base58: ${ex.getMessage}")
-    } yield PublicKeyAccount(bytes)).left.map(err => InvalidAddress(s"Invalid sender: $err"))
+      _ <- Either.cond(s.length <= KeyStringLength,
+                       (),
+                       "Bad public key string length")
+      bytes <- Base58
+        .decode(s)
+        .toEither
+        .left
+        .map(ex => s"Unable to decode base58: ${ex.getMessage}")
+    } yield PublicKeyAccount(bytes)).left.map(err =>
+      InvalidAddress(s"Invalid sender: $err"))
 }

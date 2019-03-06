@@ -6,8 +6,10 @@ import scorex.block.Block
 import io.lunes.transaction.TransactionParsers
 
 trait CommonApiFunctions { this: ApiRoute =>
-  protected[api] def withBlock(blockchain: Blockchain, encodedSignature: String): Directive1[Block] =
-    if (encodedSignature.length > TransactionParsers.SignatureStringLength) complete(InvalidSignature)
+  protected[api] def withBlock(blockchain: Blockchain,
+                               encodedSignature: String): Directive1[Block] =
+    if (encodedSignature.length > TransactionParsers.SignatureStringLength)
+      complete(InvalidSignature)
     else {
       ByteStr
         .decodeBase58(encodedSignature)

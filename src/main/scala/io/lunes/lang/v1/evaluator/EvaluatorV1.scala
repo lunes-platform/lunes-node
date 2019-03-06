@@ -18,8 +18,9 @@ object EvaluatorV1 extends ExprEvaluator {
     for {
       ctx <- get[EvaluationContext, ExecutionError]
       blockEvaluation = evalExpr(let.value)
-      lazyBlock       = LazyVal(blockEvaluation.ter(ctx))
-      _      <- modify[EvaluationContext, ExecutionError](lets.modify(_)(_.updated(let.name, lazyBlock)))
+      lazyBlock = LazyVal(blockEvaluation.ter(ctx))
+      _ <- modify[EvaluationContext, ExecutionError](
+        lets.modify(_)(_.updated(let.name, lazyBlock)))
       result <- evalExpr(inner)
     } yield result
 
@@ -27,7 +28,9 @@ object EvaluatorV1 extends ExprEvaluator {
     get[EvaluationContext, ExecutionError] flatMap { ctx =>
       lets.get(ctx).get(key) match {
         case Some(lzy) => liftTER[Any](lzy.value.value)
-        case None      => raiseError[EvaluationContext, ExecutionError, Any](s"A definition of '$key' not found")
+        case None =>
+          raiseError[EvaluationContext, ExecutionError, Any](
+            s"A definition of '$key' not found")
       }
     }
 
@@ -41,17 +44,21 @@ object EvaluatorV1 extends ExprEvaluator {
     evalExpr(expr).map(_.asInstanceOf[CaseObj]) flatMap {
       _.fields.get(field) match {
         case Some(eager) => eager.pure[EvalM]
-        case None        => raiseError[EvaluationContext, ExecutionError, Any](s"field '$field' not found")
+        case None =>
+          raiseError[EvaluationContext, ExecutionError, Any](
+            s"field '$field' not found")
       }
     }
 
-  private def evalFunctionCall(header: FunctionHeader, args: List[EXPR]): EvalM[Any] =
+  private def evalFunctionCall(header: FunctionHeader,
+                               args: List[EXPR]): EvalM[Any] =
     for {
       ctx <- get[EvaluationContext, ExecutionError]
       result <- funcs
         .get(ctx)
         .get(header)
-        .fold(raiseError[EvaluationContext, ExecutionError, Any](s"function '$header' not found")) { func =>
+        .fold(raiseError[EvaluationContext, ExecutionError, Any](
+          s"function '$header' not found")) { func =>
           args
             .traverse[EvalM, Any](a => evalExpr(a))
             .map(func.eval)
@@ -59,7 +66,8 @@ object EvaluatorV1 extends ExprEvaluator {
         }
     } yield result
 
-  private def pureAny[A](v: A): EvalM[Any] = v.pure[EvalM].map(_.asInstanceOf[Any])
+  private def pureAny[A](v: A): EvalM[Any] =
+    v.pure[EvalM].map(_.asInstanceOf[Any])
 
   private def evalExpr(t: EXPR): EvalM[Any] = t match {
     case BLOCK(let, inner)           => evalBlock(let, inner)
@@ -74,7 +82,8 @@ object EvaluatorV1 extends ExprEvaluator {
     case FUNCTION_CALL(header, args) => evalFunctionCall(header, args)
   }
 
-  def apply[A](c: EvaluationContext, expr: EXPR): (EvaluationContext, Either[ExecutionError, A]) = {
+  def apply[A](c: EvaluationContext,
+               expr: EXPR): (EvaluationContext, Either[ExecutionError, A]) = {
     evalExpr(expr)
       .map(_.asInstanceOf[A])
       .run(c)

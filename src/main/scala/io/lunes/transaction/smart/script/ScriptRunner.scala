@@ -12,7 +12,11 @@ import io.lunes.transaction.smart.BlockchainContext
 
 object ScriptRunner {
 
-  def apply[A, T <: Transaction](height: Int, tx: T, blockchain: Blockchain, script: Script): (EvaluationContext, Either[ExecutionError, A]) =
+  def apply[A, T <: Transaction](
+      height: Int,
+      tx: T,
+      blockchain: Blockchain,
+      script: Script): (EvaluationContext, Either[ExecutionError, A]) =
     script match {
       case Script.Expr(expr) =>
         val ctx = BlockchainContext.build(
@@ -23,7 +27,8 @@ object ScriptRunner {
         )
         EvaluatorV1[A](ctx, expr)
 
-      case _ => (EvaluationContext.empty, "Unsupported script version".asLeft[A])
+      case _ =>
+        (EvaluationContext.empty, "Unsupported script version".asLeft[A])
     }
 
 }

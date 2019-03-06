@@ -1,15 +1,23 @@
 package io.lunes.features
 
-import io.lunes.features.BlockchainFeatureStatus.{Activated, Approved, Undefined}
-import io.lunes.features.api.NodeFeatureStatus.{Implemented, NotImplemented, Voted}
+import io.lunes.features.BlockchainFeatureStatus.{
+  Activated,
+  Approved,
+  Undefined
+}
+import io.lunes.features.api.NodeFeatureStatus.{
+  Implemented,
+  NotImplemented,
+  Voted
+}
 import play.api.libs.json._
 
 package object api {
   implicit val nodeFeatureStatusFormat: Format[NodeFeatureStatus] =
     new Format[NodeFeatureStatus] {
       private val notimplemented = "NOT_IMPLEMENTED"
-      private val implemented    = "IMPLEMENTED"
-      private val voted          = "VOTED"
+      private val implemented = "IMPLEMENTED"
+      private val voted = "VOTED"
 
       override def reads(json: JsValue): JsResult[NodeFeatureStatus] =
         json match {
@@ -31,7 +39,7 @@ package object api {
   implicit val blockchainFeatureStatusFormat: Format[BlockchainFeatureStatus] =
     new Format[BlockchainFeatureStatus] {
       private val undefined = "VOTING"
-      private val approved  = "APPROVED"
+      private val approved = "APPROVED"
       private val activated = "ACTIVATED"
 
       override def reads(json: JsValue): JsResult[BlockchainFeatureStatus] =
@@ -51,6 +59,7 @@ package object api {
       }
     }
 
-  implicit val activationStatusFeatureFormat: Format[FeatureActivationStatus] = Json.format
-  implicit val activationStatusFormat: Format[ActivationStatus]               = Json.format
+  implicit val activationStatusFeatureFormat: Format[FeatureActivationStatus] =
+    Json.format
+  implicit val activationStatusFormat: Format[ActivationStatus] = Json.format
 }

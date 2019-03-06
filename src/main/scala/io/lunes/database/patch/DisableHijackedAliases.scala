@@ -17,10 +17,11 @@ object DisableHijackedAliases extends ScorexLogging {
   def apply(rw: RW): Unit = {
     log.info("Collecting hijacked aliases")
     val aliases = new util.HashMap[Alias, Seq[CreateAliasTransaction]]()
-    val height  = rw.get(Keys.height)
+    val height = rw.get(Keys.height)
 
     for (h <- 1 to height) {
-      val (header, txBytes) = BlockHeader.parseBytes(rw.get(Keys.blockBytes(h)).get).get
+      val (header, txBytes) =
+        BlockHeader.parseBytes(rw.get(Keys.blockBytes(h)).get).get
       if (header.transactionCount > 0) {
         val buffer = ByteBuffer.wrap(txBytes)
         header.version match {
@@ -31,11 +32,15 @@ object DisableHijackedAliases extends ScorexLogging {
           val length = buffer.getInt
           buffer.mark()
           val txType = buffer.get()
-          if (txType == CreateAliasTransaction.typeId || (txType == 0 && buffer.get() == CreateAliasTransaction.typeId)) {
+          if (txType == CreateAliasTransaction.typeId || (txType == 0 && buffer
+                .get() == CreateAliasTransaction.typeId)) {
             buffer.reset()
             buffer.get(txBuffer, 0, length)
             TransactionParsers.parseBytes(txBuffer).get match {
-              case cat: CreateAliasTransaction => aliases.compute(cat.alias, (_, prevTx) => Option(prevTx).fold(Seq(cat))(_ :+ cat))
+              case cat: CreateAliasTransaction =>
+                aliases.compute(
+                  cat.alias,
+                  (_, prevTx) => Option(prevTx).fold(Seq(cat))(_ :+ cat))
             }
           } else {
             buffer.reset()
@@ -51,7 +56,8 @@ object DisableHijackedAliases extends ScorexLogging {
       if txs.size > 1
     } yield alias
 
-    log.info(s"Collected ${aliases.size()} aliases, of which ${hijackedAliases.size} were hijacked")
+    log.info(
+      s"Collected ${aliases.size()} aliases, of which ${hijackedAliases.size} were hijacked")
 
     for (alias <- hijackedAliases) rw.put(Keys.aliasIsDisabled(alias), true)
   }
@@ -59,11 +65,14 @@ object DisableHijackedAliases extends ScorexLogging {
   def revert(rw: RW): Unit = {
     log.info("Discarding the list of hijacked aliases")
     val prefixBytes = Shorts.toByteArray(Keys.AliasIsDisabledPrefix)
-    val iterator    = rw.iterator
+    val iterator = rw.iterator
 
     try {
       iterator.seek(prefixBytes)
-      while (iterator.hasNext && iterator.peekNext().getKey.startsWith(prefixBytes)) {
+      while (iterator.hasNext && iterator
+               .peekNext()
+               .getKey
+               .startsWith(prefixBytes)) {
         rw.delete(iterator.next().getKey)
       }
     } finally {

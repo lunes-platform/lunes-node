@@ -14,8 +14,9 @@ import scala.util.{Failure, Success, Try}
 
 object ScriptCompiler {
 
-  private val v1Compiler    = new CompilerV1(utils.dummyTypeCheckerContext)
-  private val functionCosts = EvaluationContext.functionCosts(utils.dummyContext.functions.values)
+  private val v1Compiler = new CompilerV1(utils.dummyTypeCheckerContext)
+  private val functionCosts =
+    EvaluationContext.functionCosts(utils.dummyContext.functions.values)
 
   def apply(scriptText: String): Either[String, (Script, Long)] = {
     val directives = DirectiveParser(scriptText)
@@ -30,7 +31,7 @@ object ScriptCompiler {
       expr <- v match {
         case V1 => v1Compiler.compile(scriptWithoutDirectives, directives)
       }
-      script     <- ScriptV1(expr)
+      script <- ScriptV1(expr)
       complexity <- ScriptEstimator(functionCosts, expr)
     } yield (script, complexity)
   }
@@ -39,7 +40,8 @@ object ScriptCompiler {
     case Script.Expr(expr) => ScriptEstimator(functionCosts, expr)
   }
 
-  private def extractVersion(directives: List[Directive]): Either[String, ScriptVersion] = {
+  private def extractVersion(
+      directives: List[Directive]): Either[String, ScriptVersion] = {
     directives
       .find(_.key == DirectiveKey.LANGUAGE_VERSION)
       .map(d =>
@@ -47,7 +49,8 @@ object ScriptCompiler {
           case Success(v) =>
             ScriptVersion
               .fromInt(v)
-              .fold[Either[String, ScriptVersion]](Left("Unsupported language version"))(_.asRight)
+              .fold[Either[String, ScriptVersion]](
+                Left("Unsupported language version"))(_.asRight)
           case Failure(ex) =>
             Left("Can't parse language version")
       })

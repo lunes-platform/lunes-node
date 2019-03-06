@@ -13,33 +13,48 @@ object SignedTransferV2Request {
 }
 
 @ApiModel(value = "Signed Asset transfer transaction")
-case class SignedTransferV2Request(@ApiModelProperty(value = "Base58 encoded sender public key", required = true)
-                                   senderPublicKey: String,
-                                   @ApiModelProperty(value = "Base58 encoded Asset ID")
-                                   assetId: Option[String],
-                                   @ApiModelProperty(value = "Recipient address", required = true)
-                                   recipient: String,
-                                   @ApiModelProperty(required = true, example = "1000000")
-                                   amount: Long,
-                                   @ApiModelProperty(value = "Base58 encoded Fee Asset ID")
-                                   feeAssetId: Option[String],
-                                   @ApiModelProperty(required = true)
-                                   fee: Long,
-                                   @ApiModelProperty(required = true)
-                                   timestamp: Long,
-                                   @ApiModelProperty(required = true)
-                                   version: Byte,
-                                   @ApiModelProperty(required = true)
-                                   proofs: List[String])
+case class SignedTransferV2Request(
+    @ApiModelProperty(value = "Base58 encoded sender public key",
+                      required = true)
+    senderPublicKey: String,
+    @ApiModelProperty(value = "Base58 encoded Asset ID")
+    assetId: Option[String],
+    @ApiModelProperty(value = "Recipient address", required = true)
+    recipient: String,
+    @ApiModelProperty(required = true, example = "1000000")
+    amount: Long,
+    @ApiModelProperty(value = "Base58 encoded Fee Asset ID")
+    feeAssetId: Option[String],
+    @ApiModelProperty(required = true)
+    fee: Long,
+    @ApiModelProperty(required = true)
+    timestamp: Long,
+    @ApiModelProperty(required = true)
+    version: Byte,
+    @ApiModelProperty(required = true)
+    proofs: List[String])
     extends BroadcastRequest {
   def toTx: Either[ValidationError, TransferTransactionV2] =
     for {
-      _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
-      _assetId    <- parseBase58ToOption(assetId.filter(_.length > 0), "invalid.assetId", AssetIdStringLength)
-      _feeAssetId <- parseBase58ToOption(feeAssetId.filter(_.length > 0), "invalid.assetId", AssetIdStringLength)
-      _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
-      _proofs     <- Proofs.create(_proofBytes)
-      _recipient  <- AddressOrAlias.fromString(recipient)
-      t           <- TransferTransactionV2.create(version, _assetId, _sender, _recipient, amount, timestamp, _feeAssetId, fee, _proofs)
+      _sender <- PublicKeyAccount.fromBase58String(senderPublicKey)
+      _assetId <- parseBase58ToOption(assetId.filter(_.length > 0),
+                                      "invalid.assetId",
+                                      AssetIdStringLength)
+      _feeAssetId <- parseBase58ToOption(feeAssetId.filter(_.length > 0),
+                                         "invalid.assetId",
+                                         AssetIdStringLength)
+      _proofBytes <- proofs.traverse(s =>
+        parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
+      _proofs <- Proofs.create(_proofBytes)
+      _recipient <- AddressOrAlias.fromString(recipient)
+      t <- TransferTransactionV2.create(version,
+                                        _assetId,
+                                        _sender,
+                                        _recipient,
+                                        amount,
+                                        timestamp,
+                                        _feeAssetId,
+                                        fee,
+                                        _proofs)
     } yield t
 }

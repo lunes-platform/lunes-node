@@ -5,35 +5,42 @@ import java.io.IOException
 import io.lunes.network._
 import io.netty.channel._
 import io.netty.channel.socket.SocketChannel
-import io.netty.handler.codec.{LengthFieldBasedFrameDecoder, LengthFieldPrepender}
+import io.netty.handler.codec.{
+  LengthFieldBasedFrameDecoder,
+  LengthFieldPrepender
+}
 import scorex.utils.ScorexLogging
 
 import scala.concurrent.Promise
 import scala.concurrent.duration._
 
-class ClientHandshakeHandler(handshake: Handshake, promise: Promise[Channel]) extends ChannelInboundHandlerAdapter with ScorexLogging {
+class ClientHandshakeHandler(handshake: Handshake, promise: Promise[Channel])
+    extends ChannelInboundHandlerAdapter
+    with ScorexLogging {
 
   private def removeHandlers(ctx: ChannelHandlerContext): Unit = {
     ctx.pipeline().remove(classOf[HandshakeTimeoutHandler])
     ctx.pipeline().remove(this)
   }
 
-  override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match {
-    case HandshakeTimeoutExpired =>
-      log.error("Timeout expired while waiting for handshake")
-      ctx.close()
-      promise.failure(new IOException("No handshake"))
-    case remoteHandshake: Handshake =>
-      if (handshake.applicationName != remoteHandshake.applicationName) {
-        log.warn(s"Remote application name ${remoteHandshake.applicationName} does not match local ${handshake.applicationName}")
+  override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit =
+    msg match {
+      case HandshakeTimeoutExpired =>
+        log.error("Timeout expired while waiting for handshake")
         ctx.close()
-      } else {
-        promise.success(ctx.channel())
-        log.info(s"Accepted handshake $remoteHandshake")
-        removeHandlers(ctx)
-      }
-    case _ => super.channelRead(ctx, msg)
-  }
+        promise.failure(new IOException("No handshake"))
+      case remoteHandshake: Handshake =>
+        if (handshake.applicationName != remoteHandshake.applicationName) {
+          log.warn(
+            s"Remote application name ${remoteHandshake.applicationName} does not match local ${handshake.applicationName}")
+          ctx.close()
+        } else {
+          promise.success(ctx.channel())
+          log.info(s"Accepted handshake $remoteHandshake")
+          removeHandlers(ctx)
+        }
+      case _ => super.channelRead(ctx, msg)
+    }
 
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
     ctx.writeAndFlush(handshake.encode(ctx.alloc().buffer()))
@@ -42,9 +49,10 @@ class ClientHandshakeHandler(handshake: Handshake, promise: Promise[Channel]) ex
 }
 
 // Used only in tests and Generator
-class LegacyChannelInitializer(handshake: Handshake, promise: Promise[Channel]) extends ChannelInitializer[SocketChannel] {
+class LegacyChannelInitializer(handshake: Handshake, promise: Promise[Channel])
+    extends ChannelInitializer[SocketChannel] {
   private val lengthFieldLength = 4
-  private val maxFieldLength    = 1024 * 1024
+  private val maxFieldLength = 1024 * 1024
 
   override def initChannel(ch: SocketChannel): Unit =
     ch.pipeline()
@@ -53,7 +61,11 @@ class LegacyChannelInitializer(handshake: Handshake, promise: Promise[Channel]) 
         new HandshakeTimeoutHandler(30.seconds),
         new ClientHandshakeHandler(handshake, promise),
         new LengthFieldPrepender(lengthFieldLength),
-        new LengthFieldBasedFrameDecoder(maxFieldLength, 0, lengthFieldLength, 0, lengthFieldLength),
+        new LengthFieldBasedFrameDecoder(maxFieldLength,
+                                         0,
+                                         lengthFieldLength,
+                                         0,
+                                         lengthFieldLength),
         new LegacyFrameCodec(PeerDatabase.NoOp)
       )
 }

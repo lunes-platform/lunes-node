@@ -2,15 +2,23 @@ package io.lunes.mining
 
 import io.lunes.state.Blockchain
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
-import io.lunes.transaction.assets.{BurnTransaction, ReissueTransaction, SponsorFeeTransaction}
-import io.lunes.transaction.transfer.{MassTransferTransaction, TransferTransaction}
+import io.lunes.transaction.assets.{
+  BurnTransaction,
+  ReissueTransaction,
+  SponsorFeeTransaction
+}
+import io.lunes.transaction.transfer.{
+  MassTransferTransaction,
+  TransferTransaction
+}
 import io.lunes.transaction.{Authorized, Transaction}
 
 object TxEstimators {
   type Fn = (Blockchain, Transaction) => Long
 
   object sizeInBytes extends Fn {
-    override def apply(blockchain: Blockchain, x: Transaction): Long = x.bytes().length // + headers
+    override def apply(blockchain: Blockchain, x: Transaction): Long =
+      x.bytes().length // + headers
 
     override def toString(): String = "sizeInBytes"
   }
@@ -24,8 +32,9 @@ object TxEstimators {
   object scriptRunNumber extends Fn {
     override def apply(blockchain: Blockchain, x: Transaction): Long = {
       val smartAccountRun = x match {
-        case x: Transaction with Authorized if blockchain.hasScript(x.sender) => 1
-        case _                                                                => 0
+        case x: Transaction with Authorized if blockchain.hasScript(x.sender) =>
+          1
+        case _ => 0
       }
 
       val assetIds = x match {
@@ -34,11 +43,13 @@ object TxEstimators {
         case x: BurnTransaction         => Seq(x.assetId)
         case x: ReissueTransaction      => Seq(x.assetId)
         case x: SponsorFeeTransaction   => Seq(x.assetId)
-        case x: ExchangeTransaction     => Seq(x.buyOrder.assetPair.amountAsset, x.buyOrder.assetPair.priceAsset).flatten
-        case _                          => Seq.empty
+        case x: ExchangeTransaction =>
+          Seq(x.buyOrder.assetPair.amountAsset, x.buyOrder.assetPair.priceAsset).flatten
+        case _ => Seq.empty
       }
 
-      val smartTokenRuns = assetIds.flatMap(blockchain.assetDescription).count(_.script.isDefined)
+      val smartTokenRuns =
+        assetIds.flatMap(blockchain.assetDescription).count(_.script.isDefined)
       smartAccountRun + smartTokenRuns
     }
 

@@ -22,25 +22,37 @@ case class TransferTransactionV1 private (assetId: Option[AssetId],
     with SignedTransaction
     with FastHashId {
 
-  override val builder: TransactionParser     = TransferTransactionV1
-  override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(Array(builder.typeId) ++ bytesBase())
-  override val bytes: Coeval[Array[Byte]]     = Coeval.evalOnce(Bytes.concat(Array(builder.typeId), signature.arr, bodyBytes()))
-  override val version: Byte                  = 1: Byte
+  override val builder: TransactionParser = TransferTransactionV1
+  override val bodyBytes: Coeval[Array[Byte]] =
+    Coeval.evalOnce(Array(builder.typeId) ++ bytesBase())
+  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(
+    Bytes.concat(Array(builder.typeId), signature.arr, bodyBytes()))
+  override val version: Byte = 1: Byte
 }
 
-object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1] with TransactionParser.HardcodedVersion1 {
+object TransferTransactionV1
+    extends TransactionParserFor[TransferTransactionV1]
+    with TransactionParser.HardcodedVersion1 {
 
   override val typeId: Byte = 4
 
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  override protected def parseTail(version: Byte,
+                                   bytes: Array[Byte]): Try[TransactionT] =
     Try {
       val signature = ByteStr(bytes.slice(0, SignatureLength))
-      val txId      = bytes(SignatureLength)
+      val txId = bytes(SignatureLength)
       require(txId == typeId, s"Signed tx id is not match")
 
       (for {
         parsed <- TransferTransaction.parseBase(bytes, SignatureLength + 1)
-        (sender, assetIdOpt, feeAssetIdOpt, timestamp, amount, feeAmount, recipient, _) = parsed
+        (sender,
+         assetIdOpt,
+         feeAssetIdOpt,
+         timestamp,
+         amount,
+         feeAmount,
+         recipient,
+         _) = parsed
         tt <- TransferTransactionV1.create(assetIdOpt.map(ByteStr(_)),
                                            sender,
                                            recipient,
@@ -49,7 +61,8 @@ object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1]
                                            feeAssetIdOpt.map(ByteStr(_)),
                                            feeAmount,
                                            signature)
-      } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+      } yield tt).fold(left => Failure(new Exception(left.toString)),
+                       right => Success(right))
     }.flatten
 
   def create(assetId: Option[AssetId],
@@ -62,19 +75,37 @@ object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1]
              signature: ByteStr): Either[ValidationError, TransactionT] = {
     TransferTransaction
       .validate(amount, feeAmount)
-      .map(_ => TransferTransactionV1(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, signature))
+      .map(
+        _ =>
+          TransferTransactionV1(assetId,
+                                sender,
+                                recipient,
+                                amount,
+                                timestamp,
+                                feeAssetId,
+                                feeAmount,
+                                signature))
   }
 
-  def signed(assetId: Option[AssetId],
-             sender: PublicKeyAccount,
-             recipient: AddressOrAlias,
-             amount: Long,
-             timestamp: Long,
-             feeAssetId: Option[AssetId],
-             feeAmount: Long,
-             signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
-    create(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, ByteStr.empty).right.map { unsigned =>
-      unsigned.copy(signature = ByteStr(crypto.sign(signer, unsigned.bodyBytes())))
+  def signed(
+      assetId: Option[AssetId],
+      sender: PublicKeyAccount,
+      recipient: AddressOrAlias,
+      amount: Long,
+      timestamp: Long,
+      feeAssetId: Option[AssetId],
+      feeAmount: Long,
+      signer: PrivateKeyAccount): Either[ValidationError, TransactionT] = {
+    create(assetId,
+           sender,
+           recipient,
+           amount,
+           timestamp,
+           feeAssetId,
+           feeAmount,
+           ByteStr.empty).right.map { unsigned =>
+      unsigned.copy(
+        signature = ByteStr(crypto.sign(signer, unsigned.bodyBytes())))
     }
   }
 
@@ -85,6 +116,13 @@ object TransferTransactionV1 extends TransactionParserFor[TransferTransactionV1]
                  timestamp: Long,
                  feeAssetId: Option[AssetId],
                  feeAmount: Long): Either[ValidationError, TransactionT] = {
-    signed(assetId, sender, recipient, amount, timestamp, feeAssetId, feeAmount, sender)
+    signed(assetId,
+           sender,
+           recipient,
+           amount,
+           timestamp,
+           feeAssetId,
+           feeAmount,
+           sender)
   }
 }

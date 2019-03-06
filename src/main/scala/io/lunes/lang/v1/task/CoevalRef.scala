@@ -9,10 +9,11 @@ sealed trait CoevalRef[A] {
 }
 
 object CoevalRef {
-  def of[A, R <: Atomic[A]](a: A)(implicit ab: AtomicBuilder[A, R]): CoevalRef[A] = {
+  def of[A, R <: Atomic[A]](a: A)(
+      implicit ab: AtomicBuilder[A, R]): CoevalRef[A] = {
     new CoevalRef[A] {
-      private val atom: Atomic[A]            = Atomic(a)
-      override def read: Coeval[A]           = Coeval.delay(atom.get)
+      private val atom: Atomic[A] = Atomic(a)
+      override def read: Coeval[A] = Coeval.delay(atom.get)
       override def write(a: A): Coeval[Unit] = Coeval.delay(atom.set(a))
     }
   }

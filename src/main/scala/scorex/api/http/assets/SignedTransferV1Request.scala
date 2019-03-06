@@ -16,39 +16,58 @@ object SignedTransferV1Request {
       (JsPath \ "recipient").read[String] and
       (JsPath \ "amount").read[Long] and
       (JsPath \ "fee").read[Long] and
-      (JsPath \ "feeAssetId").read[String].map(Option.apply).orElse((JsPath \ "feeAsset").readNullable[String]) and
+      (JsPath \ "feeAssetId")
+        .read[String]
+        .map(Option.apply)
+        .orElse((JsPath \ "feeAsset").readNullable[String]) and
       (JsPath \ "timestamp").read[Long] and
       (JsPath \ "signature").read[String]
   )(SignedTransferV1Request.apply _)
 
-  implicit val writes: Writes[SignedTransferV1Request] = Json.writes[SignedTransferV1Request]
+  implicit val writes: Writes[SignedTransferV1Request] =
+    Json.writes[SignedTransferV1Request]
 }
 
 @ApiModel(value = "Signed Asset transfer transaction")
-case class SignedTransferV1Request(@ApiModelProperty(value = "Base58 encoded sender public key", required = true)
-                                   senderPublicKey: String,
-                                   @ApiModelProperty(value = "Base58 encoded Asset ID")
-                                   assetId: Option[String],
-                                   @ApiModelProperty(value = "Recipient address", required = true)
-                                   recipient: String,
-                                   @ApiModelProperty(required = true, example = "1000000")
-                                   amount: Long,
-                                   @ApiModelProperty(required = true)
-                                   fee: Long,
-                                   @ApiModelProperty(value = "Fee asset ID")
-                                   feeAssetId: Option[String],
-                                   @ApiModelProperty(required = true)
-                                   timestamp: Long,
-                                   @ApiModelProperty(required = true)
-                                   signature: String)
+case class SignedTransferV1Request(
+    @ApiModelProperty(value = "Base58 encoded sender public key",
+                      required = true)
+    senderPublicKey: String,
+    @ApiModelProperty(value = "Base58 encoded Asset ID")
+    assetId: Option[String],
+    @ApiModelProperty(value = "Recipient address", required = true)
+    recipient: String,
+    @ApiModelProperty(required = true, example = "1000000")
+    amount: Long,
+    @ApiModelProperty(required = true)
+    fee: Long,
+    @ApiModelProperty(value = "Fee asset ID")
+    feeAssetId: Option[String],
+    @ApiModelProperty(required = true)
+    timestamp: Long,
+    @ApiModelProperty(required = true)
+    signature: String)
     extends BroadcastRequest {
   def toTx: Either[ValidationError, TransferTransactionV1] =
     for {
-      _sender     <- PublicKeyAccount.fromBase58String(senderPublicKey)
-      _assetId    <- parseBase58ToOption(assetId.filter(_.length > 0), "invalid.assetId", AssetIdStringLength)
-      _feeAssetId <- parseBase58ToOption(feeAssetId.filter(_.length > 0), "invalid.feeAssetId", AssetIdStringLength)
-      _signature  <- parseBase58(signature, "invalid.signature", SignatureStringLength)
-      _account    <- AddressOrAlias.fromString(recipient)
-      t           <- TransferTransactionV1.create(_assetId, _sender, _account, amount, timestamp, _feeAssetId, fee, _signature)
+      _sender <- PublicKeyAccount.fromBase58String(senderPublicKey)
+      _assetId <- parseBase58ToOption(assetId.filter(_.length > 0),
+                                      "invalid.assetId",
+                                      AssetIdStringLength)
+      _feeAssetId <- parseBase58ToOption(feeAssetId.filter(_.length > 0),
+                                         "invalid.feeAssetId",
+                                         AssetIdStringLength)
+      _signature <- parseBase58(signature,
+                                "invalid.signature",
+                                SignatureStringLength)
+      _account <- AddressOrAlias.fromString(recipient)
+      t <- TransferTransactionV1.create(_assetId,
+                                        _sender,
+                                        _account,
+                                        amount,
+                                        timestamp,
+                                        _feeAssetId,
+                                        fee,
+                                        _signature)
     } yield t
 }

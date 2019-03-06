@@ -3,13 +3,14 @@ package io.lunes.database
 import org.iq80.leveldb.{DB, DBIterator, ReadOptions}
 
 class RW(db: DB) extends AutoCloseable {
-  private val batch       = db.createWriteBatch()
-  private val snapshot    = db.getSnapshot
+  private val batch = db.createWriteBatch()
+  private val snapshot = db.getSnapshot
   private val readOptions = new ReadOptions().snapshot(snapshot)
 
   def get[V](key: Key[V]): V = key.parse(db.get(key.keyBytes, readOptions))
 
-  def put[V](key: Key[V], value: V): Unit = batch.put(key.keyBytes, key.encode(value))
+  def put[V](key: Key[V], value: V): Unit =
+    batch.put(key.keyBytes, key.encode(value))
 
   def delete(key: Array[Byte]): Unit = batch.delete(key)
 

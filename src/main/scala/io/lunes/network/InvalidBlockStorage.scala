@@ -13,15 +13,18 @@ trait InvalidBlockStorage {
   def find(blockId: ByteStr): Option[ValidationError]
 }
 
-class InvalidBlockStorageImpl(settings: InvalidBlockStorageSettings) extends InvalidBlockStorage {
+class InvalidBlockStorageImpl(settings: InvalidBlockStorageSettings)
+    extends InvalidBlockStorage {
   private val cache = CacheBuilder
     .newBuilder()
     .expireAfterWrite(settings.timeout.length, settings.timeout.unit)
     .build[ByteStr, ValidationError]()
 
-  override def add(blockId: ByteStr, validationError: ValidationError): Unit = cache.put(blockId, validationError)
+  override def add(blockId: ByteStr, validationError: ValidationError): Unit =
+    cache.put(blockId, validationError)
 
-  override def find(blockId: ByteStr): Option[ValidationError] = Option(cache.getIfPresent(blockId))
+  override def find(blockId: ByteStr): Option[ValidationError] =
+    Option(cache.getIfPresent(blockId))
 }
 
 object InvalidBlockStorageImpl {

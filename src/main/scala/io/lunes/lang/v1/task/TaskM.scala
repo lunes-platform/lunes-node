@@ -15,11 +15,12 @@ import monix.execution.atomic.{Atomic, AtomicBuilder}
 trait TaskM[S, E, R] {
   protected[task] val inner: Kleisli[Coeval, CoevalRef[S], Either[E, R]]
 
-  def run[RS <: Atomic[S]](initial: S)(implicit b: AtomicBuilder[S, RS]): Coeval[(S, Either[E, R])] = {
+  def run[RS <: Atomic[S]](initial: S)(
+      implicit b: AtomicBuilder[S, RS]): Coeval[(S, Either[E, R])] = {
     val stateRef = CoevalRef.of(initial)
 
     for {
-      result     <- inner.run(stateRef)
+      result <- inner.run(stateRef)
       finalState <- stateRef.read
     } yield (finalState, result)
   }
@@ -47,11 +48,16 @@ trait TaskM[S, E, R] {
 
 object TaskM {
 
-  private[task] def fromKleisli[S, E, R](in: Kleisli[Coeval, CoevalRef[S], Either[E, R]]): TaskM[S, E, R] = new TaskM[S, E, R] {
-    override protected[task] val inner: Kleisli[Coeval, CoevalRef[S], Either[E, R]] = in
-  }
+  private[task] def fromKleisli[S, E, R](
+      in: Kleisli[Coeval, CoevalRef[S], Either[E, R]]): TaskM[S, E, R] =
+    new TaskM[S, E, R] {
+      override protected[task] val inner
+        : Kleisli[Coeval, CoevalRef[S], Either[E, R]] = in
+    }
 
-  def apply[S, E, R](f: S => Coeval[Either[E, R]]): TaskM[S, E, R] = new TaskM[S, E, R] {
-    override protected[task] val inner: Kleisli[Coeval, CoevalRef[S], Either[E, R]] = Kleisli(_.read >>= f)
-  }
+  def apply[S, E, R](f: S => Coeval[Either[E, R]]): TaskM[S, E, R] =
+    new TaskM[S, E, R] {
+      override protected[task] val inner
+        : Kleisli[Coeval, CoevalRef[S], Either[E, R]] = Kleisli(_.read >>= f)
+    }
 }

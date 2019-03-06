@@ -13,7 +13,9 @@ import scorex.api.http.{ApiRoute, CommonApiFunctions}
 import scorex.utils.ScorexLogging
 @Path("/utils/lunesnode")
 @Api(value = "utils")
-case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, application: Shutdownable)
+case class NodeApiRoute(settings: RestAPISettings,
+                        blockchain: Blockchain,
+                        application: Shutdownable)
     extends ApiRoute
     with CommonApiFunctions
     with ScorexLogging {
@@ -23,7 +25,9 @@ case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, appli
   }
 
   @Path("/version")
-  @ApiOperation(value = "Version", notes = "Get Lunes node version", httpMethod = "GET")
+  @ApiOperation(value = "Version",
+                notes = "Get Lunes node version",
+                httpMethod = "GET")
   @ApiResponses(
     Array(
       new ApiResponse(code = 200, message = "Json Lunes node version")
@@ -41,15 +45,17 @@ case class NodeApiRoute(settings: RestAPISettings, blockchain: Blockchain, appli
   }
 
   @Path("/status")
-  @ApiOperation(value = "Status", notes = "Get status of the running core", httpMethod = "GET")
+  @ApiOperation(value = "Status",
+                notes = "Get status of the running core",
+                httpMethod = "GET")
   def status: Route = (get & path("status")) {
     val lastUpdated = blockchain.lastBlock.get.timestamp
     complete(
       Json.obj(
         "blockchainHeight" -> blockchain.height,
-        "stateHeight"      -> blockchain.height,
+        "stateHeight" -> blockchain.height,
         "updatedTimestamp" -> lastUpdated,
-        "updatedDate"      -> Instant.ofEpochMilli(lastUpdated).toString
+        "updatedDate" -> Instant.ofEpochMilli(lastUpdated).toString
       ))
   }
 }

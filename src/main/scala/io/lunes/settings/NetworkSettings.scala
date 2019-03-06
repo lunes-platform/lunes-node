@@ -13,7 +13,9 @@ import net.ceedubs.ficus.readers.ValueReader
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 
-case class UPnPSettings(enable: Boolean, gatewayTimeout: FiniteDuration, discoverTimeout: FiniteDuration)
+case class UPnPSettings(enable: Boolean,
+                        gatewayTimeout: FiniteDuration,
+                        discoverTimeout: FiniteDuration)
 
 case class NetworkSettings(file: Option[File],
                            bindAddress: InetSocketAddress,
@@ -44,36 +46,46 @@ object NetworkSettings {
   implicit val byteReader: ValueReader[Byte] = { (cfg: Config, path: String) =>
     val x = cfg.getInt(path)
     if (x.isValidByte) x.toByte
-    else throw new IllegalArgumentException(s"$path has an invalid value: '$x' expected to be a byte")
+    else
+      throw new IllegalArgumentException(
+        s"$path has an invalid value: '$x' expected to be a byte")
   }
 
   private def fromConfig(config: Config): NetworkSettings = {
-    val file        = config.getAs[File]("file")
-    val bindAddress = new InetSocketAddress(config.as[String]("bind-address"), config.as[Int]("port"))
-    val nonce       = config.getOrElse("nonce", randomNonce)
-    val nodeName    = config.getOrElse("node-name", s"Node-$nonce")
-    require(nodeName.getBytes(Charsets.UTF_8).length <= MaxNodeNameBytesLength,
-            s"Node name should have length less than $MaxNodeNameBytesLength bytes")
-    val declaredAddress = config.getAs[String]("declared-address").map { address =>
-      val uri = new URI(s"my://$address")
-      new InetSocketAddress(uri.getHost, uri.getPort)
+    val file = config.getAs[File]("file")
+    val bindAddress = new InetSocketAddress(config.as[String]("bind-address"),
+                                            config.as[Int]("port"))
+    val nonce = config.getOrElse("nonce", randomNonce)
+    val nodeName = config.getOrElse("node-name", s"Node-$nonce")
+    require(
+      nodeName.getBytes(Charsets.UTF_8).length <= MaxNodeNameBytesLength,
+      s"Node name should have length less than $MaxNodeNameBytesLength bytes")
+    val declaredAddress = config.getAs[String]("declared-address").map {
+      address =>
+        val uri = new URI(s"my://$address")
+        new InetSocketAddress(uri.getHost, uri.getPort)
     }
 
-    val knownPeers                   = config.as[Seq[String]]("known-peers")
-    val peersDataResidenceTime       = config.as[FiniteDuration]("peers-data-residence-time")
-    val blackListResidenceTime       = config.as[FiniteDuration]("black-list-residence-time")
-    val maxInboundConnections        = config.as[Int]("max-inbound-connections")
-    val maxOutboundConnections       = config.as[Int]("max-outbound-connections")
-    val maxConnectionsFromSingleHost = config.as[Int]("max-single-host-connections")
-    val connectionTimeout            = config.as[FiniteDuration]("connection-timeout")
-    val maxUnverifiedPeers           = config.as[Int]("max-unverified-peers")
-    val enablePeersExchange          = config.as[Boolean]("enable-peers-exchange")
-    val enableBlacklisting           = config.as[Boolean]("enable-blacklisting")
-    val peersBroadcastInterval       = config.as[FiniteDuration]("peers-broadcast-interval")
-    val handshakeTimeout             = config.as[FiniteDuration]("handshake-timeout")
-    val suspensionResidenceTime      = config.as[FiniteDuration]("suspension-residence-time")
-    val uPnPSettings                 = config.as[UPnPSettings]("upnp")
-    val trafficLogger                = config.as[TrafficLogger.Settings]("traffic-logger")
+    val knownPeers = config.as[Seq[String]]("known-peers")
+    val peersDataResidenceTime =
+      config.as[FiniteDuration]("peers-data-residence-time")
+    val blackListResidenceTime =
+      config.as[FiniteDuration]("black-list-residence-time")
+    val maxInboundConnections = config.as[Int]("max-inbound-connections")
+    val maxOutboundConnections = config.as[Int]("max-outbound-connections")
+    val maxConnectionsFromSingleHost =
+      config.as[Int]("max-single-host-connections")
+    val connectionTimeout = config.as[FiniteDuration]("connection-timeout")
+    val maxUnverifiedPeers = config.as[Int]("max-unverified-peers")
+    val enablePeersExchange = config.as[Boolean]("enable-peers-exchange")
+    val enableBlacklisting = config.as[Boolean]("enable-blacklisting")
+    val peersBroadcastInterval =
+      config.as[FiniteDuration]("peers-broadcast-interval")
+    val handshakeTimeout = config.as[FiniteDuration]("handshake-timeout")
+    val suspensionResidenceTime =
+      config.as[FiniteDuration]("suspension-residence-time")
+    val uPnPSettings = config.as[UPnPSettings]("upnp")
+    val trafficLogger = config.as[TrafficLogger.Settings]("traffic-logger")
 
     NetworkSettings(
       file,

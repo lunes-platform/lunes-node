@@ -5,28 +5,30 @@ import io.lunes.lang.v1.evaluator.ctx.PredefCaseType
 
 object Types {
 
-  val addressType        = PredefCaseType("Address", List("bytes" -> BYTEVECTOR))
-  val aliasType          = PredefCaseType("Alias", List("alias" -> STRING))
+  val addressType = PredefCaseType("Address", List("bytes" -> BYTEVECTOR))
+  val aliasType = PredefCaseType("Alias", List("alias" -> STRING))
   val addressOrAliasType = UNION(addressType.typeRef, aliasType.typeRef)
 
-  val transfer = PredefCaseType("Transfer", List("recipient" -> addressOrAliasType, "amount" -> LONG))
+  val transfer = PredefCaseType(
+    "Transfer",
+    List("recipient" -> addressOrAliasType, "amount" -> LONG))
 
   val optionByteVector: OPTION = OPTION(BYTEVECTOR)
-  val optionAddress            = OPTION(addressType.typeRef)
-  val optionLong: OPTION       = OPTION(LONG)
-  val listByteVector: LIST     = LIST(BYTEVECTOR)
-  val listTransfers            = LIST(transfer.typeRef)
+  val optionAddress = OPTION(addressType.typeRef)
+  val optionLong: OPTION = OPTION(LONG)
+  val listByteVector: LIST = LIST(BYTEVECTOR)
+  val listTransfers = LIST(transfer.typeRef)
 
   val header = List(
-    "id"        -> BYTEVECTOR,
-    "fee"       -> LONG,
+    "id" -> BYTEVECTOR,
+    "fee" -> LONG,
     "timestamp" -> LONG,
-    "version"   -> LONG,
+    "version" -> LONG,
   )
   val proven = List(
-    "senderPk"  -> BYTEVECTOR,
+    "senderPk" -> BYTEVECTOR,
     "bodyBytes" -> BYTEVECTOR,
-    "proofs"    -> listByteVector
+    "proofs" -> listByteVector
   )
 
   val genesisTransactionType = PredefCaseType(
@@ -37,31 +39,31 @@ object Types {
   val transferTransactionType = PredefCaseType(
     "TransferTransaction",
     List(
-      "feeAssetId"      -> optionByteVector,
-      "amount"          -> LONG,
+      "feeAssetId" -> optionByteVector,
+      "amount" -> LONG,
       "transferAssetId" -> optionByteVector,
-      "recipient"       -> addressOrAliasType,
-      "attachment"      -> BYTEVECTOR
+      "recipient" -> addressOrAliasType,
+      "attachment" -> BYTEVECTOR
     ) ++ header ++ proven
   )
 
   val issueTransactionType = PredefCaseType(
     "IssueTransaction",
     List(
-      "quantity"    -> LONG,
-      "name"        -> BYTEVECTOR,
+      "quantity" -> LONG,
+      "name" -> BYTEVECTOR,
       "description" -> BYTEVECTOR,
-      "reissuable"  -> BOOLEAN,
-      "decimals"    -> LONG,
-      "script"      -> optionByteVector
+      "reissuable" -> BOOLEAN,
+      "decimals" -> LONG,
+      "script" -> optionByteVector
     ) ++ header ++ proven
   )
 
   val reissueTransactionType = PredefCaseType(
     "ReissueTransaction",
     List(
-      "quantity"   -> LONG,
-      "assetId"    -> BYTEVECTOR,
+      "quantity" -> LONG,
+      "assetId" -> BYTEVECTOR,
       "reissuable" -> BOOLEAN,
     ) ++ header ++ proven
   )
@@ -70,13 +72,13 @@ object Types {
     "BurnTransaction",
     List(
       "quantity" -> LONG,
-      "assetId"  -> BYTEVECTOR
+      "assetId" -> BYTEVECTOR
     ) ++ header ++ proven
   )
   val leaseTransactionType = PredefCaseType(
     "LeaseTransaction",
     List(
-      "amount"    -> LONG,
+      "amount" -> LONG,
       "recipient" -> addressOrAliasType,
     ) ++ header ++ proven
   )
@@ -98,7 +100,7 @@ object Types {
   val paymentTransactionType = PredefCaseType(
     "PaymentTransaction",
     List(
-      "amount"    -> LONG,
+      "amount" -> LONG,
       "recipient" -> addressOrAliasType,
     ) ++ header ++ proven
   )
@@ -106,49 +108,55 @@ object Types {
   val sponsorFeeTransactionType = PredefCaseType(
     "SponsorFeeTransaction",
     List(
-      "assetId"              -> BYTEVECTOR,
+      "assetId" -> BYTEVECTOR,
       "minSponsoredAssetFee" -> optionLong
     ) ++ header ++ proven
   )
 
-  val buyType     = PredefCaseType("Buy", List.empty)
-  val sellType    = PredefCaseType("Buy", List.empty)
+  val buyType = PredefCaseType("Buy", List.empty)
+  val sellType = PredefCaseType("Buy", List.empty)
   val ordTypeType = UNION(buyType.typeRef, sellType.typeRef)
 
-  val assetPairType = PredefCaseType("AssetPair", List("amountAsset" -> optionByteVector, "priceAsset" -> optionByteVector))
+  val assetPairType = PredefCaseType(
+    "AssetPair",
+    List("amountAsset" -> optionByteVector, "priceAsset" -> optionByteVector))
   val orderType = PredefCaseType(
     "Order",
     List(
-      "senderPublicKey"  -> BYTEVECTOR,
+      "senderPublicKey" -> BYTEVECTOR,
       "matcherPublicKey" -> BYTEVECTOR,
-      "assetPair"        -> assetPairType.typeRef,
-      "orderType"        -> ordTypeType,
-      "price"            -> LONG,
-      "amount"           -> LONG,
-      "timestamp"        -> LONG,
-      "expiration"       -> LONG,
-      "matcherFee"       -> LONG,
-      "signature"        -> BYTEVECTOR
+      "assetPair" -> assetPairType.typeRef,
+      "orderType" -> ordTypeType,
+      "price" -> LONG,
+      "amount" -> LONG,
+      "timestamp" -> LONG,
+      "expiration" -> LONG,
+      "matcherFee" -> LONG,
+      "signature" -> BYTEVECTOR
     )
   )
   val exchangeTransactionType = PredefCaseType(
     "ExchangeTransaction",
-    List("buyOrder"       -> orderType.typeRef,
-         "sellOrder"      -> orderType.typeRef,
-         "price"          -> LONG,
-         "amount"         -> LONG,
-         "buyMatcherFee"  -> LONG,
+    List("buyOrder" -> orderType.typeRef,
+         "sellOrder" -> orderType.typeRef,
+         "price" -> LONG,
+         "amount" -> LONG,
+         "buyMatcherFee" -> LONG,
          "sellMatcherFee" -> LONG)
       ++ header ++ proven
   )
 
-  def buildDataEntryType(name: String, tpe: TYPE) = PredefCaseType(name + "DataEntry", List("key" -> STRING, "value" -> tpe))
+  def buildDataEntryType(name: String, tpe: TYPE) =
+    PredefCaseType(name + "DataEntry", List("key" -> STRING, "value" -> tpe))
 
-  val strDataEntryType  = buildDataEntryType("Str", STRING)
+  val strDataEntryType = buildDataEntryType("Str", STRING)
   val boolDataEntryType = buildDataEntryType("Bool", BOOLEAN)
-  val bvDataEntryType   = buildDataEntryType("ByteVector", BYTEVECTOR)
+  val bvDataEntryType = buildDataEntryType("ByteVector", BYTEVECTOR)
   val longDataEntryType = buildDataEntryType("Long", LONG)
-  val dataEntryTypes    = List(strDataEntryType, boolDataEntryType, bvDataEntryType, longDataEntryType)
+  val dataEntryTypes = List(strDataEntryType,
+                            boolDataEntryType,
+                            bvDataEntryType,
+                            longDataEntryType)
 
   val listOfDataEntriesType = LIST(UNION(dataEntryTypes.map(_.typeRef)))
 
@@ -160,12 +168,12 @@ object Types {
   val massTransferTransactionType = PredefCaseType(
     "MassTransferTransaction",
     List(
-      "feeAssetId"    -> optionByteVector,
-      "assetId"       -> optionByteVector,
-      "totalAmount"   -> LONG,
-      "transfers"     -> listTransfers,
+      "feeAssetId" -> optionByteVector,
+      "assetId" -> optionByteVector,
+      "totalAmount" -> LONG,
+      "transfers" -> listTransfers,
       "transferCount" -> LONG,
-      "attachment"    -> BYTEVECTOR
+      "attachment" -> BYTEVECTOR
     ) ++ header ++ proven
   )
 
@@ -176,7 +184,8 @@ object Types {
     ) ++ header ++ proven
   )
 
-  val obsoleteTransactionTypes = List(genesisTransactionType, paymentTransactionType)
+  val obsoleteTransactionTypes =
+    List(genesisTransactionType, paymentTransactionType)
 
   val activeTransactionTypes = List(
     transferTransactionType,
@@ -196,7 +205,7 @@ object Types {
   val transactionTypes = /*obsoleteTransactionTypes ++ */ activeTransactionTypes
 
   val outgoingTransactionType = UNION(activeTransactionTypes.map(_.typeRef))
-  val anyTransactionType      = UNION(transactionTypes.map(_.typeRef))
+  val anyTransactionType = UNION(transactionTypes.map(_.typeRef))
 
   val caseTypes = (Seq(addressType, aliasType, transfer) ++ dataEntryTypes ++ transactionTypes)
 }

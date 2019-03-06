@@ -13,9 +13,11 @@ case class Validation(status: Boolean, labels: Set[String] = Set.empty) {
       else Validation(true)
     }
 
-  def :|(l: String): Validation = if (!this.status) copy(labels = labels + l) else this
+  def :|(l: String): Validation =
+    if (!this.status) copy(labels = labels + l) else this
 
-  def |:(l: String): Validation = if (!this.status) copy(labels = labels.map(l + " " + _)) else this
+  def |:(l: String): Validation =
+    if (!this.status) copy(labels = labels.map(l + " " + _)) else this
 
 }
 
@@ -26,7 +28,8 @@ class ExtendedBoolean(b: => Boolean) {
 }
 
 case object Validation {
-  implicit def booleanOperators(b: => Boolean): ExtendedBoolean = new ExtendedBoolean(b)
+  implicit def booleanOperators(b: => Boolean): ExtendedBoolean =
+    new ExtendedBoolean(b)
 
   implicit def result2Boolean(x: Validation): Boolean = x.status
 

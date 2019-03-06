@@ -9,12 +9,17 @@ import io.lunes.transaction.assets.exchange.Validation.booleanOperators
 
 import scala.util.{Success, Try}
 
-case class AssetPair(@ApiModelProperty(dataType = "java.lang.String") amountAsset: Option[AssetId],
-                     @ApiModelProperty(dataType = "java.lang.String") priceAsset: Option[AssetId]) {
+case class AssetPair(
+    @ApiModelProperty(dataType = "java.lang.String") amountAsset: Option[
+      AssetId],
+    @ApiModelProperty(dataType = "java.lang.String") priceAsset: Option[
+      AssetId]) {
   @ApiModelProperty(hidden = true)
-  lazy val priceAssetStr: String = priceAsset.map(_.base58).getOrElse(AssetPair.LunesName)
+  lazy val priceAssetStr: String =
+    priceAsset.map(_.base58).getOrElse(AssetPair.LunesName)
   @ApiModelProperty(hidden = true)
-  lazy val amountAssetStr: String = amountAsset.map(_.base58).getOrElse(AssetPair.LunesName)
+  lazy val amountAssetStr: String =
+    amountAsset.map(_.base58).getOrElse(AssetPair.LunesName)
 
   override def toString: String = key
 
@@ -28,7 +33,7 @@ case class AssetPair(@ApiModelProperty(dataType = "java.lang.String") amountAsse
 
   def json: JsObject = Json.obj(
     "amountAsset" -> amountAsset.map(_.base58),
-    "priceAsset"  -> priceAsset.map(_.base58)
+    "priceAsset" -> priceAsset.map(_.base58)
   )
 }
 

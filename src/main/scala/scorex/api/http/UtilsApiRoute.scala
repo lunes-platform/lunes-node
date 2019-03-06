@@ -14,8 +14,12 @@ import io.lunes.transaction.smart.script.{Script, ScriptCompiler}
 import scorex.utils.Time
 
 @Path("/utils")
-@Api(value = "/utils", description = "Useful functions", position = 3, produces = "application/json")
-case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends ApiRoute {
+@Api(value = "/utils",
+     description = "Useful functions",
+     position = 3,
+     produces = "application/json")
+case class UtilsApiRoute(timeService: Time, settings: RestAPISettings)
+    extends ApiRoute {
 
   import UtilsApiRoute._
 
@@ -33,7 +37,11 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
 //  @ApiOperation(value = "Compile", notes = "Compiles string code to base64 script representation", httpMethod = "POST")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "code", required = true, dataType = "string", paramType = "body", value = "Script code")
+      new ApiImplicitParam(name = "code",
+                           required = true,
+                           dataType = "string",
+                           paramType = "body",
+                           value = "Script code")
     ))
   @ApiResponses(
     Array(
@@ -46,9 +54,9 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
           e => ScriptCompilerError(e), {
             case (script, complexity) =>
               Json.obj(
-                "script"     -> script.bytes().base64,
+                "script" -> script.bytes().base64,
                 "complexity" -> complexity,
-                "extraFee"   -> CommonValidation.ScriptExtraFee
+                "extraFee" -> CommonValidation.ScriptExtraFee
               )
           }
         )
@@ -60,7 +68,11 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
 //  @ApiOperation(value = "Estimate", notes = "Estimates compiled code in Base64 representation", httpMethod = "POST")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "code", required = true, dataType = "string", paramType = "body", value = "A compiled Base64 code")
+      new ApiImplicitParam(name = "code",
+                           required = true,
+                           dataType = "string",
+                           paramType = "body",
+                           value = "A compiled Base64 code")
     ))
   @ApiResponses(
     Array(
@@ -80,10 +92,10 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
             e => ScriptCompilerError(e), {
               case (script, complexity) =>
                 Json.obj(
-                  "script"     -> code,
+                  "script" -> code,
                   "scriptText" -> script.text,
                   "complexity" -> complexity,
-                  "extraFee"   -> CommonValidation.ScriptExtraFee
+                  "extraFee" -> CommonValidation.ScriptExtraFee
                 )
             }
           )
@@ -92,17 +104,23 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   @Path("/time")
-  @ApiOperation(value = "Time", notes = "Current Node time (UTC)", httpMethod = "GET")
+  @ApiOperation(value = "Time",
+                notes = "Current Node time (UTC)",
+                httpMethod = "GET")
   @ApiResponses(
     Array(
       new ApiResponse(code = 200, message = "Json with time or error")
     ))
   def time: Route = (path("time") & get) {
-    complete(Json.obj("system" -> System.currentTimeMillis(), "NTP" -> timeService.correctedTime()))
+    complete(
+      Json.obj("system" -> System.currentTimeMillis(),
+               "NTP" -> timeService.correctedTime()))
   }
 
   @Path("/seed")
-  @ApiOperation(value = "Seed", notes = "Generate random seed", httpMethod = "GET")
+  @ApiOperation(value = "Seed",
+                notes = "Generate random seed",
+                httpMethod = "GET")
   @ApiResponses(
     Array(
       new ApiResponse(code = 200, message = "Json with peer list or error")
@@ -112,10 +130,16 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   @Path("/seed/{length}")
-  @ApiOperation(value = "Seed of specified length", notes = "Generate random seed of specified length", httpMethod = "GET")
+  @ApiOperation(value = "Seed of specified length",
+                notes = "Generate random seed of specified length",
+                httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "length", value = "Seed length ", required = true, dataType = "integer", paramType = "path")
+      new ApiImplicitParam(name = "length",
+                           value = "Seed length ",
+                           required = true,
+                           dataType = "integer",
+                           paramType = "path")
     ))
   @ApiResponse(code = 200, message = "Json with error message")
   def length: Route = (path("seed" / IntNumber) & get) { length =>
@@ -124,58 +148,94 @@ case class UtilsApiRoute(timeService: Time, settings: RestAPISettings) extends A
   }
 
   @Path("/hash/secure")
-  @ApiOperation(value = "Hash", notes = "Return SecureCryptographicHash of specified message", httpMethod = "POST")
+  @ApiOperation(value = "Hash",
+                notes = "Return SecureCryptographicHash of specified message",
+                httpMethod = "POST")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "message", value = "Message to hash", required = true, paramType = "body", dataType = "string")
+      new ApiImplicitParam(name = "message",
+                           value = "Message to hash",
+                           required = true,
+                           paramType = "body",
+                           dataType = "string")
     ))
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
+      new ApiResponse(
+        code = 200,
+        message =
+          "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
     ))
   def hashSecure: Route = (path("hash" / "secure") & post) {
     entity(as[String]) { message =>
-      complete(Json.obj("message" -> message, "hash" -> Base58.encode(crypto.secureHash(message))))
+      complete(
+        Json.obj("message" -> message,
+                 "hash" -> Base58.encode(crypto.secureHash(message))))
     }
   }
 
   @Path("/hash/fast")
-  @ApiOperation(value = "Hash", notes = "Return FastCryptographicHash of specified message", httpMethod = "POST")
+  @ApiOperation(value = "Hash",
+                notes = "Return FastCryptographicHash of specified message",
+                httpMethod = "POST")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "message", value = "Message to hash", required = true, paramType = "body", dataType = "string")
+      new ApiImplicitParam(name = "message",
+                           value = "Message to hash",
+                           required = true,
+                           paramType = "body",
+                           dataType = "string")
     ))
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
+      new ApiResponse(
+        code = 200,
+        message =
+          "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
     ))
   def hashFast: Route = (path("hash" / "fast") & post) {
     entity(as[String]) { message =>
-      complete(Json.obj("message" -> message, "hash" -> Base58.encode(crypto.fastHash(message))))
+      complete(
+        Json.obj("message" -> message,
+                 "hash" -> Base58.encode(crypto.fastHash(message))))
     }
   }
   @Path("/sign/{privateKey}")
-  @ApiOperation(value = "Hash", notes = "Return FastCryptographicHash of specified message", httpMethod = "POST")
+  @ApiOperation(value = "Hash",
+                notes = "Return FastCryptographicHash of specified message",
+                httpMethod = "POST")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "privateKey", value = "privateKey", required = true, paramType = "path", dataType = "string"),
-      new ApiImplicitParam(name = "message", value = "Message to hash", required = true, paramType = "body", dataType = "string")
+      new ApiImplicitParam(name = "privateKey",
+                           value = "privateKey",
+                           required = true,
+                           paramType = "path",
+                           dataType = "string"),
+      new ApiImplicitParam(name = "message",
+                           value = "Message to hash",
+                           required = true,
+                           paramType = "body",
+                           dataType = "string")
     ))
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
+      new ApiResponse(
+        code = 200,
+        message =
+          "Json with error or json like {\"message\": \"your message\",\"hash\": \"your message hash\"}")
     ))
   def sign: Route = (path("sign" / Segment) & post) { pk =>
     entity(as[String]) { message =>
       complete(
         Json.obj("message" -> message,
                  "signature" ->
-                   Base58.encode(crypto.sign(Base58.decode(pk).get, Base58.decode(message).get))))
+                   Base58.encode(crypto.sign(Base58.decode(pk).get,
+                                             Base58.decode(message).get))))
     }
   }
 }
 
 object UtilsApiRoute {
-  val MaxSeedSize     = 1024
+  val MaxSeedSize = 1024
   val DefaultSeedSize = 32
 }

@@ -21,8 +21,11 @@ object FeesSettings {
       .flatMap { entry =>
         FeesSettings
         if (txTypes.contains(entry.getKey)) {
-          val rawFees = config.as[Map[String, Long]](s"$configPath.${entry.getKey}")
-          val fees    = rawFees.map { case (asset, fee) => FeeSettings(asset, fee) }(collection.breakOut)
+          val rawFees =
+            config.as[Map[String, Long]](s"$configPath.${entry.getKey}")
+          val fees = rawFees.map {
+            case (asset, fee) => FeeSettings(asset, fee)
+          }(collection.breakOut)
           Some(txTypes(entry.getKey) -> fees)
         } else throw new NoSuchElementException(entry.getKey)
       }(collection.breakOut)

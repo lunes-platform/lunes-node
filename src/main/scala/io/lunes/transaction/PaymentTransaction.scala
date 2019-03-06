@@ -13,13 +13,20 @@ import io.lunes.transaction.TransactionParsers._
 
 import scala.util.{Failure, Success, Try}
 
-case class PaymentTransaction private (sender: PublicKeyAccount, recipient: Address, amount: Long, fee: Long, timestamp: Long, signature: ByteStr)
+case class PaymentTransaction private (sender: PublicKeyAccount,
+                                       recipient: Address,
+                                       amount: Long,
+                                       fee: Long,
+                                       timestamp: Long,
+                                       signature: ByteStr)
     extends SignedTransaction {
-  override val builder: TransactionParser        = PaymentTransaction
+  override val builder: TransactionParser = PaymentTransaction
   override val assetFee: (Option[AssetId], Long) = (None, fee)
-  override val id: Coeval[AssetId]               = Coeval.evalOnce(signature)
+  override val id: Coeval[AssetId] = Coeval.evalOnce(signature)
 
-  override val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase() ++ Json.obj("recipient" -> recipient.address, "amount" -> amount))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase() ++ Json.obj("recipient" -> recipient.address,
+                           "amount" -> amount))
 
   private val hashBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
     Bytes.concat(Array(builder.typeId),
@@ -39,24 +46,33 @@ case class PaymentTransaction private (sender: PublicKeyAccount, recipient: Addr
 
   val hash: Coeval[Array[Byte]] = Coeval.evalOnce(crypto.fastHash(hashBytes()))
 
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(hashBytes(), signature.arr))
+  override val bytes: Coeval[Array[Byte]] =
+    Coeval.evalOnce(Bytes.concat(hashBytes(), signature.arr))
 
 }
 
-object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with TransactionParser.HardcodedVersion1 {
+object PaymentTransaction
+    extends TransactionParserFor[PaymentTransaction]
+    with TransactionParser.HardcodedVersion1 {
 
   override val typeId: Byte = 2
 
   val RecipientLength: Int = Address.AddressLength
 
   private val SenderLength = 32
-  private val FeeLength    = 8
-  private val BaseLength   = TimestampLength + SenderLength + RecipientLength + AmountLength + FeeLength + SignatureLength
+  private val FeeLength = 8
+  private val BaseLength = TimestampLength + SenderLength + RecipientLength + AmountLength + FeeLength + SignatureLength
 
-  def create(sender: PrivateKeyAccount, recipient: Address, amount: Long, fee: Long, timestamp: Long): Either[ValidationError, TransactionT] = {
-    create(sender, recipient, amount, fee, timestamp, ByteStr.empty).right.map(unsigned => {
-      unsigned.copy(signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
-    })
+  def create(sender: PrivateKeyAccount,
+             recipient: Address,
+             amount: Long,
+             fee: Long,
+             timestamp: Long): Either[ValidationError, TransactionT] = {
+    create(sender, recipient, amount, fee, timestamp, ByteStr.empty).right
+      .map(unsigned => {
+        unsigned.copy(
+          signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
+      })
   }
 
   def create(sender: PublicKeyAccount,
@@ -72,11 +88,18 @@ object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with 
     } else if (Try(Math.addExact(amount, fee)).isFailure) {
       Left(ValidationError.OverflowError) // CHECK THAT fee+amount won't overflow Long
     } else {
-      Right(PaymentTransaction(sender, recipient, amount, fee, timestamp, signature))
+      Right(
+        PaymentTransaction(sender,
+                           recipient,
+                           amount,
+                           fee,
+                           timestamp,
+                           signature))
     }
   }
 
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  override protected def parseTail(version: Byte,
+                                   bytes: Array[Byte]): Try[TransactionT] =
     Try {
       require(bytes.length >= BaseLength, "Data does not match base length")
 
@@ -84,35 +107,46 @@ object PaymentTransaction extends TransactionParserFor[PaymentTransaction] with 
 
       //READ TIMESTAMP
       val timestampBytes = bytes.take(TimestampLength)
-      val timestamp      = Longs.fromByteArray(timestampBytes)
+      val timestamp = Longs.fromByteArray(timestampBytes)
       position += TimestampLength
 
       //READ SENDER
-      val senderBytes = util.Arrays.copyOfRange(bytes, position, position + SenderLength)
-      val sender      = PublicKeyAccount(senderBytes)
+      val senderBytes =
+        util.Arrays.copyOfRange(bytes, position, position + SenderLength)
+      val sender = PublicKeyAccount(senderBytes)
       position += SenderLength
 
       //READ RECIPIENT
-      val recipientBytes = util.Arrays.copyOfRange(bytes, position, position + RecipientLength)
-      val recipient      = Address.fromBytes(recipientBytes).explicitGet()
+      val recipientBytes =
+        util.Arrays.copyOfRange(bytes, position, position + RecipientLength)
+      val recipient = Address.fromBytes(recipientBytes).explicitGet()
       position += RecipientLength
 
       //READ AMOUNT
-      val amountBytes = util.Arrays.copyOfRange(bytes, position, position + AmountLength)
-      val amount      = Longs.fromByteArray(amountBytes)
+      val amountBytes =
+        util.Arrays.copyOfRange(bytes, position, position + AmountLength)
+      val amount = Longs.fromByteArray(amountBytes)
       position += AmountLength
 
       //READ FEE
-      val feeBytes = util.Arrays.copyOfRange(bytes, position, position + FeeLength)
-      val fee      = Longs.fromByteArray(feeBytes)
+      val feeBytes =
+        util.Arrays.copyOfRange(bytes, position, position + FeeLength)
+      val fee = Longs.fromByteArray(feeBytes)
       position += FeeLength
 
       //READ SIGNATURE
-      val signatureBytes = util.Arrays.copyOfRange(bytes, position, position + SignatureLength)
+      val signatureBytes =
+        util.Arrays.copyOfRange(bytes, position, position + SignatureLength)
 
       PaymentTransaction
-        .create(sender, recipient, amount, fee, timestamp, ByteStr(signatureBytes))
-        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+        .create(sender,
+                recipient,
+                amount,
+                fee,
+                timestamp,
+                ByteStr(signatureBytes))
+        .fold(left => Failure(new Exception(left.toString)),
+              right => Success(right))
     }.flatten
 
 }

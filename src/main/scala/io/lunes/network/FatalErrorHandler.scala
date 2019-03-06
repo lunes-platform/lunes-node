@@ -9,8 +9,11 @@ import scorex.utils.ScorexLogging
 
 import scala.util.control.NonFatal
 @Sharable
-class FatalErrorHandler extends ChannelInboundHandlerAdapter with ScorexLogging {
-  override def exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable): Unit = cause match {
+class FatalErrorHandler
+    extends ChannelInboundHandlerAdapter
+    with ScorexLogging {
+  override def exceptionCaught(ctx: ChannelHandlerContext,
+                               cause: Throwable): Unit = cause match {
     case ioe: IOException if ioe.getMessage == "Connection reset by peer" =>
       // https://stackoverflow.com/q/9829531
       // https://stackoverflow.com/q/1434451
@@ -18,7 +21,8 @@ class FatalErrorHandler extends ChannelInboundHandlerAdapter with ScorexLogging 
     case NonFatal(_) =>
       log.debug(s"${id(ctx)} Exception caught", cause)
     case _ =>
-      log.error(s"${id(ctx)} Fatal error in channel, terminating application", cause)
+      log.error(s"${id(ctx)} Fatal error in channel, terminating application",
+                cause)
       forceStopApplication()
   }
 }

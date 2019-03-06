@@ -11,12 +11,15 @@ import scorex.wallet.Wallet
 
 @Path("/wallet")
 @Api(value = "/wallet")
-case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet) extends ApiRoute {
+case class WalletApiRoute(settings: RestAPISettings, wallet: Wallet)
+    extends ApiRoute {
 
   override lazy val route = seed
 
   @Path("/seed")
-  @ApiOperation(value = "Seed", notes = "Export wallet seed", httpMethod = "GET")
+  @ApiOperation(value = "Seed",
+                notes = "Export wallet seed",
+                httpMethod = "GET")
   def seed: Route = (path("wallet" / "seed") & get & withAuth) {
     complete(Json.obj("seed" -> Base58.encode(wallet.seed)))
   }

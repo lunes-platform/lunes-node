@@ -25,26 +25,38 @@ final case class BurnTransactionV2 private (version: Byte,
   override def chainByte: Option[Byte] = Some(chainId)
 
   override val bodyBytes: Coeval[Array[Byte]] =
-    byteBase.map(base => Bytes.concat(Array(builder.typeId, version, chainId), base))
+    byteBase.map(base =>
+      Bytes.concat(Array(builder.typeId, version, chainId), base))
 
   override val bytes: Coeval[Array[Byte]] =
     (bodyBytes, proofs.bytes)
       .mapN { case (bb, pb) => Bytes.concat(Array(0: Byte), bb, pb) }
 }
 
-object BurnTransactionV2 extends TransactionParserFor[BurnTransactionV2] with TransactionParser.MultipleVersions {
+object BurnTransactionV2
+    extends TransactionParserFor[BurnTransactionV2]
+    with TransactionParser.MultipleVersions {
   override val typeId: Byte = BurnTransaction.typeId
 
   override val supportedVersions: Set[Byte] = Set(2)
 
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[BurnTransactionV2] =
+  override protected def parseTail(version: Byte,
+                                   bytes: Array[Byte]): Try[BurnTransactionV2] =
     Try {
-      val chainId                                          = bytes(0)
-      val (sender, assetId, quantity, fee, timestamp, end) = BurnTransaction.parseBase(1, bytes)
+      val chainId = bytes(0)
+      val (sender, assetId, quantity, fee, timestamp, end) =
+        BurnTransaction.parseBase(1, bytes)
 
       (for {
         proofs <- Proofs.fromBytes(bytes.drop(end))
-        tx     <- create(version, chainId, sender, assetId, quantity, fee, timestamp, proofs)
+        tx <- create(version,
+                     chainId,
+                     sender,
+                     assetId,
+                     quantity,
+                     fee,
+                     timestamp,
+                     proofs)
       } yield tx).fold(
         err => Failure(new Exception(err.toString)),
         t => Success(t)
@@ -61,7 +73,16 @@ object BurnTransactionV2 extends TransactionParserFor[BurnTransactionV2] with Tr
              proofs: Proofs): Either[ValidationError, BurnTransactionV2] =
     BurnTransaction
       .validateBurnParams(quantity, fee)
-      .map(_ => BurnTransactionV2(version, chainId, sender, assetId, quantity, fee, timestamp, proofs))
+      .map(
+        _ =>
+          BurnTransactionV2(version,
+                            chainId,
+                            sender,
+                            assetId,
+                            quantity,
+                            fee,
+                            timestamp,
+                            proofs))
 
   def signed(version: Byte,
              chainId: Byte,
@@ -72,8 +93,16 @@ object BurnTransactionV2 extends TransactionParserFor[BurnTransactionV2] with Tr
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     for {
-      unsigned <- create(version, chainId, sender, assetId, quantity, fee, timestamp, Proofs.empty)
-      proofs   <- Proofs.create(Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes()))))
+      unsigned <- create(version,
+                         chainId,
+                         sender,
+                         assetId,
+                         quantity,
+                         fee,
+                         timestamp,
+                         Proofs.empty)
+      proofs <- Proofs.create(
+        Seq(ByteStr(crypto.sign(signer, unsigned.bodyBytes()))))
     } yield unsigned.copy(proofs = proofs)
 
   def selfSigned(version: Byte,

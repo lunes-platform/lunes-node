@@ -7,7 +7,8 @@ object TypeInferrer {
 
   case class MatchResult(tpe: TYPE, name: TYPEPARAM)
   // (ACTUAL, EXPECTED)
-  def apply(seq: Seq[(TYPE, TYPEPLACEHOLDER)]): Either[String, Map[TYPEPARAM, TYPE]] = {
+  def apply(seq: Seq[(TYPE, TYPEPLACEHOLDER)])
+    : Either[String, Map[TYPEPARAM, TYPE]] = {
     val matching = seq.map(x => matchTypes(x._1, x._2))
     matching.find(_.isLeft) match {
       case Some(left) => left.asInstanceOf[Left[String, Nothing]]
@@ -23,9 +24,15 @@ object TypeInferrer {
         val resolved = matchResults.mapValues { matchResults =>
           if (matchResults.size == 1) Right(matchResults.head.tpe)
           else {
-            val maybeCommonType = matchResults.tail.map(_.tpe).toVector.foldLeftM(matchResults.head.tpe)(findCommonType)
+            val maybeCommonType = matchResults.tail
+              .map(_.tpe)
+              .toVector
+              .foldLeftM(matchResults.head.tpe)(findCommonType)
             maybeCommonType match {
-              case None             => Left(s"Can't match inferred types of ${matchResults.head.name} over ${matchResults.map(_.tpe)}")
+              case None =>
+                Left(
+                  s"Can't match inferred types of ${matchResults.head.name} over ${matchResults
+                    .map(_.tpe)}")
               case Some(commonType) => Right(commonType)
             }
           }
@@ -38,7 +45,9 @@ object TypeInferrer {
     }
   }
 
-  def matchTypes(actual: TYPE, expected: TYPEPLACEHOLDER): Either[String, Option[MatchResult]] = {
+  def matchTypes(
+      actual: TYPE,
+      expected: TYPEPLACEHOLDER): Either[String, Option[MatchResult]] = {
     lazy val err = s"Non-matching types: expected: $expected, actual: $actual"
 
     (expected, actual) match {
@@ -46,13 +55,16 @@ object TypeInferrer {
         Either.cond(matchType(realType, actual).isDefined, None, err)
       case (tp @ TYPEPARAM(char), _) =>
         Right(Some(MatchResult(actual, tp)))
-      case (tp @ OPTIONTYPEPARAM(innerTypeParam), OPTION(t)) => matchTypes(t, innerTypeParam)
-      case (tp @ LISTTYPEPARAM(innerTypeParam), LIST(t))     => matchTypes(t, innerTypeParam)
-      case _                                                 => Left(err)
+      case (tp @ OPTIONTYPEPARAM(innerTypeParam), OPTION(t)) =>
+        matchTypes(t, innerTypeParam)
+      case (tp @ LISTTYPEPARAM(innerTypeParam), LIST(t)) =>
+        matchTypes(t, innerTypeParam)
+      case _ => Left(err)
     }
   }
 
-  def inferResultType(resultType: TYPEPLACEHOLDER, resolved: Map[TYPEPARAM, TYPE]): Either[String, TYPE] = {
+  def inferResultType(resultType: TYPEPLACEHOLDER,
+                      resolved: Map[TYPEPARAM, TYPE]): Either[String, TYPE] = {
     resultType match {
       case plainType: TYPE => Right(plainType)
       case tp @ TYPEPARAM(_) =>
@@ -73,16 +85,21 @@ object TypeInferrer {
         r <- findCommonType(head, t)
       } yield r
   }
-  def findCommonType(t1: TYPE, t2: TYPE): Option[TYPE]      = findCommonType(t1, t2, biDirectional = true)
-  def matchType(required: TYPE, actual: TYPE): Option[TYPE] = findCommonType(required, actual, biDirectional = false)
+  def findCommonType(t1: TYPE, t2: TYPE): Option[TYPE] =
+    findCommonType(t1, t2, biDirectional = true)
+  def matchType(required: TYPE, actual: TYPE): Option[TYPE] =
+    findCommonType(required, actual, biDirectional = false)
 
-  private def findCommonType(required: TYPE, actual: TYPE, biDirectional: Boolean): Option[TYPE] =
+  private def findCommonType(required: TYPE,
+                             actual: TYPE,
+                             biDirectional: Boolean): Option[TYPE] =
     if (actual == NOTHING) Some(required)
     else if (required == NOTHING && biDirectional) Some(actual)
     else if (required == actual) Some(required)
     else
       (required, actual) match {
-        case (OPTION(it1), OPTION(it2)) => findCommonType(it1, it2, biDirectional).map(OPTION)
+        case (OPTION(it1), OPTION(it2)) =>
+          findCommonType(it1, it2, biDirectional).map(OPTION)
         case (r: UNION, a: UNION) =>
           if (biDirectional && (r equivalent a)) Some(r)
           else if (!biDirectional && (r >= a)) Some(r)

@@ -11,7 +11,8 @@ import io.lunes.transaction.smart.script.{Script, ScriptReader}
 import io.lunes.transaction.{Transaction, TransactionParsers}
 
 package object database {
-  implicit class ByteArrayDataOutputExt(val output: ByteArrayDataOutput) extends AnyVal {
+  implicit class ByteArrayDataOutputExt(val output: ByteArrayDataOutput)
+      extends AnyVal {
     def writeBigInt(v: BigInt): Unit = {
       val b = v.toByteArray
       require(b.length <= Byte.MaxValue)
@@ -29,10 +30,11 @@ package object database {
     }
   }
 
-  implicit class ByteArrayDataInputExt(val input: ByteArrayDataInput) extends AnyVal {
+  implicit class ByteArrayDataInputExt(val input: ByteArrayDataInput)
+      extends AnyVal {
     def readBigInt(): BigInt = {
       val len = input.readByte()
-      val b   = new Array[Byte](len)
+      val b = new Array[Byte](len)
       input.readFully(b)
       BigInt(b)
     }
@@ -40,7 +42,7 @@ package object database {
     def readScriptOption(): Option[Script] = {
       if (input.readBoolean()) {
         val len = input.readShort()
-        val b   = new Array[Byte](len)
+        val b = new Array[Byte](len)
         input.readFully(b)
         Some(ScriptReader.fromBytes(b).explicitGet())
       } else None
@@ -51,26 +53,28 @@ package object database {
     values.foldLeft(ByteBuffer.allocate(4 * values.length))(_ putInt _).array()
   }
 
-  def readIntSeq(data: Array[Byte]): Seq[Int] = Option(data).fold(Seq.empty[Int]) { d =>
-    val in = ByteBuffer.wrap(data)
-    Seq.fill(d.length / 4)(in.getInt)
-  }
-
-  def readTxIds(data: Array[Byte]): Seq[ByteStr] = Option(data).fold(Seq.empty[ByteStr]) { d =>
-    val b   = ByteBuffer.wrap(d)
-    val ids = Seq.newBuilder[ByteStr]
-
-    while (b.remaining() > 0) {
-      val buffer = b.get() match {
-        case crypto.DigestSize      => new Array[Byte](crypto.DigestSize)
-        case crypto.SignatureLength => new Array[Byte](crypto.SignatureLength)
-      }
-      b.get(buffer)
-      ids += ByteStr(buffer)
+  def readIntSeq(data: Array[Byte]): Seq[Int] =
+    Option(data).fold(Seq.empty[Int]) { d =>
+      val in = ByteBuffer.wrap(data)
+      Seq.fill(d.length / 4)(in.getInt)
     }
 
-    ids.result()
-  }
+  def readTxIds(data: Array[Byte]): Seq[ByteStr] =
+    Option(data).fold(Seq.empty[ByteStr]) { d =>
+      val b = ByteBuffer.wrap(d)
+      val ids = Seq.newBuilder[ByteStr]
+
+      while (b.remaining() > 0) {
+        val buffer = b.get() match {
+          case crypto.DigestSize      => new Array[Byte](crypto.DigestSize)
+          case crypto.SignatureLength => new Array[Byte](crypto.SignatureLength)
+        }
+        b.get(buffer)
+        ids += ByteStr(buffer)
+      }
+
+      ids.result()
+    }
 
   def writeTxIds(ids: Seq[ByteStr]): Array[Byte] =
     ids
@@ -84,21 +88,23 @@ package object database {
       }
       .array()
 
-  def readStrings(data: Array[Byte]): Seq[String] = Option(data).fold(Seq.empty[String]) { _ =>
-    var i = 0
-    val s = Seq.newBuilder[String]
+  def readStrings(data: Array[Byte]): Seq[String] =
+    Option(data).fold(Seq.empty[String]) { _ =>
+      var i = 0
+      val s = Seq.newBuilder[String]
 
-    while (i < data.length) {
-      val len = Shorts.fromByteArray(data.drop(i))
-      s += new String(data, i + 2, len, UTF_8)
-      i += (2 + len)
+      while (i < data.length) {
+        val len = Shorts.fromByteArray(data.drop(i))
+        s += new String(data, i + 2, len, UTF_8)
+        i += (2 + len)
+      }
+      s.result()
     }
-    s.result()
-  }
 
   def writeStrings(strings: Seq[String]): Array[Byte] =
     strings
-      .foldLeft(ByteBuffer.allocate(strings.map(_.getBytes(UTF_8).length + 2).sum)) {
+      .foldLeft(
+        ByteBuffer.allocate(strings.map(_.getBytes(UTF_8).length + 2).sum)) {
         case (b, s) =>
           val bytes = s.getBytes(UTF_8)
           b.putShort(bytes.length.toShort).put(bytes)
@@ -115,11 +121,12 @@ package object database {
     ndo.toByteArray
   }
 
-  def readBigIntSeq(data: Array[Byte]): Seq[BigInt] = Option(data).fold(Seq.empty[BigInt]) { d =>
-    val ndi    = newDataInput(d)
-    val length = ndi.readShort()
-    for (_ <- 0 until length) yield ndi.readBigInt()
-  }
+  def readBigIntSeq(data: Array[Byte]): Seq[BigInt] =
+    Option(data).fold(Seq.empty[BigInt]) { d =>
+      val ndi = newDataInput(d)
+      val length = ndi.readShort()
+      for (_ <- 0 until length) yield ndi.readBigInt()
+    }
 
   def writeLeaseBalance(lb: LeaseBalance): Array[Byte] = {
     val ndo = newDataOutput()
@@ -128,15 +135,17 @@ package object database {
     ndo.toByteArray
   }
 
-  def readLeaseBalance(data: Array[Byte]): LeaseBalance = Option(data).fold(LeaseBalance.empty) { d =>
-    val ndi = newDataInput(d)
-    LeaseBalance(ndi.readLong(), ndi.readLong())
-  }
+  def readLeaseBalance(data: Array[Byte]): LeaseBalance =
+    Option(data).fold(LeaseBalance.empty) { d =>
+      val ndi = newDataInput(d)
+      LeaseBalance(ndi.readLong(), ndi.readLong())
+    }
 
-  def readVolumeAndFee(data: Array[Byte]): VolumeAndFee = Option(data).fold(VolumeAndFee.empty) { d =>
-    val ndi = newDataInput(d)
-    VolumeAndFee(ndi.readLong(), ndi.readLong())
-  }
+  def readVolumeAndFee(data: Array[Byte]): VolumeAndFee =
+    Option(data).fold(VolumeAndFee.empty) { d =>
+      val ndi = newDataInput(d)
+      VolumeAndFee(ndi.readLong(), ndi.readLong())
+    }
 
   def writeVolumeAndFee(vf: VolumeAndFee): Array[Byte] = {
     val ndo = newDataOutput()
@@ -156,21 +165,24 @@ package object database {
     ByteBuffer.allocate(4 + txBytes.length).putInt(h).put(txBytes).array()
   }
 
-  def readTransactionIds(data: Array[Byte]): Seq[(Int, ByteStr)] = Option(data).fold(Seq.empty[(Int, ByteStr)]) { d =>
-    val b   = ByteBuffer.wrap(d)
-    val ids = Seq.newBuilder[(Int, ByteStr)]
-    while (b.hasRemaining) {
-      ids += b.get.toInt -> {
-        val buf = new Array[Byte](b.get)
-        b.get(buf)
-        ByteStr(buf)
+  def readTransactionIds(data: Array[Byte]): Seq[(Int, ByteStr)] =
+    Option(data).fold(Seq.empty[(Int, ByteStr)]) { d =>
+      val b = ByteBuffer.wrap(d)
+      val ids = Seq.newBuilder[(Int, ByteStr)]
+      while (b.hasRemaining) {
+        ids += b.get.toInt -> {
+          val buf = new Array[Byte](b.get)
+          b.get(buf)
+          ByteStr(buf)
+        }
       }
+      ids.result()
     }
-    ids.result()
-  }
 
   def writeTransactionIds(ids: Seq[(Int, ByteStr)]): Array[Byte] = {
-    val size   = ids.foldLeft(0) { case (prev, (_, id)) => prev + 2 + id.arr.length }
+    val size = ids.foldLeft(0) {
+      case (prev, (_, id)) => prev + 2 + id.arr.length
+    }
     val buffer = ByteBuffer.allocate(size)
     for ((typeId, id) <- ids) {
       buffer.put(typeId.toByte).put(id.arr.length.toByte).put(id.arr)
@@ -178,15 +190,16 @@ package object database {
     buffer.array()
   }
 
-  def readFeatureMap(data: Array[Byte]): Map[Short, Int] = Option(data).fold(Map.empty[Short, Int]) { _ =>
-    val b        = ByteBuffer.wrap(data)
-    val features = Map.newBuilder[Short, Int]
-    while (b.hasRemaining) {
-      features += b.getShort -> b.getInt
-    }
+  def readFeatureMap(data: Array[Byte]): Map[Short, Int] =
+    Option(data).fold(Map.empty[Short, Int]) { _ =>
+      val b = ByteBuffer.wrap(data)
+      val features = Map.newBuilder[Short, Int]
+      while (b.hasRemaining) {
+        features += b.getShort -> b.getInt
+      }
 
-    features.result()
-  }
+      features.result()
+    }
 
   def writeFeatureMap(features: Map[Short, Int]): Array[Byte] = {
     val b = ByteBuffer.allocate(features.size * 6)

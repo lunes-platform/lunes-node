@@ -24,51 +24,72 @@ object MicroBlockSynchronizer {
             lastBlockIdEvents: Observable[ByteStr],
             microblockInvs: ChannelObservable[MicroBlockInv],
             microblockResponses: ChannelObservable[MicroBlockResponse],
-            scheduler: SchedulerService): (Observable[(Channel, MicroblockData)], Coeval[CacheSizes]) = {
+            scheduler: SchedulerService)
+    : (Observable[(Channel, MicroblockData)], Coeval[CacheSizes]) = {
 
     implicit val schdlr: SchedulerService = scheduler
 
-    val microBlockOwners     = cache[MicroBlockSignature, MSet[Channel]](settings.invCacheTimeout)
-    val nextInvs             = cache[MicroBlockSignature, MicroBlockInv](settings.invCacheTimeout)
-    val awaiting             = cache[MicroBlockSignature, MicroBlockInv](settings.invCacheTimeout)
-    val successfullyReceived = cache[MicroBlockSignature, Object](settings.processedMicroBlocksCacheTimeout)
+    val microBlockOwners =
+      cache[MicroBlockSignature, MSet[Channel]](settings.invCacheTimeout)
+    val nextInvs =
+      cache[MicroBlockSignature, MicroBlockInv](settings.invCacheTimeout)
+    val awaiting =
+      cache[MicroBlockSignature, MicroBlockInv](settings.invCacheTimeout)
+    val successfullyReceived = cache[MicroBlockSignature, Object](
+      settings.processedMicroBlocksCacheTimeout)
 
     val lastBlockId = lastObserved(lastBlockIdEvents)
 
-    def owners(totalResBlockSig: BlockId): Set[Channel] = Option(microBlockOwners.getIfPresent(totalResBlockSig)).getOrElse(MSet.empty).toSet
+    def owners(totalResBlockSig: BlockId): Set[Channel] =
+      Option(microBlockOwners.getIfPresent(totalResBlockSig))
+        .getOrElse(MSet.empty)
+        .toSet
 
-    def alreadyRequested(totalSig: MicroBlockSignature): Boolean = Option(awaiting.getIfPresent(totalSig)).isDefined
+    def alreadyRequested(totalSig: MicroBlockSignature): Boolean =
+      Option(awaiting.getIfPresent(totalSig)).isDefined
 
-    def alreadyProcessed(totalSig: MicroBlockSignature): Boolean = Option(successfullyReceived.getIfPresent(totalSig)).isDefined
+    def alreadyProcessed(totalSig: MicroBlockSignature): Boolean =
+      Option(successfullyReceived.getIfPresent(totalSig)).isDefined
 
     val cacheSizesReporter = Coeval.eval {
-      CacheSizes(microBlockOwners.size(), nextInvs.size(), awaiting.size(), successfullyReceived.size())
+      CacheSizes(microBlockOwners.size(),
+                 nextInvs.size(),
+                 awaiting.size(),
+                 successfullyReceived.size())
     }
 
     def requestMicroBlock(mbInv: MicroBlockInv): CancelableFuture[Unit] = {
       import mbInv.totalBlockSig
 
-      def randomOwner(exclude: Set[Channel]) = random(owners(mbInv.totalBlockSig) -- exclude)
+      def randomOwner(exclude: Set[Channel]) =
+        random(owners(mbInv.totalBlockSig) -- exclude)
 
-      def task(attemptsAllowed: Int, exclude: Set[Channel]): Task[Unit] = Task.unit.flatMap { _ =>
-        if (attemptsAllowed <= 0 || alreadyProcessed(totalBlockSig)) Task.unit
-        else
-          randomOwner(exclude).fold(Task.unit) { channel =>
-            if (channel.isOpen) {
-              val request = MicroBlockRequest(totalBlockSig)
-              channel.writeAndFlush(request)
-              awaiting.put(totalBlockSig, mbInv)
-              task(attemptsAllowed - 1, exclude + channel).delayExecution(settings.waitResponseTimeout)
-            } else task(attemptsAllowed, exclude + channel)
-          }
-      }
+      def task(attemptsAllowed: Int, exclude: Set[Channel]): Task[Unit] =
+        Task.unit.flatMap { _ =>
+          if (attemptsAllowed <= 0 || alreadyProcessed(totalBlockSig)) Task.unit
+          else
+            randomOwner(exclude).fold(Task.unit) { channel =>
+              if (channel.isOpen) {
+                val request = MicroBlockRequest(totalBlockSig)
+                channel.writeAndFlush(request)
+                awaiting.put(totalBlockSig, mbInv)
+                task(attemptsAllowed - 1, exclude + channel)
+                  .delayExecution(settings.waitResponseTimeout)
+              } else task(attemptsAllowed, exclude + channel)
+            }
+        }
 
       task(MicroBlockDownloadAttempts, Set.empty).runAsyncLogErr
     }
 
-    def tryDownloadNext(prevBlockId: ByteStr): Unit = Option(nextInvs.getIfPresent(prevBlockId)).foreach(requestMicroBlock)
+    def tryDownloadNext(prevBlockId: ByteStr): Unit =
+      Option(nextInvs.getIfPresent(prevBlockId)).foreach(requestMicroBlock)
 
-    lastBlockIdEvents.mapTask(f => Task(tryDownloadNext(f))).executeOn(scheduler).logErr.subscribe()
+    lastBlockIdEvents
+      .mapTask(f => Task(tryDownloadNext(f)))
+      .executeOn(scheduler)
+      .logErr
+      .subscribe()
 
     microblockInvs
       .mapTask {
@@ -102,13 +123,19 @@ object MicroBlockSynchronizer {
           case None => Observable.empty
           case Some(mi) =>
             awaiting.invalidate(totalSig)
-            Observable((ch, MicroblockData(Option(mi), mb, Coeval.evalOnce(owners(totalSig)))))
+            Observable(
+              (ch,
+               MicroblockData(Option(mi),
+                              mb,
+                              Coeval.evalOnce(owners(totalSig)))))
         }
     }
     (observable, cacheSizesReporter)
   }
 
-  case class MicroblockData(invOpt: Option[MicroBlockInv], microBlock: MicroBlock, microblockOwners: Coeval[Set[Channel]])
+  case class MicroblockData(invOpt: Option[MicroBlockInv],
+                            microBlock: MicroBlock,
+                            microblockOwners: Coeval[Set[Channel]])
 
   type MicroBlockSignature = ByteStr
 
@@ -127,7 +154,10 @@ object MicroBlockSynchronizer {
       .expireAfterWrite(timeout.toMillis, TimeUnit.MILLISECONDS)
       .build[K, V]()
 
-  case class CacheSizes(microBlockOwners: Long, nextInvs: Long, awaiting: Long, successfullyReceived: Long)
+  case class CacheSizes(microBlockOwners: Long,
+                        nextInvs: Long,
+                        awaiting: Long,
+                        successfullyReceived: Long)
 
   private val dummy = new Object()
 }

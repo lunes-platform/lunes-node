@@ -7,13 +7,18 @@ import scorex.account.{Address, AddressOrAlias, Alias}
 import io.lunes.transaction._
 import io.lunes.transaction.assets._
 import io.lunes.transaction.assets.exchange.OrderType.{BUY, SELL}
-import io.lunes.transaction.assets.exchange.{AssetPair, ExchangeTransaction, Order}
+import io.lunes.transaction.assets.exchange.{
+  AssetPair,
+  ExchangeTransaction,
+  Order
+}
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 import io.lunes.transaction.transfer._
 
 object RealTransactionWrapper {
 
-  private def header(tx: Transaction): Header = Header(ByteVector(tx.id().arr), tx.assetFee._2, tx.timestamp, 0)
+  private def header(tx: Transaction): Header =
+    Header(ByteVector(tx.id().arr), tx.assetFee._2, tx.timestamp, 0)
   private def proven(tx: ProvenTransaction): Proven =
     Proven(
       header(tx),
@@ -24,7 +29,8 @@ object RealTransactionWrapper {
 
   implicit def toByteVector(s: ByteStr): ByteVector = ByteVector(s.arr)
 
-  implicit def assetPair(a: AssetPair): APair = APair(a.amountAsset.map(toByteVector), a.priceAsset.map(toByteVector))
+  implicit def assetPair(a: AssetPair): APair =
+    APair(a.amountAsset.map(toByteVector), a.priceAsset.map(toByteVector))
   implicit def ord(o: Order): Ord =
     Ord(
       senderPublicKey = o.senderPublicKey.toAddress.bytes,
@@ -59,8 +65,15 @@ object RealTransactionWrapper {
           recipient = t.recipient
         )
       case i: IssueTransaction =>
-        Tx.Issue(proven(i), i.quantity, i.assetId(), ByteVector(i.description), i.reissuable, i.decimals, i.script.map(_.bytes()).map(toByteVector))
-      case r: ReissueTransaction     => Tx.ReIssue(proven(r), r.quantity, r.assetId, r.reissuable)
+        Tx.Issue(proven(i),
+                 i.quantity,
+                 i.assetId(),
+                 ByteVector(i.description),
+                 i.reissuable,
+                 i.decimals,
+                 i.script.map(_.bytes()).map(toByteVector))
+      case r: ReissueTransaction =>
+        Tx.ReIssue(proven(r), r.quantity, r.assetId, r.reissuable)
       case b: BurnTransaction        => Tx.Burn(proven(b), b.quantity, b.assetId)
       case b: LeaseTransaction       => Tx.Lease(proven(b), b.amount, b.recipient)
       case b: LeaseCancelTransaction => Tx.LeaseCancel(proven(b), b.leaseId)
@@ -71,13 +84,24 @@ object RealTransactionWrapper {
           assetId = ms.assetId.map(a => ByteVector(a.arr)),
           transferCount = ms.transfers.length,
           totalAmount = ms.transfers.map(_.amount).sum,
-          transfers = ms.transfers.map(r => io.lunes.lang.v1.traits.TransferItem(r.address, r.amount)).toIndexedSeq,
+          transfers = ms.transfers
+            .map(r => io.lunes.lang.v1.traits.TransferItem(r.address, r.amount))
+            .toIndexedSeq,
           attachment = ByteVector(ms.attachment)
         )
-      case ss: SetScriptTransaction => Tx.SetScript(proven(ss), ss.script.map(_.bytes()).map(toByteVector))
-      case p: PaymentTransaction    => Tx.Payment(proven(p), p.amount, p.recipient)
-      case e: ExchangeTransaction   => Tx.Exchange(proven(e), e.price, e.amount, e.buyMatcherFee, e.sellMatcherFee, e.buyOrder, e.sellOrder)
-      case s: SponsorFeeTransaction => Tx.Sponsorship(proven(s), s.assetId, s.minSponsoredAssetFee)
+      case ss: SetScriptTransaction =>
+        Tx.SetScript(proven(ss), ss.script.map(_.bytes()).map(toByteVector))
+      case p: PaymentTransaction => Tx.Payment(proven(p), p.amount, p.recipient)
+      case e: ExchangeTransaction =>
+        Tx.Exchange(proven(e),
+                    e.price,
+                    e.amount,
+                    e.buyMatcherFee,
+                    e.sellMatcherFee,
+                    e.buyOrder,
+                    e.sellOrder)
+      case s: SponsorFeeTransaction =>
+        Tx.Sponsorship(proven(s), s.assetId, s.minSponsoredAssetFee)
       case d: DataTransaction =>
         Tx.Data(
           proven(d),

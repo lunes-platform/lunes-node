@@ -6,11 +6,18 @@ import shapeless.{:+:, CNil, Coproduct}
 package object assets {
 
   type TransferRequests = TransferV1Request :+: TransferV2Request :+: CNil
-  implicit val autoTransferRequestsReads: Reads[TransferRequests] = Reads { json =>
-    (json \ "version").asOpt[Byte] match {
-      case None => TransferV1Request.format.reads(json).map(Coproduct[TransferRequests](_))
-      case _    => TransferV2Request.format.reads(json).map(Coproduct[TransferRequests](_))
-    }
+  implicit val autoTransferRequestsReads: Reads[TransferRequests] = Reads {
+    json =>
+      (json \ "version").asOpt[Byte] match {
+        case None =>
+          TransferV1Request.format
+            .reads(json)
+            .map(Coproduct[TransferRequests](_))
+        case _ =>
+          TransferV2Request.format
+            .reads(json)
+            .map(Coproduct[TransferRequests](_))
+      }
   }
   implicit val autoTransferRequestsWrites: Writes[TransferRequests] = Writes {
     _.eliminate(
@@ -22,14 +29,23 @@ package object assets {
     )
   }
 
-  type SignedTransferRequests = SignedTransferV1Request :+: SignedTransferV2Request :+: CNil
-  implicit val autoSignedTransferRequestsReads: Reads[SignedTransferRequests] = Reads { json =>
-    (json \ "version").asOpt[Int] match {
-      case None | Some(1) => SignedTransferV1Request.reads.reads(json).map(Coproduct[SignedTransferRequests](_))
-      case _              => SignedTransferV2Request.format.reads(json).map(Coproduct[SignedTransferRequests](_))
+  type SignedTransferRequests =
+    SignedTransferV1Request :+: SignedTransferV2Request :+: CNil
+  implicit val autoSignedTransferRequestsReads: Reads[SignedTransferRequests] =
+    Reads { json =>
+      (json \ "version").asOpt[Int] match {
+        case None | Some(1) =>
+          SignedTransferV1Request.reads
+            .reads(json)
+            .map(Coproduct[SignedTransferRequests](_))
+        case _ =>
+          SignedTransferV2Request.format
+            .reads(json)
+            .map(Coproduct[SignedTransferRequests](_))
+      }
     }
-  }
-  implicit val autoSignedTransferRequestsWrites: Writes[SignedTransferRequests] = Writes {
+  implicit val autoSignedTransferRequestsWrites
+    : Writes[SignedTransferRequests] = Writes {
     _.eliminate(
       SignedTransferV1Request.writes.writes,
       _.eliminate(

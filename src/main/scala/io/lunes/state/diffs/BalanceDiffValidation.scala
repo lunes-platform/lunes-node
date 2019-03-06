@@ -13,25 +13,32 @@ import scala.util.{Left, Right}
 
 object BalanceDiffValidation extends ScorexLogging with Instrumented {
 
-  def apply[T <: Transaction](b: Blockchain, currentHeight: Int, fs: FunctionalitySettings)(d: Diff): Either[AccountBalanceError, Diff] = {
+  def apply[T <: Transaction](
+      b: Blockchain,
+      currentHeight: Int,
+      fs: FunctionalitySettings)(d: Diff): Either[AccountBalanceError, Diff] = {
 
     val changedAccounts = d.portfolios.keySet
 
     val positiveBalanceErrors: Map[Address, String] = changedAccounts
       .flatMap(acc => {
         val portfolioDiff = d.portfolios(acc)
-        val oldPortfolio  = b.portfolio(acc)
+        val oldPortfolio = b.portfolio(acc)
 
         val newPortfolio = oldPortfolio.combine(portfolioDiff)
 
         val err = if (newPortfolio.balance < 0) {
-          Some(s"negative lunes balance: $acc, old: ${oldPortfolio.balance}, new: ${newPortfolio.balance}")
+          Some(
+            s"negative lunes balance: $acc, old: ${oldPortfolio.balance}, new: ${newPortfolio.balance}")
         } else if (newPortfolio.assets.values.exists(_ < 0)) {
-          Some(s"negative asset balance: $acc, new portfolio: ${negativeAssetsInfo(newPortfolio)}")
+          Some(
+            s"negative asset balance: $acc, new portfolio: ${negativeAssetsInfo(newPortfolio)}")
         } else if (newPortfolio.effectiveBalance < 0) {
-          Some(s"negative effective balance: $acc, old: ${leaseLunesInfo(oldPortfolio)}, new: ${leaseLunesInfo(newPortfolio)}")
+          Some(s"negative effective balance: $acc, old: ${leaseLunesInfo(
+            oldPortfolio)}, new: ${leaseLunesInfo(newPortfolio)}")
         } else if (newPortfolio.balance < newPortfolio.lease.out && currentHeight > fs.allowLeasedBalanceTransferUntilHeight) {
-          Some(s"leased being more than own: $acc, old: ${leaseLunesInfo(oldPortfolio)}, new: ${leaseLunesInfo(newPortfolio)}")
+          Some(s"leased being more than own: $acc, old: ${leaseLunesInfo(
+            oldPortfolio)}, new: ${leaseLunesInfo(newPortfolio)}")
         } else None
         err.map(acc -> _)
       })
@@ -44,7 +51,9 @@ object BalanceDiffValidation extends ScorexLogging with Instrumented {
     }
   }
 
-  private def leaseLunesInfo(p: Portfolio): (Long, LeaseBalance) = (p.balance, p.lease)
+  private def leaseLunesInfo(p: Portfolio): (Long, LeaseBalance) =
+    (p.balance, p.lease)
 
-  private def negativeAssetsInfo(p: Portfolio): Map[ByteStr, Long] = p.assets.filter(_._2 < 0)
+  private def negativeAssetsInfo(p: Portfolio): Map[ByteStr, Long] =
+    p.assets.filter(_._2 < 0)
 }

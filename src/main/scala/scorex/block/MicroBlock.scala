@@ -22,15 +22,20 @@ case class MicroBlock(version: Byte,
                       signature: ByteStr)
     extends Signed {
 
-  private val versionField: ByteBlockField          = ByteBlockField("version", version)
-  private val prevResBlockSigField: BlockIdField    = BlockIdField("prevResBlockSig", prevResBlockSig.arr)
-  private val totalResBlockSigField: BlockIdField   = BlockIdField("totalResBlockSigField", totalResBlockSig.arr)
-  private val signerDataField: SignerDataBlockField = SignerDataBlockField("signature", SignerData(sender, signature))
-  private val transactionDataField                  = TransactionsBlockField(version.toInt, transactionData)
+  private val versionField: ByteBlockField = ByteBlockField("version", version)
+  private val prevResBlockSigField: BlockIdField =
+    BlockIdField("prevResBlockSig", prevResBlockSig.arr)
+  private val totalResBlockSigField: BlockIdField =
+    BlockIdField("totalResBlockSigField", totalResBlockSig.arr)
+  private val signerDataField: SignerDataBlockField =
+    SignerDataBlockField("signature", SignerData(sender, signature))
+  private val transactionDataField =
+    TransactionsBlockField(version.toInt, transactionData)
 
   val bytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     val txBytesSize = transactionDataField.bytes().length
-    val txBytes     = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ transactionDataField.bytes()
+    val txBytes = Bytes.ensureCapacity(Ints.toByteArray(txBytesSize), 4, 0) ++ transactionDataField
+      .bytes()
 
     versionField.bytes() ++
       prevResBlockSigField.bytes() ++
@@ -39,42 +44,70 @@ case class MicroBlock(version: Byte,
       signerDataField.bytes()
   }
 
-  private val bytesWithoutSignature: Coeval[Array[Byte]] = Coeval.evalOnce(bytes().dropRight(SignatureLength))
+  private val bytesWithoutSignature: Coeval[Array[Byte]] =
+    Coeval.evalOnce(bytes().dropRight(SignatureLength))
 
-  override val signatureValid: Coeval[Boolean]        = Coeval.evalOnce(crypto.verify(signature.arr, bytesWithoutSignature(), sender.publicKey))
-  override val signedDescendants: Coeval[Seq[Signed]] = Coeval.evalOnce(transactionData.flatMap(_.cast[Signed]))
+  override val signatureValid: Coeval[Boolean] = Coeval.evalOnce(
+    crypto.verify(signature.arr, bytesWithoutSignature(), sender.publicKey))
+  override val signedDescendants: Coeval[Seq[Signed]] =
+    Coeval.evalOnce(transactionData.flatMap(_.cast[Signed]))
 
-  override def toString: String = s"MicroBlock(${totalResBlockSig.trim} -> ${prevResBlockSig.trim}, txs=${transactionData.size})"
+  override def toString: String =
+    s"MicroBlock(${totalResBlockSig.trim} -> ${prevResBlockSig.trim}, txs=${transactionData.size})"
 }
 
 object MicroBlock extends ScorexLogging {
-  private def create(version: Byte,
-                     generator: PublicKeyAccount,
-                     transactionData: Seq[Transaction],
-                     prevResBlockSig: BlockId,
-                     totalResBlockSig: BlockId,
-                     signature: ByteStr): Either[ValidationError, MicroBlock] = {
+  private def create(
+      version: Byte,
+      generator: PublicKeyAccount,
+      transactionData: Seq[Transaction],
+      prevResBlockSig: BlockId,
+      totalResBlockSig: BlockId,
+      signature: ByteStr): Either[ValidationError, MicroBlock] = {
     if (transactionData.isEmpty)
       Left(GenericError("cannot create empty MicroBlock"))
     else if (transactionData.size > MaxTransactionsPerMicroblock)
-      Left(GenericError(s"too many txs in MicroBlock: allowed: $MaxTransactionsPerMicroblock, actual: ${transactionData.size}"))
+      Left(GenericError(
+        s"too many txs in MicroBlock: allowed: $MaxTransactionsPerMicroblock, actual: ${transactionData.size}"))
     else
-      Right(new MicroBlock(version, generator, transactionData, prevResBlockSig, totalResBlockSig, signature))
+      Right(
+        new MicroBlock(version,
+                       generator,
+                       transactionData,
+                       prevResBlockSig,
+                       totalResBlockSig,
+                       signature))
   }
 
-  def buildAndSign(generator: PrivateKeyAccount,
-                   transactionData: Seq[Transaction],
-                   prevResBlockSig: BlockId,
-                   totalResBlockSig: BlockId): Either[ValidationError, MicroBlock] =
+  def buildAndSign(
+      generator: PrivateKeyAccount,
+      transactionData: Seq[Transaction],
+      prevResBlockSig: BlockId,
+      totalResBlockSig: BlockId): Either[ValidationError, MicroBlock] =
     for {
-      _ <- Either.cond(prevResBlockSig.arr.length == SignatureLength, (), GenericError(s"Incorrect prevResBlockSig: ${prevResBlockSig.arr.length}"))
-      _ <- Either.cond(totalResBlockSig.arr.length == SignatureLength,
-                       (),
-                       GenericError(s"Incorrect totalResBlockSig: ${totalResBlockSig.arr.length}"))
-      _         <- Either.cond(generator.publicKey.length == KeyLength, (), GenericError(s"Incorrect generator.publicKey: ${generator.publicKey.length}"))
-      nonSigned <- create(version = 3: Byte, generator, transactionData, prevResBlockSig, totalResBlockSig, ByteStr.empty)
+      _ <- Either.cond(
+        prevResBlockSig.arr.length == SignatureLength,
+        (),
+        GenericError(
+          s"Incorrect prevResBlockSig: ${prevResBlockSig.arr.length}"))
+      _ <- Either.cond(
+        totalResBlockSig.arr.length == SignatureLength,
+        (),
+        GenericError(
+          s"Incorrect totalResBlockSig: ${totalResBlockSig.arr.length}"))
+      _ <- Either.cond(
+        generator.publicKey.length == KeyLength,
+        (),
+        GenericError(
+          s"Incorrect generator.publicKey: ${generator.publicKey.length}"))
+      nonSigned <- create(version = 3: Byte,
+                          generator,
+                          transactionData,
+                          prevResBlockSig,
+                          totalResBlockSig,
+                          ByteStr.empty)
     } yield {
-      val toSign    = nonSigned.bytes
+      val toSign = nonSigned.bytes
       val signature = crypto.sign(generator, toSign())
       nonSigned.copy(signature = ByteStr(signature))
     }
@@ -86,15 +119,17 @@ object MicroBlock extends ScorexLogging {
 
       var position = 1
 
-      val prevResBlockSig = ByteStr(bytes.slice(position, position + SignatureLength))
+      val prevResBlockSig =
+        ByteStr(bytes.slice(position, position + SignatureLength))
       position += SignatureLength
 
-      val totalResBlockSig = ByteStr(bytes.slice(position, position + SignatureLength))
+      val totalResBlockSig =
+        ByteStr(bytes.slice(position, position + SignatureLength))
       position += SignatureLength
 
       val tBytesLength = Ints.fromByteArray(bytes.slice(position, position + 4))
       position += 4
-      val tBytes       = bytes.slice(position, position + tBytesLength)
+      val tBytes = bytes.slice(position, position + tBytesLength)
       val txBlockField = transParseBytes(version, tBytes).get
       position += tBytesLength
 
@@ -103,7 +138,12 @@ object MicroBlock extends ScorexLogging {
 
       val signature = ByteStr(bytes.slice(position, position + SignatureLength))
 
-      create(version, PublicKeyAccount(genPK), txBlockField, prevResBlockSig, totalResBlockSig, signature).explicitGet()
+      create(version,
+             PublicKeyAccount(genPK),
+             txBlockField,
+             prevResBlockSig,
+             totalResBlockSig,
+             signature).explicitGet()
     }.recoverWith {
       case t: Throwable =>
         log.error("Error when parsing microblock", t)

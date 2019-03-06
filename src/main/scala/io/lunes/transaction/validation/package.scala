@@ -8,11 +8,11 @@ import scala.util.Try
 
 package object validation {
   val MaxDescriptionLength = 1000
-  val MaxAssetNameLength   = 16
-  val MinAssetNameLength   = 4
-  val MaxDecimals          = 8
-  val MaxTransferCount     = 100
-  val MaxEntryCount        = 100
+  val MaxAssetNameLength = 16
+  val MinAssetNameLength = 4
+  val MaxDecimals = 8
+  val MaxTransferCount = 100
+  val MaxEntryCount = 100
 
   type Validated[A] = ValidatedNel[ValidationError, A]
 

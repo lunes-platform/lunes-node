@@ -18,13 +18,17 @@ trait LeaseCancelTransaction extends ProvenTransaction {
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
-      "chainId"   -> chainByte,
-      "version"   -> version,
-      "fee"       -> fee,
+      "chainId" -> chainByte,
+      "version" -> version,
+      "fee" -> fee,
       "timestamp" -> timestamp,
-      "leaseId"   -> leaseId.base58
+      "leaseId" -> leaseId.base58
     ))
-  protected val bytesBase = Coeval.evalOnce(Bytes.concat(sender.publicKey, Longs.toByteArray(fee), Longs.toByteArray(timestamp), leaseId.arr))
+  protected val bytesBase = Coeval.evalOnce(
+    Bytes.concat(sender.publicKey,
+                 Longs.toByteArray(fee),
+                 Longs.toByteArray(timestamp),
+                 leaseId.arr))
 
 }
 
@@ -37,11 +41,13 @@ object LeaseCancelTransaction {
     } else Right(())
 
   def parseBase(bytes: Array[Byte], start: Int) = {
-    val sender    = PublicKeyAccount(bytes.slice(start, start + KeyLength))
-    val fee       = Longs.fromByteArray(bytes.slice(start + KeyLength, start + KeyLength + 8))
-    val timestamp = Longs.fromByteArray(bytes.slice(start + KeyLength + 8, start + KeyLength + 16))
-    val end       = start + KeyLength + 16 + crypto.DigestSize
-    val leaseId   = ByteStr(bytes.slice(start + KeyLength + 16, end))
+    val sender = PublicKeyAccount(bytes.slice(start, start + KeyLength))
+    val fee =
+      Longs.fromByteArray(bytes.slice(start + KeyLength, start + KeyLength + 8))
+    val timestamp = Longs.fromByteArray(
+      bytes.slice(start + KeyLength + 8, start + KeyLength + 16))
+    val end = start + KeyLength + 16 + crypto.DigestSize
+    val leaseId = ByteStr(bytes.slice(start + KeyLength + 16, end))
     (sender, fee, timestamp, leaseId, end)
   }
 }

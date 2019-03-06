@@ -4,13 +4,17 @@ import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import sbtassembly.MergeStrategy
 
-enablePlugins(JavaServerAppPackaging, JDebPackaging, SystemdPlugin, GitVersioning)
+enablePlugins(JavaServerAppPackaging,
+              JDebPackaging,
+              SystemdPlugin,
+              GitVersioning)
 scalafmtOnCompile in ThisBuild := true
 
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
 name := "lunes"
 normalizedName := s"${name.value}${network.value.packageSuffix}"
+version := "0.1.1"
 
 git.useGitDescribe := true
 git.uncommittedSignifier := Some("DIRTY")
@@ -21,7 +25,12 @@ inThisBuild(
     scalaVersion := "2.12.6",
     organization := "io.lunes",
     crossPaths := false,
-    scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-language:implicitConversions", "-Ywarn-unused:-implicits", "-Xlint")
+    scalacOptions ++= Seq("-feature",
+                          "-deprecation",
+                          "-language:higherKinds",
+                          "-language:implicitConversions",
+                          "-Ywarn-unused:-implicits",
+                          "-Xlint")
   ))
 
 resolvers += Resolver.bintrayRepo("ethereum", "maven")
@@ -37,17 +46,32 @@ val aopMerge: MergeStrategy = new MergeStrategy {
   import scala.xml._
   import scala.xml.dtd._
 
-  def apply(tempDir: File, path: String, files: Seq[File]): Either[String, Seq[(File, String)]] = {
-    val dt                         = DocType("aspectj", PublicID("-//AspectJ//DTD//EN", "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"), Nil)
-    val file                       = MergeStrategy.createMergeTarget(tempDir, path)
-    val xmls: Seq[Elem]            = files.map(XML.loadFile)
-    val aspectsChildren: Seq[Node] = xmls.flatMap(_ \\ "aspectj" \ "aspects" \ "_")
-    val weaverChildren: Seq[Node]  = xmls.flatMap(_ \\ "aspectj" \ "weaver" \ "_")
-    val options: String            = xmls.map(x => (x \\ "aspectj" \ "weaver" \ "@options").text).mkString(" ").trim
-    val weaverAttr                 = if (options.isEmpty) Null else new UnprefixedAttribute("options", options, Null)
-    val aspects                    = new Elem(null, "aspects", Null, TopScope, false, aspectsChildren: _*)
-    val weaver                     = new Elem(null, "weaver", weaverAttr, TopScope, false, weaverChildren: _*)
-    val aspectj                    = new Elem(null, "aspectj", Null, TopScope, false, aspects, weaver)
+  def apply(tempDir: File,
+            path: String,
+            files: Seq[File]): Either[String, Seq[(File, String)]] = {
+    val dt = DocType("aspectj",
+                     PublicID("-//AspectJ//DTD//EN",
+                              "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"),
+                     Nil)
+    val file = MergeStrategy.createMergeTarget(tempDir, path)
+    val xmls: Seq[Elem] = files.map(XML.loadFile)
+    val aspectsChildren: Seq[Node] =
+      xmls.flatMap(_ \\ "aspectj" \ "aspects" \ "_")
+    val weaverChildren: Seq[Node] =
+      xmls.flatMap(_ \\ "aspectj" \ "weaver" \ "_")
+    val options: String = xmls
+      .map(x => (x \\ "aspectj" \ "weaver" \ "@options").text)
+      .mkString(" ")
+      .trim
+    val weaverAttr =
+      if (options.isEmpty) Null
+      else new UnprefixedAttribute("options", options, Null)
+    val aspects =
+      new Elem(null, "aspects", Null, TopScope, false, aspectsChildren: _*)
+    val weaver =
+      new Elem(null, "weaver", weaverAttr, TopScope, false, weaverChildren: _*)
+    val aspectj =
+      new Elem(null, "aspectj", Null, TopScope, false, aspects, weaver)
     XML.save(file.toString, aspectj, "UTF-8", xmlDecl = false, dt)
     IO.append(file, IO.Newline.getBytes(IO.defaultCharset))
     Right(Seq(file -> path))
@@ -59,15 +83,16 @@ inTask(assembly)(
     test := {},
     assemblyJarName := s"lunesnode-${version.value}.jar",
     assemblyMergeStrategy := {
-      case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.concat
-      case PathList("META-INF", "aop.xml")                      => aopMerge
-      case other                                                => (assemblyMergeStrategy in assembly).value(other)
+      case PathList("META-INF", "io.netty.versions.properties") =>
+        MergeStrategy.concat
+      case PathList("META-INF", "aop.xml") => aopMerge
+      case other                           => (assemblyMergeStrategy in assembly).value(other)
     }
   ))
 
 inConfig(Compile)(
   Seq(
-    mainClass := Some("io.lunes.LunesNode"),
+    mainClass := Some("io.lunes.LunesNode")
   ))
 
 inConfig(Universal)(
@@ -92,7 +117,6 @@ inConfig(Universal)(
       "-J-XX:+UseStringDeduplication"
     )
   ))
-
 
 lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
@@ -122,11 +146,12 @@ lazy val lang =
     )
     .jvmSettings(
       libraryDependencies ++= Seq(
-        "org.scala-js"                %% "scalajs-stubs" % "0.6.22" % "provided"
-      ) ++ Dependencies.logging.map(_ % "test") // scrypto logs an error if a signature verification was failed
+        "org.scala-js" %% "scalajs-stubs" % "0.6.22" % "provided"
+      ) ++ Dependencies.logging
+        .map(_ % "test") // scrypto logs an error if a signature verification was failed
     )
 
-lazy val langJS  = lang.js
+lazy val langJS = lang.js
 lazy val langJVM = lang.jvm
 
 lazy val node = project

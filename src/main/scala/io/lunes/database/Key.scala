@@ -11,7 +11,9 @@ trait Key[V] {
 }
 
 object Key {
-  def apply[V](key: Array[Byte], parser: Array[Byte] => V, encoder: V => Array[Byte]): Key[V] = new Key[V] {
+  def apply[V](key: Array[Byte],
+               parser: Array[Byte] => V,
+               encoder: V => Array[Byte]): Key[V] = new Key[V] {
     override def keyBytes: Array[Byte] = key
 
     override def parse(bytes: Array[Byte]) = parser(bytes)
@@ -19,6 +21,10 @@ object Key {
     override def encode(v: V) = encoder(v)
   }
 
-  def opt[V](key: Array[Byte], parser: Array[Byte] => V, encoder: V => Array[Byte]): Key[Option[V]] =
-    apply[Option[V]](key, Option(_).map(parser), _.fold[Array[Byte]](null)(encoder))
+  def opt[V](key: Array[Byte],
+             parser: Array[Byte] => V,
+             encoder: V => Array[Byte]): Key[Option[V]] =
+    apply[Option[V]](key,
+                     Option(_).map(parser),
+                     _.fold[Array[Byte]](null)(encoder))
 }

@@ -19,9 +19,9 @@ trait CreateAliasTransaction extends ProvenTransaction {
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
-      "version"   -> version,
-      "alias"     -> alias.name,
-      "fee"       -> fee,
+      "version" -> version,
+      "alias" -> alias.name,
+      "fee" -> fee,
       "timestamp" -> timestamp
     ))
 
@@ -38,13 +38,18 @@ trait CreateAliasTransaction extends ProvenTransaction {
 object CreateAliasTransaction {
   val typeId: Byte = 10
 
-  def parseBase(start: Int, bytes: Array[Byte]): Try[(PublicKeyAccount, Alias, Long, Long, Int)] = {
+  def parseBase(
+      start: Int,
+      bytes: Array[Byte]): Try[(PublicKeyAccount, Alias, Long, Long, Int)] = {
     for {
       sender <- Try(PublicKeyAccount(bytes.slice(start, start + KeyLength)))
       (aliasBytes, aliasEnd) = Deser.parseArraySize(bytes, start + KeyLength)
-      alias     <- Alias.fromBytes(aliasBytes).fold(err => Failure(new Exception(err.toString)), Success.apply)
-      fee       <- Try(Longs.fromByteArray(bytes.slice(aliasEnd, aliasEnd + 8)))
-      timestamp <- Try(Longs.fromByteArray(bytes.slice(aliasEnd + 8, aliasEnd + 16)))
+      alias <- Alias
+        .fromBytes(aliasBytes)
+        .fold(err => Failure(new Exception(err.toString)), Success.apply)
+      fee <- Try(Longs.fromByteArray(bytes.slice(aliasEnd, aliasEnd + 8)))
+      timestamp <- Try(
+        Longs.fromByteArray(bytes.slice(aliasEnd + 8, aliasEnd + 16)))
     } yield (sender, alias, fee, timestamp, aliasEnd + 16)
   }
 }

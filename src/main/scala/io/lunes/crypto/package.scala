@@ -13,7 +13,8 @@ package object crypto {
 
   def fastHash(s: String): Array[Byte] = fastHash(s.getBytes())
 
-  def secureHash(m: Array[Byte]): Array[Byte] = Keccak256.hash(Blake2b256.hash(m))
+  def secureHash(m: Array[Byte]): Array[Byte] =
+    Keccak256.hash(Blake2b256.hash(m))
 
   def secureHash(s: String): Array[Byte] = secureHash(s.getBytes())
 
@@ -23,8 +24,11 @@ package object crypto {
   def sign(privateKeyBytes: Array[Byte], message: Array[Byte]): Array[Byte] =
     Curve25519.sign(PrivateKey(privateKeyBytes), message)
 
-  def verify(signature: Array[Byte], message: Array[Byte], publicKey: Array[Byte]): Boolean =
+  def verify(signature: Array[Byte],
+             message: Array[Byte],
+             publicKey: Array[Byte]): Boolean =
     Curve25519.verify(Signature(signature), message, PublicKey(publicKey))
 
-  def createKeyPair(seed: Array[Byte]): (Array[Byte], Array[Byte]) = Curve25519.createKeyPair(seed)
+  def createKeyPair(seed: Array[Byte]): (Array[Byte], Array[Byte]) =
+    Curve25519.createKeyPair(seed)
 }

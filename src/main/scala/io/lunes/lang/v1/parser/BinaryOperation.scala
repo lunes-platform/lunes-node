@@ -65,14 +65,14 @@ object BinaryOperation {
     override val func: String = "%"
   }
   case object LE_OP extends BinaryOperation {
-    val func            = ">="
+    val func = ">="
     override val parser = P("<=")
     override def expr(start: Int, end: Int, op1: EXPR, op2: EXPR): EXPR = {
       BINARY_OP(start, end, op2, LE_OP, op1)
     }
   }
   case object LT_OP extends BinaryOperation {
-    val func            = ">"
+    val func = ">"
     override val parser = P("<")
     override def expr(start: Int, end: Int, op1: EXPR, op2: EXPR): EXPR = {
       BINARY_OP(start, end, op2, LT_OP, op1)

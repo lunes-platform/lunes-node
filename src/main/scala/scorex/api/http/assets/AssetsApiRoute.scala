@@ -27,7 +27,12 @@ import scala.util.{Failure, Success}
 
 @Path("/assets")
 @Api(value = "assets")
-case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPool, allChannels: ChannelGroup, blockchain: Blockchain, time: Time)
+case class AssetsApiRoute(settings: RestAPISettings,
+                          wallet: Wallet,
+                          utx: UtxPool,
+                          allChannels: ChannelGroup,
+                          blockchain: Blockchain,
+                          time: Time)
     extends ApiRoute
     with BroadcastRoute {
   val MaxAddressesPerRequest = 1000
@@ -37,11 +42,21 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
       balance ~ balances ~ issue ~ reissue ~ burnRoute ~ transfer ~ massTransfer ~ signOrder ~ balanceDistribution ~ details
     }
   @Path("/balance/{address}/{assetId}")
-  @ApiOperation(value = "Asset's balance", notes = "Account's balance by given asset", httpMethod = "GET")
+  @ApiOperation(value = "Asset's balance",
+                notes = "Account's balance by given asset",
+                httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path"),
-      new ApiImplicitParam(name = "assetId", value = "Asset ID", required = true, dataType = "string", paramType = "path")
+      new ApiImplicitParam(name = "address",
+                           value = "Address",
+                           required = true,
+                           dataType = "string",
+                           paramType = "path"),
+      new ApiImplicitParam(name = "assetId",
+                           value = "Asset ID",
+                           required = true,
+                           dataType = "string",
+                           paramType = "path")
     ))
   def balance: Route =
     (get & path("balance" / Segment / Segment)) { (address, assetId) =>
@@ -49,27 +64,46 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
     }
 
   @Path("/{assetId}/distribution")
-  @ApiOperation(value = "Asset balance distribution", notes = "Asset balance distribution by account", httpMethod = "GET")
+  @ApiOperation(value = "Asset balance distribution",
+                notes = "Asset balance distribution by account",
+                httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "assetId", value = "Asset ID", required = true, dataType = "string", paramType = "path")
+      new ApiImplicitParam(name = "assetId",
+                           value = "Asset ID",
+                           required = true,
+                           dataType = "string",
+                           paramType = "path")
     ))
   def balanceDistribution: Route =
     (get & path(Segment / "distribution")) { assetId =>
       complete {
-        Success(assetId).filter(_.length <= AssetIdStringLength).flatMap(Base58.decode) match {
+        Success(assetId)
+          .filter(_.length <= AssetIdStringLength)
+          .flatMap(Base58.decode) match {
           case Success(byteArray) =>
-            Json.toJson(blockchain.assetDistribution(ByteStr(byteArray)).map { case (a, b) => a.stringRepr -> b })
-          case Failure(_) => ApiError.fromValidationError(io.lunes.transaction.ValidationError.GenericError("Must be base58-encoded assetId"))
+            Json.toJson(blockchain.assetDistribution(ByteStr(byteArray)).map {
+              case (a, b) => a.stringRepr -> b
+            })
+          case Failure(_) =>
+            ApiError.fromValidationError(
+              io.lunes.transaction.ValidationError
+                .GenericError("Must be base58-encoded assetId"))
         }
       }
     }
 
   @Path("/balance/{address}")
-  @ApiOperation(value = "Account's balance", notes = "Account's balances for all assets", httpMethod = "GET")
+  @ApiOperation(value = "Account's balance",
+                notes = "Account's balances for all assets",
+                httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "address", value = "Address", required = true, dataType = "string", paramType = "path")
+      new ApiImplicitParam(name = "address",
+                           value = "Address",
+                           required = true,
+                           dataType = "string",
+                           paramType = "path")
     ))
   def balances: Route =
     (get & path("balance" / Segment)) { address =>
@@ -77,10 +111,16 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
     }
 
   @Path("/details/{assetId}")
-  @ApiOperation(value = "Information about an asset", notes = "Provides detailed information about given asset", httpMethod = "GET")
+  @ApiOperation(value = "Information about an asset",
+                notes = "Provides detailed information about given asset",
+                httpMethod = "GET")
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "assetId", value = "ID of the asset", required = true, dataType = "string", paramType = "path")
+      new ApiImplicitParam(name = "assetId",
+                           value = "ID of the asset",
+                           required = true,
+                           dataType = "string",
+                           paramType = "path")
     ))
   def details: Route =
     (get & path("details" / Segment)) { id =>
@@ -111,8 +151,12 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
         req.eliminate(
           x => doBroadcast(TransactionFactory.transferAssetV1(x, wallet, time)),
           _.eliminate(
-            x => doBroadcast(TransactionFactory.transferAssetV2(x, wallet, time)),
-            _ => Future.successful(WrongJson(Some(new IllegalArgumentException("Doesn't know how to process request"))))
+            x =>
+              doBroadcast(TransactionFactory.transferAssetV2(x, wallet, time)),
+            _ =>
+              Future.successful(
+                WrongJson(Some(new IllegalArgumentException(
+                  "Doesn't know how to process request"))))
           )
         )
       }
@@ -137,10 +181,17 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
       )
     ))
   def massTransfer: Route =
-    processRequest("masstransfer", (t: MassTransferRequest) => doBroadcast(TransactionFactory.massTransferAsset(t, wallet, time)))
+    processRequest(
+      "masstransfer",
+      (t: MassTransferRequest) =>
+        doBroadcast(TransactionFactory.massTransferAsset(t, wallet, time)))
 
   @Path("/issue")
-  @ApiOperation(value = "Issue Asset", notes = "Issue new Asset", httpMethod = "POST", produces = "application/json", consumes = "application/json")
+  @ApiOperation(value = "Issue Asset",
+                notes = "Issue new Asset",
+                httpMethod = "POST",
+                produces = "application/json",
+                consumes = "application/json")
   @ApiImplicitParams(
     Array(
       new ApiImplicitParam(
@@ -154,10 +205,17 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
       )
     ))
   def issue: Route =
-    processRequest("issue", (r: IssueV1Request) => doBroadcast(TransactionFactory.issueAssetV1(r, wallet, time)))
+    processRequest(
+      "issue",
+      (r: IssueV1Request) =>
+        doBroadcast(TransactionFactory.issueAssetV1(r, wallet, time)))
 
   @Path("/reissue")
-  @ApiOperation(value = "Issue Asset", notes = "Reissue Asset", httpMethod = "POST", produces = "application/json", consumes = "application/json")
+  @ApiOperation(value = "Issue Asset",
+                notes = "Reissue Asset",
+                httpMethod = "POST",
+                produces = "application/json",
+                consumes = "application/json")
   @ApiImplicitParams(
     Array(
       new ApiImplicitParam(
@@ -166,11 +224,15 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
         required = true,
         paramType = "body",
         dataType = "scorex.api.http.assets.ReissueV1Request",
-        defaultValue = "{\"sender\":\"string\",\"assetId\":\"Base58\",\"quantity\":100000,\"reissuable\":false,\"fee\":1}"
+        defaultValue =
+          "{\"sender\":\"string\",\"assetId\":\"Base58\",\"quantity\":100000,\"reissuable\":false,\"fee\":1}"
       )
     ))
   def reissue: Route =
-    processRequest("reissue", (r: ReissueV1Request) => doBroadcast(TransactionFactory.reissueAssetV1(r, wallet, time)))
+    processRequest(
+      "reissue",
+      (r: ReissueV1Request) =>
+        doBroadcast(TransactionFactory.reissueAssetV1(r, wallet, time)))
 
   @Path("/burn")
   @ApiOperation(value = "Burn Asset",
@@ -186,11 +248,15 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
         required = true,
         paramType = "body",
         dataType = "scorex.api.http.assets.BurnV1Request",
-        defaultValue = "{\"sender\":\"string\",\"assetId\":\"Base58\",\"quantity\":100,\"fee\":100000}"
+        defaultValue =
+          "{\"sender\":\"string\",\"assetId\":\"Base58\",\"quantity\":100,\"fee\":100000}"
       )
     ))
   def burnRoute: Route =
-    processRequest("burn", (b: BurnV1Request) => doBroadcast(TransactionFactory.burnAssetV1(b, wallet, time)))
+    processRequest(
+      "burn",
+      (b: BurnV1Request) =>
+        doBroadcast(TransactionFactory.burnAssetV1(b, wallet, time)))
 
   @Path("/order")
   @ApiOperation(value = "Sign Order",
@@ -210,23 +276,31 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
     ))
   def signOrder: Route =
     processRequest("order", (order: Order) => {
-      wallet.privateKeyAccount(order.senderPublicKey).map(pk => Order.sign(order, pk))
+      wallet
+        .privateKeyAccount(order.senderPublicKey)
+        .map(pk => Order.sign(order, pk))
     })
 
-  private def balanceJson(address: String, assetIdStr: String): Either[ApiError, JsObject] = {
+  private def balanceJson(address: String,
+                          assetIdStr: String): Either[ApiError, JsObject] = {
     ByteStr.decodeBase58(assetIdStr) match {
       case Success(assetId) =>
         (for {
           acc <- Address.fromString(address)
         } yield
-          Json.obj("address" -> acc.address,
-                   "assetId" -> assetIdStr,
-                   "balance" -> JsNumber(BigDecimal(blockchain.portfolio(acc).assets.getOrElse(assetId, 0L))))).left.map(ApiError.fromValidationError)
+          Json.obj(
+            "address" -> acc.address,
+            "assetId" -> assetIdStr,
+            "balance" -> JsNumber(
+              BigDecimal(
+                blockchain.portfolio(acc).assets.getOrElse(assetId, 0L))))).left
+          .map(ApiError.fromValidationError)
       case _ => Left(InvalidAddress)
     }
   }
 
-  private def fullAccountAssetsInfo(address: String): Either[ApiError, JsObject] =
+  private def fullAccountAssetsInfo(
+      address: String): Either[ApiError, JsObject] =
     (for {
       acc <- Address.fromString(address)
     } yield {
@@ -236,24 +310,26 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
           (for {
             (assetId, balance) <- blockchain.portfolio(acc).assets
             if balance > 0
-            assetInfo                                 <- blockchain.assetDescription(assetId)
-            (_, (issueTransaction: IssueTransaction)) <- blockchain.transactionInfo(assetId)
+            assetInfo <- blockchain.assetDescription(assetId)
+            (_, (issueTransaction: IssueTransaction)) <- blockchain
+              .transactionInfo(assetId)
             sponsorBalance = if (assetInfo.sponsorship != 0) {
-              Some(blockchain.portfolio(issueTransaction.sender).spendableBalance)
+              Some(
+                blockchain.portfolio(issueTransaction.sender).spendableBalance)
             } else {
               None
             }
           } yield
             Json.obj(
-              "assetId"    -> assetId.base58,
-              "balance"    -> balance,
+              "assetId" -> assetId.base58,
+              "balance" -> balance,
               "reissuable" -> assetInfo.reissuable,
               "minSponsoredAssetFee" -> (assetInfo.sponsorship match {
                 case 0           => JsNull
                 case sponsorship => JsNumber(sponsorship)
               }),
-              "sponsorBalance"   -> sponsorBalance,
-              "quantity"         -> JsNumber(BigDecimal(assetInfo.totalVolume)),
+              "sponsorBalance" -> sponsorBalance,
+              "quantity" -> JsNumber(BigDecimal(assetInfo.totalVolume)),
               "issueTransaction" -> issueTransaction.json()
             )).toSeq)
       )
@@ -262,30 +338,37 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
   private def assetDetails(assetId: String): Either[ApiError, JsObject] =
     (for {
       id <- ByteStr.decodeBase58(assetId).toOption.toRight("Incorrect asset ID")
-      tt <- blockchain.transactionInfo(id).toRight("Failed to find issue transaction by ID")
+      tt <- blockchain
+        .transactionInfo(id)
+        .toRight("Failed to find issue transaction by ID")
       (h, mtx) = tt
       tx <- (mtx match {
         case t: IssueTransaction => Some(t)
         case _                   => None
       }).toRight("No issue transaction found with given asset ID")
-      description <- blockchain.assetDescription(id).toRight("Failed to get description of the asset")
-      complexity  <- description.script.fold[Either[String, Long]](Right(0))(ScriptCompiler.estimate)
+      description <- blockchain
+        .assetDescription(id)
+        .toRight("Failed to get description of the asset")
+      complexity <- description.script.fold[Either[String, Long]](Right(0))(
+        ScriptCompiler.estimate)
     } yield {
       JsObject(
         Seq(
-          "assetId"        -> JsString(id.base58),
-          "issueHeight"    -> JsNumber(h),
+          "assetId" -> JsString(id.base58),
+          "issueHeight" -> JsNumber(h),
           "issueTimestamp" -> JsNumber(tx.timestamp),
-          "issuer"         -> JsString(tx.sender.toString),
-          "name"           -> JsString(new String(tx.name, Charsets.UTF_8)),
-          "description"    -> JsString(new String(tx.description, Charsets.UTF_8)),
-          "decimals"       -> JsNumber(tx.decimals.toInt),
-          "reissuable"     -> JsBoolean(description.reissuable),
-          "quantity"       -> JsNumber(BigDecimal(description.totalVolume)),
-          "script"         -> Json.toJson(description.script.map(_.bytes().base58)),
-          "scriptText"     -> Json.toJson(description.script.map(_.text)),
-          "complexity"     -> JsNumber(complexity),
-          "extraFee"       -> JsNumber(if (description.script.isEmpty) 0 else CommonValidation.ScriptExtraFee),
+          "issuer" -> JsString(tx.sender.toString),
+          "name" -> JsString(new String(tx.name, Charsets.UTF_8)),
+          "description" -> JsString(new String(tx.description, Charsets.UTF_8)),
+          "decimals" -> JsNumber(tx.decimals.toInt),
+          "reissuable" -> JsBoolean(description.reissuable),
+          "quantity" -> JsNumber(BigDecimal(description.totalVolume)),
+          "script" -> Json.toJson(description.script.map(_.bytes().base58)),
+          "scriptText" -> Json.toJson(description.script.map(_.text)),
+          "complexity" -> JsNumber(complexity),
+          "extraFee" -> JsNumber(
+            if (description.script.isEmpty) 0
+            else CommonValidation.ScriptExtraFee),
           "minSponsoredAssetFee" -> (description.sponsorship match {
             case 0           => JsNull
             case sponsorship => JsNumber(sponsorship)
@@ -304,9 +387,12 @@ case class AssetsApiRoute(settings: RestAPISettings, wallet: Wallet, utx: UtxPoo
         required = true,
         paramType = "body",
         dataType = "scorex.api.http.assets.SponsorFeeRequest",
-        defaultValue = "{\"sender\":\"string\",\"assetId\":\"Base58\",\"minSponsoredAssetFee\":100000000,\"fee\":100000000}"
+        defaultValue =
+          "{\"sender\":\"string\",\"assetId\":\"Base58\",\"minSponsoredAssetFee\":100000000,\"fee\":100000000}"
       )
     ))
   def sponsorRoute: Route =
-    processRequest("sponsor", (req: SponsorFeeRequest) => doBroadcast(TransactionFactory.sponsor(req, wallet, time)))
+    processRequest("sponsor",
+                   (req: SponsorFeeRequest) =>
+                     doBroadcast(TransactionFactory.sponsor(req, wallet, time)))
 }

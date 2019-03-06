@@ -18,17 +18,20 @@ import scala.util.Try
 
 package object utils extends ScorexLogging {
 
-  private val BytesMaxValue  = 256
+  private val BytesMaxValue = 256
   private val Base58MaxValue = 58
 
   private val BytesLog = math.log(BytesMaxValue)
-  private val BaseLog  = math.log(Base58MaxValue)
+  private val BaseLog = math.log(Base58MaxValue)
 
-  val UncaughtExceptionsToLogReporter = UncaughtExceptionReporter(exc => log.error(Throwables.getStackTraceAsString(exc)))
+  val UncaughtExceptionsToLogReporter = UncaughtExceptionReporter(
+    exc => log.error(Throwables.getStackTraceAsString(exc)))
 
-  def base58Length(byteArrayLength: Int): Int = math.ceil(BytesLog / BaseLog * byteArrayLength).toInt
+  def base58Length(byteArrayLength: Int): Int =
+    math.ceil(BytesLog / BaseLog * byteArrayLength).toInt
 
-  def createWithVerification[A <: Storage with VersionedStorage](storage: => A): Try[A] = Try {
+  def createWithVerification[A <: Storage with VersionedStorage](
+      storage: => A): Try[A] = Try {
     if (storage.isVersionValid) storage
     else {
       log.info(s"Re-creating storage")
@@ -49,17 +52,20 @@ package object utils extends ScorexLogging {
       if (si)
         (1000, Vector("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"))
       else
-        (1024, Vector("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"))
+        (1024,
+         Vector("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"))
 
     def getExponent(curBytes: Long, baseValue: Int, curExponent: Int = 0): Int =
       if (curBytes < baseValue) curExponent
       else {
         val newExponent = 1 + curExponent
-        getExponent(curBytes / (baseValue * newExponent), baseValue, newExponent)
+        getExponent(curBytes / (baseValue * newExponent),
+                    baseValue,
+                    newExponent)
       }
 
-    val exponent   = getExponent(bytes, baseValue)
-    val divisor    = Math.pow(baseValue, exponent)
+    val exponent = getExponent(bytes, baseValue)
+    val divisor = Math.pow(baseValue, exponent)
     val unitString = unitStrings(exponent)
 
     f"${bytes / divisor}%.1f $unitString"
@@ -77,8 +83,11 @@ package object utils extends ScorexLogging {
     }
   }
 
-  lazy val dummyNetworkByte: Byte          = AddressScheme.current.chainId
-  lazy val dummyContext: EvaluationContext = BlockchainContext.build(dummyNetworkByte, Coeval(???), Coeval(???), null)
+  lazy val dummyNetworkByte: Byte = AddressScheme.current.chainId
+  lazy val dummyContext: EvaluationContext =
+    BlockchainContext.build(dummyNetworkByte, Coeval(???), Coeval(???), null)
   lazy val dummyTypeCheckerContext: CompilerContext =
-    CompilerContext.fromEvaluationContext(dummyContext, caseTypes.map(v => v.name -> v).toMap, predefVars)
+    CompilerContext.fromEvaluationContext(dummyContext,
+                                          caseTypes.map(v => v.name -> v).toMap,
+                                          predefVars)
 }

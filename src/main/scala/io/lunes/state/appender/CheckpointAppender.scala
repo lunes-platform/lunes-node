@@ -8,7 +8,11 @@ import io.netty.channel.group.ChannelGroup
 import kamon.Kamon
 import monix.eval.Task
 import monix.execution.Scheduler
-import io.lunes.transaction.{BlockchainUpdater, CheckpointService, ValidationError}
+import io.lunes.transaction.{
+  BlockchainUpdater,
+  CheckpointService,
+  ValidationError
+}
 import scorex.utils.ScorexLogging
 
 object CheckpointAppender extends ScorexLogging {
@@ -18,7 +22,9 @@ object CheckpointAppender extends ScorexLogging {
             peerDatabase: PeerDatabase,
             miner: Miner,
             allChannels: ChannelGroup,
-            scheduler: Scheduler)(maybeChannel: Option[Channel], c: Checkpoint): Task[Either[ValidationError, Option[BigInt]]] = {
+            scheduler: Scheduler)(
+      maybeChannel: Option[Channel],
+      c: Checkpoint): Task[Either[ValidationError, Option[BigInt]]] = {
     val t = Task(checkpointService.set(c).map { _ =>
       log.info(s"Processing checkpoint $c")
       makeBlockchainCompliantWith(blockchain, blockchainUpdater)(c)
@@ -39,7 +45,9 @@ object CheckpointAppender extends ScorexLogging {
     }
   }
 
-  private def makeBlockchainCompliantWith(blockchain: Blockchain, blockchainUpdater: BlockchainUpdater)(checkpoint: Checkpoint): Unit = {
+  private def makeBlockchainCompliantWith(
+      blockchain: Blockchain,
+      blockchainUpdater: BlockchainUpdater)(checkpoint: Checkpoint): Unit = {
     val existingItems = checkpoint.items.filter { checkpoint =>
       blockchain.blockAt(checkpoint.height).isDefined
     }
@@ -52,9 +60,10 @@ object CheckpointAppender extends ScorexLogging {
 
     if (fork.nonEmpty) {
       val genesisBlockHeight = 1
-      val hh                 = existingItems.map(_.height) :+ genesisBlockHeight
+      val hh = existingItems.map(_.height) :+ genesisBlockHeight
       blockchain.blockAt(hh(fork.size)).foreach { lastValidBlock =>
-        log.warn(s"Fork detected (length = ${fork.size}), rollback to last valid block $lastValidBlock]")
+        log.warn(
+          s"Fork detected (length = ${fork.size}), rollback to last valid block $lastValidBlock]")
         blockBlockForkStats.increment()
         blockForkHeightStats.record(fork.size)
         blockchainUpdater.removeAfter(lastValidBlock.uniqueId)
@@ -62,6 +71,7 @@ object CheckpointAppender extends ScorexLogging {
     }
   }
 
-  private val blockBlockForkStats  = Kamon.metrics.counter("block-fork")
-  private val blockForkHeightStats = Kamon.metrics.histogram("block-fork-height")
+  private val blockBlockForkStats = Kamon.metrics.counter("block-fork")
+  private val blockForkHeightStats =
+    Kamon.metrics.histogram("block-fork-height")
 }

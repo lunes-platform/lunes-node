@@ -8,7 +8,8 @@ trait Instrumented {
 
   import Instrumented._
 
-  def measureSizeLog[F[_] <: TraversableOnce[_], A, R](s: String)(fa: => F[A])(f: F[A] => R): R = {
+  def measureSizeLog[F[_] <: TraversableOnce[_], A, R](s: String)(fa: => F[A])(
+      f: F[A] => R): R = {
     val (r, time) = withTime(f(fa))
     log.trace(s"processing of ${fa.size} $s took ${time}ms")
     r
@@ -20,7 +21,8 @@ trait Instrumented {
     r
   }
 
-  def measureSuccessful[A, B](h: Histogram, f: => Either[A, B]): Either[A, B] = {
+  def measureSuccessful[A, B](h: Histogram,
+                              f: => Either[A, B]): Either[A, B] = {
     val (r, time) = withTime(f)
     if (r.isRight)
       h.safeRecord(time)
@@ -34,14 +36,16 @@ trait Instrumented {
     r
   }
 
-  def measureSuccessfulFun[A, B](writeTime: Long => Unit, f: => Either[A, B]): Either[A, B] = {
+  def measureSuccessfulFun[A, B](writeTime: Long => Unit,
+                                 f: => Either[A, B]): Either[A, B] = {
     val (r, time) = withTime(f)
     if (r.isRight)
       writeTime(time)
     r
   }
 
-  def measureSuccessfulFun[A](writeTime: Long => Unit, f: => Option[A]): Option[A] = {
+  def measureSuccessfulFun[A](writeTime: Long => Unit,
+                              f: => Option[A]): Option[A] = {
     val (r, time) = withTime(f)
     if (r.isDefined)
       writeTime(time)
@@ -52,9 +56,9 @@ trait Instrumented {
 object Instrumented {
 
   def withTime[R](f: => R): (R, Long) = {
-    val t0   = System.currentTimeMillis()
+    val t0 = System.currentTimeMillis()
     val r: R = f
-    val t1   = System.currentTimeMillis()
+    val t1 = System.currentTimeMillis()
     (r, t1 - t0)
   }
 

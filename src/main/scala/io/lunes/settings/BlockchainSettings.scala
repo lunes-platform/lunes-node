@@ -24,31 +24,35 @@ import scala.concurrent.duration._
   * @param preActivatedFeatures
   * @param doubleFeaturesPeriodsAfterHeight
   */
-case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
-                                 blocksForFeatureActivation: Int,
-                                 allowTemporaryNegativeUntil: Long,
-                                 requireSortedTransactionsAfter: Long,
-                                 generationBalanceDepthFrom50To1000AfterHeight: Int,
-                                 minimalGeneratingBalanceAfter: Long,
-                                 allowTransactionsFromFutureUntil: Long,
-                                 allowUnissuedAssetsUntil: Long,
-                                 allowInvalidReissueInSameBlockUntilTimestamp: Long,
-                                 allowMultipleLeaseCancelTransactionUntilTimestamp: Long,
-                                 resetEffectiveBalancesAtHeight: Int,
-                                 blockVersion3AfterHeight: Int,
-                                 preActivatedFeatures: Map[Short, Int],
-                                 doubleFeaturesPeriodsAfterHeight: Int) {
-  val dontRequireSortedTransactionsAfter    = blockVersion3AfterHeight
+case class FunctionalitySettings(
+    featureCheckBlocksPeriod: Int,
+    blocksForFeatureActivation: Int,
+    allowTemporaryNegativeUntil: Long,
+    requireSortedTransactionsAfter: Long,
+    generationBalanceDepthFrom50To1000AfterHeight: Int,
+    minimalGeneratingBalanceAfter: Long,
+    allowTransactionsFromFutureUntil: Long,
+    allowUnissuedAssetsUntil: Long,
+    allowInvalidReissueInSameBlockUntilTimestamp: Long,
+    allowMultipleLeaseCancelTransactionUntilTimestamp: Long,
+    resetEffectiveBalancesAtHeight: Int,
+    blockVersion3AfterHeight: Int,
+    preActivatedFeatures: Map[Short, Int],
+    doubleFeaturesPeriodsAfterHeight: Int) {
+  val dontRequireSortedTransactionsAfter = blockVersion3AfterHeight
   val allowLeasedBalanceTransferUntilHeight = blockVersion3AfterHeight
 
-  require(featureCheckBlocksPeriod > 0, "featureCheckBlocksPeriod must be greater than 0")
+  require(featureCheckBlocksPeriod > 0,
+          "featureCheckBlocksPeriod must be greater than 0")
   require(
     (blocksForFeatureActivation > 0) && (blocksForFeatureActivation <= featureCheckBlocksPeriod),
     s"blocksForFeatureActivation must be in range 1 to $featureCheckBlocksPeriod"
   )
 
   def activationWindowSize(height: Int): Int =
-    featureCheckBlocksPeriod * (if (height <= doubleFeaturesPeriodsAfterHeight) 1 else 2)
+    featureCheckBlocksPeriod * (if (height <= doubleFeaturesPeriodsAfterHeight)
+                                  1
+                                else 2)
 
   def activationWindow(height: Int): Range =
     if (height < 1) Range(0, 0)
@@ -58,7 +62,9 @@ case class FunctionalitySettings(featureCheckBlocksPeriod: Int,
     }
 
   def blocksForFeatureActivation(height: Int): Int =
-    blocksForFeatureActivation * (if (height <= doubleFeaturesPeriodsAfterHeight) 1 else 2)
+    blocksForFeatureActivation * (if (height <= doubleFeaturesPeriodsAfterHeight)
+                                    1
+                                  else 2)
 
   def generatingBalanceDepth(height: Int): Int =
     if (height >= generationBalanceDepthFrom50To1000AfterHeight) 1000 else 50
@@ -202,7 +208,7 @@ case class BlockchainSettings(addressSchemeCharacter: Char,
 object BlockchainType extends Enumeration {
   val MAINNET = Value("MAINNET")
   val TESTNET = Value("TESTNET")
-  val DEVNET  = Value("DEVNET")
+  val DEVNET = Value("DEVNET")
 }
 
 /**
@@ -218,18 +224,26 @@ object BlockchainSettings {
     */
   def fromConfig(config: Config): BlockchainSettings = {
     val blockchainType = config.as[BlockchainType.Value](s"$configPath.type")
-    val (addressSchemeCharacter, functionalitySettings, genesisSettings) = blockchainType match {
-      case BlockchainType.MAINNET =>
-        (Constants.MainSchemeCharacter, FunctionalitySettings.MAINNET, GenesisSettings.MAINNET)
-      case BlockchainType.TESTNET =>
-        (Constants.TestSchemeCharacter, FunctionalitySettings.TESTNET, GenesisSettings.TESTNET)
-      case BlockchainType.DEVNET =>
-        (Constants.DevSchemeCharacter, FunctionalitySettings.DEVNET, GenesisSettings.DEVNET)
-    }
+    val (addressSchemeCharacter, functionalitySettings, genesisSettings) =
+      blockchainType match {
+        case BlockchainType.MAINNET =>
+          (Constants.MainSchemeCharacter,
+           FunctionalitySettings.MAINNET,
+           GenesisSettings.MAINNET)
+        case BlockchainType.TESTNET =>
+          (Constants.TestSchemeCharacter,
+           FunctionalitySettings.TESTNET,
+           GenesisSettings.TESTNET)
+        case BlockchainType.DEVNET =>
+          (Constants.DevSchemeCharacter,
+           FunctionalitySettings.DEVNET,
+           GenesisSettings.DEVNET)
+      }
 
     BlockchainSettings(
       addressSchemeCharacter = addressSchemeCharacter,
-      maxTransactionsPerBlockDiff = config.as[Int](s"$configPath.max-transactions-per-block-diff"),
+      maxTransactionsPerBlockDiff =
+        config.as[Int](s"$configPath.max-transactions-per-block-diff"),
       minBlocksInMemory = config.as[Int](s"$configPath.min-blocks-in-memory"),
       functionalitySettings = functionalitySettings,
       genesisSettings = genesisSettings

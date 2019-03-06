@@ -72,15 +72,18 @@ object qExplorer extends ScorexLogging {
 
     val configFilename = Try(args(0)).toOption.getOrElse("lunes-testnet.conf")
 
-    val settings = LunesSettings.fromConfig(loadConfig(ConfigFactory.parseFile(new File(configFilename))))
+    val settings = LunesSettings.fromConfig(
+      loadConfig(ConfigFactory.parseFile(new File(configFilename))))
     AddressScheme.current = new AddressScheme {
-      override val chainId: Byte = settings.blockchainSettings.addressSchemeCharacter.toByte
+      override val chainId: Byte =
+        settings.blockchainSettings.addressSchemeCharacter.toByte
     }
 
     log.info(s"Data directory: ${settings.dataDirectory}")
 
-    val db     = openDB(settings.dataDirectory)
-    val reader = new LevelDBWriter(db, settings.blockchainSettings.functionalitySettings)
+    val db = openDB(settings.dataDirectory)
+    val reader =
+      new LevelDBWriter(db, settings.blockchainSettings.functionalitySettings)
 
     val blockchainHeight = reader.height
     log.info(s"Blockchain height is $blockchainHeight")
@@ -92,29 +95,34 @@ object qExplorer extends ScorexLogging {
         case "B" =>
           val maybeBlockId = Base58.decode(args(2)).toOption.map(ByteStr.apply)
           if (maybeBlockId.isDefined) {
-            val kBlockHeight     = Keys.heightOf(maybeBlockId.get)
+            val kBlockHeight = Keys.heightOf(maybeBlockId.get)
             val blockHeightBytes = db.get(kBlockHeight.keyBytes)
             val maybeBlockHeight = kBlockHeight.parse(blockHeightBytes)
             maybeBlockHeight.foreach { h =>
-              val kBlock     = Keys.blockBytes(h)
+              val kBlock = Keys.blockBytes(h)
               val blockBytes = db.get(kBlock.keyBytes)
-              log.info(s"BlockId=${maybeBlockId.get} at h=$h: ${Base64.encode(blockBytes)}")
+              log.info(
+                s"BlockId=${maybeBlockId.get} at h=$h: ${Base64.encode(blockBytes)}")
             }
           } else log.error("No block ID was provided")
 
         case "O" =>
           val orderId = Base58.decode(args(2)).toOption.map(ByteStr.apply)
           if (orderId.isDefined) {
-            val kVolumeAndFee = Keys.filledVolumeAndFee(orderId.get)(blockchainHeight)
-            val bytes1        = db.get(kVolumeAndFee.keyBytes)
-            val v             = kVolumeAndFee.parse(bytes1)
-            log.info(s"OrderId = ${Base58.encode(orderId.get.arr)}: Volume = ${v.volume}, Fee = ${v.fee}")
+            val kVolumeAndFee =
+              Keys.filledVolumeAndFee(orderId.get)(blockchainHeight)
+            val bytes1 = db.get(kVolumeAndFee.keyBytes)
+            val v = kVolumeAndFee.parse(bytes1)
+            log.info(s"OrderId = ${Base58
+              .encode(orderId.get.arr)}: Volume = ${v.volume}, Fee = ${v.fee}")
 
-            val kVolumeAndFeeHistory = Keys.filledVolumeAndFeeHistory(orderId.get)
-            val bytes2               = db.get(kVolumeAndFeeHistory.keyBytes)
-            val value2               = kVolumeAndFeeHistory.parse(bytes2)
-            val value2Str            = value2.mkString("[", ", ", "]")
-            log.info(s"OrderId = ${Base58.encode(orderId.get.arr)}: History = $value2Str")
+            val kVolumeAndFeeHistory =
+              Keys.filledVolumeAndFeeHistory(orderId.get)
+            val bytes2 = db.get(kVolumeAndFeeHistory.keyBytes)
+            val value2 = kVolumeAndFeeHistory.parse(bytes2)
+            val value2Str = value2.mkString("[", ", ", "]")
+            log.info(
+              s"OrderId = ${Base58.encode(orderId.get.arr)}: History = $value2Str")
             value2.foreach { h =>
               val k = Keys.filledVolumeAndFee(orderId.get)(h)
               val v = k.parse(db.get(k.keyBytes))
@@ -123,13 +131,13 @@ object qExplorer extends ScorexLogging {
           } else log.error("No order ID was provided")
 
         case "A" =>
-          val address   = Address.fromString(args(2)).explicitGet()
-          val aid       = Keys.addressId(address)
+          val address = Address.fromString(args(2)).explicitGet()
+          val aid = Keys.addressId(address)
           val addressId = aid.parse(db.get(aid.keyBytes)).get
           log.info(s"Address id = $addressId")
 
           val kwbh = Keys.lunesBalanceHistory(addressId)
-          val wbh  = kwbh.parse(db.get(kwbh.keyBytes))
+          val wbh = kwbh.parse(db.get(kwbh.keyBytes))
 
           val balances = wbh.map { h =>
             val k = Keys.lunesBalance(addressId)(h)
@@ -138,14 +146,16 @@ object qExplorer extends ScorexLogging {
           balances.foreach(b => log.info(s"h = ${b._1}: balance = ${b._2}"))
 
         case "AC" =>
-          val lastAddressId = Keys.lastAddressId.parse(db.get(Keys.lastAddressId.keyBytes))
+          val lastAddressId =
+            Keys.lastAddressId.parse(db.get(Keys.lastAddressId.keyBytes))
           log.info(s"Last address id: $lastAddressId")
 
         case "AD" =>
-          val result        = new util.HashMap[Address, java.lang.Integer]()
-          val lastAddressId = Keys.lastAddressId.parse(db.get(Keys.lastAddressId.keyBytes))
+          val result = new util.HashMap[Address, java.lang.Integer]()
+          val lastAddressId =
+            Keys.lastAddressId.parse(db.get(Keys.lastAddressId.keyBytes))
           for (id <- BigInt(1) to lastAddressId.getOrElse(BigInt(0))) {
-            val k       = Keys.idToAddress(id)
+            val k = Keys.idToAddress(id)
             val address = k.parse(db.get(k.keyBytes))
             result.compute(address,
                            (_, prev) =>
@@ -162,14 +172,14 @@ object qExplorer extends ScorexLogging {
         case "AA" =>
           val secondaryId = args(3)
 
-          val address   = Address.fromString(args(2)).explicitGet()
-          val asset     = ByteStr.decodeBase58(secondaryId).get
-          val ai        = Keys.addressId(address)
+          val address = Address.fromString(args(2)).explicitGet()
+          val asset = ByteStr.decodeBase58(secondaryId).get
+          val ai = Keys.addressId(address)
           val addressId = ai.parse(db.get(ai.keyBytes)).get
           log.info(s"Address ID = $addressId")
 
           val kabh = Keys.assetBalanceHistory(addressId, asset)
-          val abh  = kabh.parse(db.get(kabh.keyBytes))
+          val abh = kabh.parse(db.get(kabh.keyBytes))
 
           val balances = abh.map { h =>
             val k = Keys.assetBalance(addressId, asset)(h)
@@ -180,17 +190,21 @@ object qExplorer extends ScorexLogging {
         case "S" =>
           log.info("Collecting DB stats")
           val iterator = db.iterator()
-          val result   = new util.HashMap[Short, Stats]
+          val result = new util.HashMap[Short, Stats]
           iterator.seekToFirst()
           while (iterator.hasNext) {
-            val entry     = iterator.next()
+            val entry = iterator.next()
             val keyPrefix = ByteBuffer.wrap(entry.getKey).getShort
             result.compute(
               keyPrefix,
               (_, maybePrev) =>
                 maybePrev match {
-                  case null => Stats(1, entry.getKey.length, entry.getValue.length)
-                  case prev => Stats(prev.entryCount + 1, prev.totalKeySize + entry.getKey.length, prev.totalValueSize + entry.getValue.length)
+                  case null =>
+                    Stats(1, entry.getKey.length, entry.getValue.length)
+                  case prev =>
+                    Stats(prev.entryCount + 1,
+                          prev.totalKeySize + entry.getKey.length,
+                          prev.totalValueSize + entry.getValue.length)
               }
             )
           }
@@ -198,7 +212,8 @@ object qExplorer extends ScorexLogging {
 
           log.info("key-space,entry-count,total-key-size,total-value-size")
           for ((prefix, stats) <- result.asScala) {
-            log.info(s"${keys(prefix)},${stats.entryCount},${stats.totalKeySize},${stats.totalValueSize}")
+            log.info(
+              s"${keys(prefix)},${stats.entryCount},${stats.totalKeySize},${stats.totalValueSize}")
           }
       }
     } finally db.close()

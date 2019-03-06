@@ -4,7 +4,12 @@ import io.lunes.utils.base58Length
 import scorex.crypto.signatures.Curve25519
 import io.lunes.transaction.assets._
 import io.lunes.transaction.assets.exchange.ExchangeTransaction
-import io.lunes.transaction.lease.{LeaseCancelTransactionV1, LeaseCancelTransactionV2, LeaseTransactionV1, LeaseTransactionV2}
+import io.lunes.transaction.lease.{
+  LeaseCancelTransactionV1,
+  LeaseCancelTransactionV2,
+  LeaseTransactionV1,
+  LeaseTransactionV2
+}
 import io.lunes.transaction.smart.SetScriptTransaction
 import io.lunes.transaction.transfer._
 
@@ -12,9 +17,9 @@ import scala.util.{Failure, Success, Try}
 
 object TransactionParsers {
 
-  val TimestampLength            = 8
-  val AmountLength               = 8
-  val TypeLength                 = 1
+  val TimestampLength = 8
+  val AmountLength = 8
+  val TypeLength = 1
   val SignatureStringLength: Int = base58Length(Curve25519.SignatureLength)
 
   private val old: Map[Byte, TransactionParser] = Seq[TransactionParser](
@@ -33,22 +38,23 @@ object TransactionParsers {
     x.typeId -> x
   }(collection.breakOut)
 
-  private val modern: Map[(Byte, Byte), TransactionParser] = Seq[TransactionParser](
-    DataTransaction,
-    TransferTransactionV2,
-    SetScriptTransaction,
-    IssueTransactionV2,
-    CreateAliasTransactionV2,
-    ReissueTransactionV2,
-    BurnTransactionV2,
-    LeaseTransactionV2,
-    LeaseCancelTransactionV2,
-    SponsorFeeTransaction
-  ).flatMap { x =>
-    x.supportedVersions.map { version =>
-      ((x.typeId, version), x)
-    }
-  }(collection.breakOut)
+  private val modern: Map[(Byte, Byte), TransactionParser] =
+    Seq[TransactionParser](
+      DataTransaction,
+      TransferTransactionV2,
+      SetScriptTransaction,
+      IssueTransactionV2,
+      CreateAliasTransactionV2,
+      ReissueTransactionV2,
+      BurnTransactionV2,
+      LeaseTransactionV2,
+      LeaseCancelTransactionV2,
+      SponsorFeeTransaction
+    ).flatMap { x =>
+      x.supportedVersions.map { version =>
+        ((x.typeId, version), x)
+      }
+    }(collection.breakOut)
 
   private val all: Map[(Byte, Byte), TransactionParser] = old.flatMap {
     case (typeId, builder) =>
@@ -61,12 +67,14 @@ object TransactionParsers {
     case (_, builder) => builder.classTag.runtimeClass.getSimpleName -> builder
   }
 
-  def by(name: String): Option[TransactionParser]                = byName.get(name)
-  def by(typeId: Byte, version: Byte): Option[TransactionParser] = all.get((typeId, version))
+  def by(name: String): Option[TransactionParser] = byName.get(name)
+  def by(typeId: Byte, version: Byte): Option[TransactionParser] =
+    all.get((typeId, version))
 
   def parseBytes(data: Array[Byte]): Try[Transaction] =
     data.headOption
-      .fold[Try[Byte]](Failure(new IllegalArgumentException("Can't find the significant byte: the buffer is empty")))(Success(_))
+      .fold[Try[Byte]](Failure(new IllegalArgumentException(
+        "Can't find the significant byte: the buffer is empty")))(Success(_))
       .flatMap { headByte =>
         if (headByte == 0) modernParseBytes(data)
         else oldParseBytes(headByte, data)
@@ -75,18 +83,21 @@ object TransactionParsers {
   private def oldParseBytes(tpe: Byte, data: Array[Byte]): Try[Transaction] =
     old
       .get(tpe)
-      .fold[Try[TransactionParser]](Failure(new IllegalArgumentException(s"Unknown transaction type (old encoding): '$tpe'")))(Success(_))
+      .fold[Try[TransactionParser]](Failure(new IllegalArgumentException(
+        s"Unknown transaction type (old encoding): '$tpe'")))(Success(_))
       .flatMap(_.parseBytes(data))
 
   private def modernParseBytes(data: Array[Byte]): Try[Transaction] = {
     if (data.length < 2)
-      Failure(new IllegalArgumentException(s"Can't determine the type and the version of transaction: the buffer has ${data.length} bytes"))
+      Failure(new IllegalArgumentException(
+        s"Can't determine the type and the version of transaction: the buffer has ${data.length} bytes"))
     else {
       val Array(_, typeId, version) = data.take(3)
       modern
         .get((typeId, version))
-        .fold[Try[TransactionParser]](
-          Failure(new IllegalArgumentException(s"Unknown transaction type ($typeId) and version ($version) (modern encoding)")))(Success(_))
+        .fold[Try[TransactionParser]](Failure(new IllegalArgumentException(
+          s"Unknown transaction type ($typeId) and version ($version) (modern encoding)")))(
+          Success(_))
         .flatMap(_.parseBytes(data))
     }
   }

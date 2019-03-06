@@ -7,7 +7,10 @@ case class IssueV1Request(sender: String,
                           name: String,
                           description: String,
                           quantity: Long,
-                          @ApiModelProperty(allowableValues = "range[0,8]", example = "8", dataType = "integer", required = true)
+                          @ApiModelProperty(allowableValues = "range[0,8]",
+                                            example = "8",
+                                            dataType = "integer",
+                                            required = true)
                           decimals: Byte,
                           reissuable: Boolean,
                           fee: Long,

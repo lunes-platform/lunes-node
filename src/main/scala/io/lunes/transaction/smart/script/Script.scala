@@ -27,7 +27,12 @@ object Script {
 
   def fromBase64String(str: String): Either[ScriptParseError, Script] =
     for {
-      bytes  <- Base64.decode(str).toEither.left.map(ex => ScriptParseError(s"Unable to decode base64: ${ex.getMessage}"))
+      bytes <- Base64
+        .decode(str)
+        .toEither
+        .left
+        .map(ex =>
+          ScriptParseError(s"Unable to decode base64: ${ex.getMessage}"))
       script <- ScriptReader.fromBytes(bytes)
     } yield script
 

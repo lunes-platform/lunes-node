@@ -5,13 +5,16 @@ import cats.kernel.instances.map._
 import scorex.block.Block.Fraction
 import io.lunes.transaction.AssetId
 
-case class Portfolio(balance: Long, lease: LeaseBalance, assets: Map[ByteStr, Long]) {
+case class Portfolio(balance: Long,
+                     lease: LeaseBalance,
+                     assets: Map[ByteStr, Long]) {
   lazy val effectiveBalance: Long = safeSum(balance, lease.in) - lease.out
   lazy val spendableBalance: Long = balance - lease.out
 
   lazy val isEmpty: Boolean = this == Portfolio.empty
 
-  def balanceOf(assetId: Option[AssetId]): Long = assetId.flatMap(assets.get).getOrElse(balance)
+  def balanceOf(assetId: Option[AssetId]): Long =
+    assetId.flatMap(assets.get).getOrElse(balance)
   def remove(assetId: Option[AssetId], amount: Long): Option[Portfolio] = {
     val origAmount = assetId match {
       case None    => balance
@@ -31,7 +34,8 @@ case class Portfolio(balance: Long, lease: LeaseBalance, assets: Map[ByteStr, Lo
 object Portfolio {
   val empty = Portfolio(0L, Monoid[LeaseBalance].empty, Map.empty)
 
-  implicit val longSemigroup: Semigroup[Long] = (x: Long, y: Long) => safeSum(x, y)
+  implicit val longSemigroup: Semigroup[Long] = (x: Long, y: Long) =>
+    safeSum(x, y)
 
   implicit val monoid: Monoid[Portfolio] = new Monoid[Portfolio] {
     override val empty: Portfolio = Portfolio.empty
@@ -54,10 +58,14 @@ object Portfolio {
     )
 
     def multiply(f: Fraction): Portfolio =
-      Portfolio(f(self.balance), LeaseBalance.empty, self.assets.mapValues(f.apply))
+      Portfolio(f(self.balance),
+                LeaseBalance.empty,
+                self.assets.mapValues(f.apply))
 
     def minus(other: Portfolio): Portfolio =
-      Portfolio(self.balance - other.balance, LeaseBalance.empty, Monoid.combine(self.assets, other.assets.mapValues(-_)))
+      Portfolio(self.balance - other.balance,
+                LeaseBalance.empty,
+                Monoid.combine(self.assets, other.assets.mapValues(-_)))
   }
 
 }

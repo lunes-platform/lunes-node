@@ -11,12 +11,15 @@ import scorex.utils.ScorexLogging
 
 import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
 
-class NgState(val base: Block, val baseBlockDiff: Diff, val approvedFeatures: Set[Short]) extends ScorexLogging {
+class NgState(val base: Block,
+              val baseBlockDiff: Diff,
+              val approvedFeatures: Set[Short])
+    extends ScorexLogging {
 
   private val MaxTotalDiffs = 3
 
   private val microDiffs: MMap[BlockId, (Diff, Long)] = MMap.empty
-  private val micros: MList[MicroBlock]               = MList.empty // fresh head
+  private val micros: MList[MicroBlock] = MList.empty // fresh head
   private val totalBlockDiffCache = CacheBuilder
     .newBuilder()
     .maximumSize(MaxTotalDiffs)
@@ -32,10 +35,15 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val approvedFeatures: Se
       Option(totalBlockDiffCache.getIfPresent(totalResBlockSig)) match {
         case Some(d) => d
         case None =>
-          val prevResBlockSig  = micros.find(_.totalResBlockSig == totalResBlockSig).get.prevResBlockSig
-          val prevResBlockDiff = Option(totalBlockDiffCache.getIfPresent(prevResBlockSig)).getOrElse(diffFor(prevResBlockSig))
+          val prevResBlockSig = micros
+            .find(_.totalResBlockSig == totalResBlockSig)
+            .get
+            .prevResBlockSig
+          val prevResBlockDiff =
+            Option(totalBlockDiffCache.getIfPresent(prevResBlockSig))
+              .getOrElse(diffFor(prevResBlockSig))
           val currentMicroDiff = microDiffs(totalResBlockSig)._1
-          val r                = Monoid.combine(prevResBlockDiff, currentMicroDiff)
+          val r = Monoid.combine(prevResBlockDiff, currentMicroDiff)
           totalBlockDiffCache.put(totalResBlockSig, r)
           r
       }
@@ -45,23 +53,31 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val approvedFeatures: Se
 
   def lastMicroBlock: Option[MicroBlock] = micros.headOption
 
-  def transactions: Seq[Transaction] = base.transactionData ++ micros.map(_.transactionData).reverse.flatten
+  def transactions: Seq[Transaction] =
+    base.transactionData ++ micros.map(_.transactionData).reverse.flatten
 
   def bestLiquidBlock: Block =
     if (micros.isEmpty) {
       base
     } else {
-      base.copy(signerData = base.signerData.copy(signature = micros.head.totalResBlockSig), transactionData = transactions)
+      base.copy(
+        signerData =
+          base.signerData.copy(signature = micros.head.totalResBlockSig),
+        transactionData = transactions)
     }
 
   def totalDiffOf(id: BlockId): Option[(Block, Diff, DiscardedMicroBlocks)] =
     forgeBlock(id).map { case (b, txs) => (b, diffFor(id), txs) }
 
-  def bestLiquidDiff: Diff = micros.headOption.fold(baseBlockDiff)(m => totalDiffOf(m.totalResBlockSig).get._2)
+  def bestLiquidDiff: Diff =
+    micros.headOption.fold(baseBlockDiff)(m =>
+      totalDiffOf(m.totalResBlockSig).get._2)
 
-  def contains(blockId: BlockId): Boolean = base.uniqueId == blockId || microDiffs.contains(blockId)
+  def contains(blockId: BlockId): Boolean =
+    base.uniqueId == blockId || microDiffs.contains(blockId)
 
-  def microBlock(id: BlockId): Option[MicroBlock] = micros.find(_.totalResBlockSig == id)
+  def microBlock(id: BlockId): Option[MicroBlock] =
+    micros.find(_.totalResBlockSig == id)
 
   private def forgeBlock(id: BlockId): Option[(Block, DiscardedMicroBlocks)] = {
     val ms = micros.reverse
@@ -69,20 +85,25 @@ class NgState(val base: Block, val baseBlockDiff: Diff, val approvedFeatures: Se
       Some((base, ms))
     } else if (!ms.exists(_.totalResBlockSig == id)) None
     else {
-      val (accumulatedTxs, maybeFound) = ms.foldLeft((List.empty[Transaction], Option.empty[(ByteStr, DiscardedMicroBlocks)])) {
+      val (accumulatedTxs, maybeFound) = ms.foldLeft(
+        (List.empty[Transaction],
+         Option.empty[(ByteStr, DiscardedMicroBlocks)])) {
         case ((accumulated, maybeDiscarded), micro) =>
           maybeDiscarded match {
-            case Some((sig, discarded)) => (accumulated, Some((sig, micro +: discarded)))
+            case Some((sig, discarded)) =>
+              (accumulated, Some((sig, micro +: discarded)))
             case None =>
               if (micro.totalResBlockSig == id)
-                (accumulated ++ micro.transactionData, Some((micro.totalResBlockSig, Seq.empty[MicroBlock])))
+                (accumulated ++ micro.transactionData,
+                 Some((micro.totalResBlockSig, Seq.empty[MicroBlock])))
               else
                 (accumulated ++ micro.transactionData, None)
           }
       }
       maybeFound.map {
         case (sig, discardedMicroblocks) =>
-          (base.copy(signerData = base.signerData.copy(signature = sig), transactionData = base.transactionData ++ accumulatedTxs),
+          (base.copy(signerData = base.signerData.copy(signature = sig),
+                     transactionData = base.transactionData ++ accumulatedTxs),
            discardedMicroblocks)
       }
     }

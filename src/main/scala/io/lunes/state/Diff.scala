@@ -35,12 +35,16 @@ object VolumeAndFee {
   }
 }
 
-case class AssetInfo(isReissuable: Boolean, volume: BigInt, script: Option[Script])
+case class AssetInfo(isReissuable: Boolean,
+                     volume: BigInt,
+                     script: Option[Script])
 object AssetInfo {
   implicit val assetInfoMonoid: Monoid[AssetInfo] = new Monoid[AssetInfo] {
     override def empty: AssetInfo = AssetInfo(isReissuable = true, 0, None)
     override def combine(x: AssetInfo, y: AssetInfo): AssetInfo =
-      AssetInfo(x.isReissuable && y.isReissuable, x.volume + y.volume, y.script.orElse(x.script))
+      AssetInfo(x.isReissuable && y.isReissuable,
+                x.volume + y.volume,
+                y.script.orElse(x.script))
   }
 }
 
@@ -69,37 +73,44 @@ case class AssetDescription(issuer: PublicKeyAccount,
 case class AccountDataInfo(data: Map[String, DataEntry[_]])
 
 object AccountDataInfo {
-  implicit val accountDataInfoMonoid: Monoid[AccountDataInfo] = new Monoid[AccountDataInfo] {
-    override def empty: AccountDataInfo = AccountDataInfo(Map.empty)
+  implicit val accountDataInfoMonoid: Monoid[AccountDataInfo] =
+    new Monoid[AccountDataInfo] {
+      override def empty: AccountDataInfo = AccountDataInfo(Map.empty)
 
-    override def combine(x: AccountDataInfo, y: AccountDataInfo): AccountDataInfo = AccountDataInfo(x.data ++ y.data)
-  }
+      override def combine(x: AccountDataInfo,
+                           y: AccountDataInfo): AccountDataInfo =
+        AccountDataInfo(x.data ++ y.data)
+    }
 }
 
 sealed abstract class Sponsorship
 case class SponsorshipValue(minFee: Long) extends Sponsorship
-case object SponsorshipNoInfo             extends Sponsorship
+case object SponsorshipNoInfo extends Sponsorship
 
 object Sponsorship {
   val FeeUnit = 100000
 
-  implicit val sponsorshipMonoid: Monoid[Sponsorship] = new Monoid[Sponsorship] {
-    override def empty: Sponsorship = SponsorshipNoInfo
+  implicit val sponsorshipMonoid: Monoid[Sponsorship] =
+    new Monoid[Sponsorship] {
+      override def empty: Sponsorship = SponsorshipNoInfo
 
-    override def combine(x: Sponsorship, y: Sponsorship): Sponsorship = y match {
-      case SponsorshipNoInfo => x
-      case _                 => y
+      override def combine(x: Sponsorship, y: Sponsorship): Sponsorship =
+        y match {
+          case SponsorshipNoInfo => x
+          case _                 => y
+        }
     }
-  }
 
-  def sponsoredFeesSwitchHeight(blockchain: Blockchain, fs: FunctionalitySettings): Int =
+  def sponsoredFeesSwitchHeight(blockchain: Blockchain,
+                                fs: FunctionalitySettings): Int =
     blockchain
       .featureActivationHeight(BlockchainFeatures.FeeSponsorship.id)
       .map(h => h + fs.activationWindowSize(h))
       .getOrElse(Int.MaxValue)
 
   def toLunes(assetFee: Long, sponsorship: Long): Long = {
-    val lunes = (BigDecimal(assetFee) * BigDecimal(Sponsorship.FeeUnit)) / BigDecimal(sponsorship)
+    val lunes = (BigDecimal(assetFee) * BigDecimal(Sponsorship.FeeUnit)) / BigDecimal(
+      sponsorship)
     if (lunes > Long.MaxValue) {
       throw new java.lang.ArithmeticException("Overflow")
     }
@@ -119,11 +130,15 @@ case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
 
   lazy val accountTransactionIds: Map[Address, List[ByteStr]] = {
     val map: List[(Address, Set[(Int, Long, ByteStr)])] = transactions.toList
-      .flatMap { case (id, (h, tx, accs)) => accs.map(acc => acc -> Set((h, tx.timestamp, id))) }
-    val groupedByAcc = map.foldLeft(Map.empty[Address, Set[(Int, Long, ByteStr)]]) {
-      case (m, (acc, set)) =>
-        m.combine(Map(acc -> set))
-    }
+      .flatMap {
+        case (id, (h, tx, accs)) =>
+          accs.map(acc => acc -> Set((h, tx.timestamp, id)))
+      }
+    val groupedByAcc =
+      map.foldLeft(Map.empty[Address, Set[(Int, Long, ByteStr)]]) {
+        case (m, (acc, set)) =>
+          m.combine(Map(acc -> set))
+      }
     groupedByAcc
       .mapValues(l => l.toList.sortBy { case ((h, t, _)) => (-h, -t) }) // fresh head ([h=2, h=1, h=0])
       .mapValues(_.map(_._3))
@@ -153,7 +168,15 @@ object Diff {
       sponsorship = sponsorship
     )
 
-  val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
+  val empty = new Diff(Map.empty,
+                       Map.empty,
+                       Map.empty,
+                       Map.empty,
+                       Map.empty,
+                       Map.empty,
+                       Map.empty,
+                       Map.empty,
+                       Map.empty)
 
   implicit val diffMonoid = new Monoid[Diff] {
     override def empty: Diff = Diff.empty

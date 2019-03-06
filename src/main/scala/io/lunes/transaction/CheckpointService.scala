@@ -13,7 +13,8 @@ trait CheckpointService {
 object CheckpointService {
 
   implicit class CheckpointServiceExt(cs: CheckpointService) {
-    def isBlockValid(candidateSignature: ByteStr, estimatedHeight: Int): Boolean =
+    def isBlockValid(candidateSignature: ByteStr,
+                     estimatedHeight: Int): Boolean =
       !cs.get.exists {
         _.items.exists {
           case BlockCheckpoint(h, sig) =>

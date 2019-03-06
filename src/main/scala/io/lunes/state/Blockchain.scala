@@ -25,7 +25,8 @@ trait Blockchain {
   def lastBlockIds(howMany: Int): Seq[ByteStr]
 
   /** Returns a chain of blocks starting with the block with the given ID (from oldest to newest) */
-  def blockIdsAfter(parentSignature: ByteStr, howMany: Int): Option[Seq[ByteStr]]
+  def blockIdsAfter(parentSignature: ByteStr,
+                    howMany: Int): Option[Seq[ByteStr]]
 
   def parent(block: Block, back: Int = 1): Option[Block]
 
@@ -39,7 +40,10 @@ trait Blockchain {
   def transactionInfo(id: ByteStr): Option[(Int, Transaction)]
   def transactionHeight(id: ByteStr): Option[Int]
 
-  def addressTransactions(address: Address, types: Set[Transaction.Type], count: Int, from: Int): Seq[(Int, Transaction)]
+  def addressTransactions(address: Address,
+                          types: Set[Transaction.Type],
+                          count: Int,
+                          from: Int): Seq[(Int, Transaction)]
 
   def containsTransaction(id: ByteStr): Boolean
   def forgetTransactions(pred: (ByteStr, Long) => Boolean): Map[ByteStr, Long]
@@ -54,7 +58,9 @@ trait Blockchain {
   def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee
 
   /** Retrieves Lunes balance snapshot in the [from, to] range (inclusive) */
-  def balanceSnapshots(address: Address, from: Int, to: Int): Seq[BalanceSnapshot]
+  def balanceSnapshots(address: Address,
+                       from: Int,
+                       to: Int): Seq[BalanceSnapshot]
 
   def accountScript(address: Address): Option[Script]
   def hasScript(address: Address): Boolean
@@ -72,7 +78,8 @@ trait Blockchain {
 
   /** Builds a new portfolio map by applying a partial function to all portfolios on which the function is defined.
     * @note Portfolios passed to `pf` only contain Lunes and Leasing balances to improve performance */
-  def collectLposPortfolios[A](pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A]
+  def collectLposPortfolios[A](
+      pf: PartialFunction[(Address, Portfolio), A]): Map[Address, A]
 
   def append(diff: Diff, block: Block): Unit
   def rollbackTo(targetBlockId: ByteStr): Seq[Block]

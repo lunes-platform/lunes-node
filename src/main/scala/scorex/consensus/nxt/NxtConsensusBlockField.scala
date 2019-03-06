@@ -4,7 +4,8 @@ import com.google.common.primitives.{Bytes, Longs}
 import play.api.libs.json.{JsObject, Json}
 import scorex.block.BlockField
 
-case class NxtConsensusBlockField(override val value: NxtLikeConsensusBlockData) extends BlockField[NxtLikeConsensusBlockData] {
+case class NxtConsensusBlockField(override val value: NxtLikeConsensusBlockData)
+    extends BlockField[NxtLikeConsensusBlockData] {
 
   override val name: String = "nxt-consensus"
 
@@ -15,7 +16,7 @@ case class NxtConsensusBlockField(override val value: NxtLikeConsensusBlockData)
   override def j: JsObject =
     Json.obj(
       name -> Json.obj(
-        "base-target"          -> value.baseTarget,
+        "base-target" -> value.baseTarget,
         "generation-signature" -> value.generationSignature.base58
       ))
 }

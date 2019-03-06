@@ -10,7 +10,10 @@ import io.swagger.models.{Scheme, Swagger}
 
 import scala.reflect.runtime.universe.Type
 
-class SwaggerDocService(val actorSystem: ActorSystem, val materializer: ActorMaterializer, val apiTypes: Seq[Type], settings: RestAPISettings)
+class SwaggerDocService(val actorSystem: ActorSystem,
+                        val materializer: ActorMaterializer,
+                        val apiTypes: Seq[Type],
+                        settings: RestAPISettings)
     extends SwaggerHttpService
     with HasActorSystem {
 
@@ -21,7 +24,9 @@ class SwaggerDocService(val actorSystem: ActorSystem, val materializer: ActorMat
     "Lunes Full Node",
     "License: Apache License, Version 2.0",
     None,
-    Some(License("Apache License, Version 2.0", "https://github.io.lunes/Lunes/blob/master/LICENSE"))
+    Some(
+      License("Apache License, Version 2.0",
+              "https://github.io.lunes/Lunes/blob/master/LICENSE"))
   )
 
   //Let swagger-ui determine the host and port

@@ -1,6 +1,11 @@
 package io.lunes.root
 
-import akka.actor.{ActorSystem, AllForOneStrategy, SupervisorStrategy, SupervisorStrategyConfigurator}
+import akka.actor.{
+  ActorSystem,
+  AllForOneStrategy,
+  SupervisorStrategy,
+  SupervisorStrategyConfigurator
+}
 import com.typesafe.config.Config
 import scorex.utils.ScorexLogging
 
@@ -11,12 +16,13 @@ object RootActorSystem extends ScorexLogging {
   @volatile private var failed = false
 
   final class EscalatingStrategy extends SupervisorStrategyConfigurator {
-    override def create(): SupervisorStrategy = AllForOneStrategy(loggingEnabled = false) {
-      case t: Throwable =>
-        failed = true
-        log.error("Root actor got exception, escalate", t)
-        SupervisorStrategy.Escalate
-    }
+    override def create(): SupervisorStrategy =
+      AllForOneStrategy(loggingEnabled = false) {
+        case t: Throwable =>
+          failed = true
+          log.error("Root actor got exception, escalate", t)
+          SupervisorStrategy.Escalate
+      }
   }
 
   def start(id: String, config: Config)(init: ActorSystem => Unit): Unit = {

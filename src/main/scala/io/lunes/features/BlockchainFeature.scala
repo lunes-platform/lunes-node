@@ -4,13 +4,13 @@ case class BlockchainFeature private (id: Short, description: String)
 
 object BlockchainFeatures {
 
-  val NG              = BlockchainFeature(2, "NG Protocol")
-  val MassTransfer    = BlockchainFeature(3, "Mass Transfer Transaction")
-  val SmartAccounts   = BlockchainFeature(4, "Smart Accounts")
+  val NG = BlockchainFeature(2, "NG Protocol")
+  val MassTransfer = BlockchainFeature(3, "Mass Transfer Transaction")
+  val SmartAccounts = BlockchainFeature(4, "Smart Accounts")
   val DataTransaction = BlockchainFeature(5, "Data Transaction")
-  val BurnAnyTokens   = BlockchainFeature(6, "Burn Any Tokens")
-  val FeeSponsorship  = BlockchainFeature(7, "Fee Sponsorship")
-  val FairPoS         = BlockchainFeature(8, "Fair PoS")
+  val BurnAnyTokens = BlockchainFeature(6, "Burn Any Tokens")
+  val FeeSponsorship = BlockchainFeature(7, "Fee Sponsorship")
+  val FairPoS = BlockchainFeature(8, "Fair PoS")
 
   private val dict = Seq(
     NG,

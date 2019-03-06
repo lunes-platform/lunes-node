@@ -18,7 +18,7 @@ object ScriptVersion {
   object Versions {
     object V1 extends ScriptVersion { self =>
       override type ExprT = Terms.EXPR
-      override type CtxT  = EvaluationContext
+      override type CtxT = EvaluationContext
       override val value: Int = 1
     }
   }

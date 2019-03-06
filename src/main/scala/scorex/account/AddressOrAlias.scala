@@ -21,16 +21,19 @@ trait AddressOrAlias {
 
 object AddressOrAlias {
 
-  def fromBytes(bytes: Array[Byte], position: Int): Either[ValidationError, (AddressOrAlias, Int)] = {
+  def fromBytes(
+      bytes: Array[Byte],
+      position: Int): Either[ValidationError, (AddressOrAlias, Int)] = {
     bytes(position) match {
       case Address.AddressVersion =>
-        val addressEnd   = position + Address.AddressLength
+        val addressEnd = position + Address.AddressLength
         val addressBytes = bytes.slice(position, addressEnd)
         Address.fromBytes(addressBytes).map((_, addressEnd))
       case Alias.AddressVersion =>
         val (_, aliasEnd) = Deser.parseArraySize(bytes, position + 2)
         Alias.fromBytes(bytes.slice(position, aliasEnd)).map((_, aliasEnd))
-      case _ => Left(ValidationError.InvalidAddress("Unknown address/alias version"))
+      case _ =>
+        Left(ValidationError.InvalidAddress("Unknown address/alias version"))
     }
   }
 

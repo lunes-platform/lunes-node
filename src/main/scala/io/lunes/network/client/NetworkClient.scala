@@ -15,10 +15,18 @@ import scorex.utils.ScorexLogging
 
 import scala.concurrent.{Future, Promise}
 
-class NetworkClient(chainId: Char, nodeName: String, nonce: Long, allChannels: ChannelGroup) extends ScorexLogging {
+class NetworkClient(chainId: Char,
+                    nodeName: String,
+                    nonce: Long,
+                    allChannels: ChannelGroup)
+    extends ScorexLogging {
 
   private val workerGroup = new NioEventLoopGroup()
-  private val handshake   = Handshake(Constants.ApplicationName + chainId, Constants.VersionTuple, nodeName, nonce, None)
+  private val handshake = Handshake(Constants.ApplicationName + chainId,
+                                    Constants.VersionTuple,
+                                    nodeName,
+                                    nonce,
+                                    None)
 
   def connect(remoteAddress: InetSocketAddress): Future[Channel] = {
     val p = Promise[Channel]
@@ -39,7 +47,8 @@ class NetworkClient(chainId: Char, nodeName: String, nonce: Long, allChannels: C
     allChannels.add(channel)
     channel.closeFuture().addListener { (chf: ChannelFuture) =>
       if (!p.isCompleted) {
-        val cause = Option(chf.cause()).getOrElse(new IllegalStateException("The connection is closed before handshake"))
+        val cause = Option(chf.cause()).getOrElse(new IllegalStateException(
+          "The connection is closed before handshake"))
         p.failure(new IOException(cause))
       }
       log.debug(s"Connection to $remoteAddress closed")

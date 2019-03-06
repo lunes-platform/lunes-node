@@ -3,7 +3,11 @@ package io.lunes.features.api
 import akka.http.scaladsl.server.Route
 import io.lunes.features.FeatureProvider._
 import io.lunes.features.{BlockchainFeatureStatus, BlockchainFeatures}
-import io.lunes.settings.{FeaturesSettings, FunctionalitySettings, RestAPISettings}
+import io.lunes.settings.{
+  FeaturesSettings,
+  FunctionalitySettings,
+  RestAPISettings
+}
 import io.lunes.state.Blockchain
 import io.swagger.annotations._
 import javax.ws.rs.Path
@@ -26,7 +30,9 @@ case class ActivationApiRoute(settings: RestAPISettings,
   }
 
   @Path("/status")
-  @ApiOperation(value = "Status", notes = "Get activation status", httpMethod = "GET")
+  @ApiOperation(value = "Status",
+                notes = "Get activation status",
+                httpMethod = "GET")
   @ApiResponses(
     Array(
       new ApiResponse(code = 200, message = "Json activation status")
@@ -47,15 +53,20 @@ case class ActivationApiRoute(settings: RestAPISettings,
           val status = blockchain.featureStatus(id, height)
           FeatureActivationStatus(
             id,
-            BlockchainFeatures.feature(id).fold("Unknown feature")(_.description),
+            BlockchainFeatures
+              .feature(id)
+              .fold("Unknown feature")(_.description),
             status,
-            (BlockchainFeatures.implemented.contains(id), featuresSettings.supported.contains(id)) match {
+            (BlockchainFeatures.implemented.contains(id),
+             featuresSettings.supported.contains(id)) match {
               case (false, _) => NodeFeatureStatus.NotImplemented
               case (_, true)  => NodeFeatureStatus.Voted
               case _          => NodeFeatureStatus.Implemented
             },
             blockchain.featureActivationHeight(id),
-            if (status == BlockchainFeatureStatus.Undefined) blockchain.featureVotes(height).get(id).orElse(Some(0)) else None
+            if (status == BlockchainFeatureStatus.Undefined)
+              blockchain.featureVotes(height).get(id).orElse(Some(0))
+            else None
           )
         })
       )))

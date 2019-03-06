@@ -8,7 +8,8 @@ trait TaskMFunctions {
 
   def pure[S, E, R](x: R): TaskM[S, E, R] = TaskM(_ => Coeval.pure(x.asRight))
 
-  def raiseError[S, E, R](e: E): TaskM[S, E, R] = TaskM(_ => Coeval.pure(e.asLeft))
+  def raiseError[S, E, R](e: E): TaskM[S, E, R] =
+    TaskM(_ => Coeval.pure(e.asLeft))
 
   def get[S, E]: TaskM[S, E, S] = TaskM(s => Coeval.pure(s.asRight))
 
@@ -19,5 +20,6 @@ trait TaskMFunctions {
 
   def inspect[S, E, A](f: S => A): TaskM[S, E, A] = get[S, E].map(f)
 
-  def modify[S, E](f: S => S): TaskM[S, E, Unit] = get[S, E].flatMap(f andThen set)
+  def modify[S, E](f: S => S): TaskM[S, E, Unit] =
+    get[S, E].flatMap(f andThen set)
 }

@@ -6,5 +6,6 @@ import monix.eval.Coeval
 
 trait FastHashId extends ProvenTransaction {
 
-  val id: Coeval[AssetId] = Coeval.evalOnce(ByteStr(crypto.fastHash(bodyBytes())))
+  val id: Coeval[AssetId] =
+    Coeval.evalOnce(ByteStr(crypto.fastHash(bodyBytes())))
 }

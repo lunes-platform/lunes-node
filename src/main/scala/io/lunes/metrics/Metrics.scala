@@ -25,11 +25,12 @@ object Metrics extends ScorexLogging {
 
   case class Settings(enable: Boolean, nodeId: Int, influxDb: InfluxDbSettings)
 
-  private implicit val scheduler: SchedulerService = Scheduler.singleThread("metrics")
+  private implicit val scheduler: SchedulerService =
+    Scheduler.singleThread("metrics")
 
-  private var settings: Settings   = _
+  private var settings: Settings = _
   private var db: Option[InfluxDB] = None
-  private val time                 = new TimeImpl
+  private val time = new TimeImpl
 
   def start(config: Settings): Future[Boolean] =
     Task {
@@ -38,37 +39,44 @@ object Metrics extends ScorexLogging {
           db = None
           dbc.close()
         } catch {
-          case e: Throwable => log.warn(s"Failed to close InfluxDB (${e.getMessage()})")
+          case e: Throwable =>
+            log.warn(s"Failed to close InfluxDB (${e.getMessage()})")
         }
       }
       settings = config
       if (settings.enable) {
         import config.{influxDb => dbSettings}
 
-        log.info(s"Metrics are enabled and will be sent to ${dbSettings.uri}/${dbSettings.db}")
+        log.info(
+          s"Metrics are enabled and will be sent to ${dbSettings.uri}/${dbSettings.db}")
         try {
-          val x = if (dbSettings.username.nonEmpty && dbSettings.password.nonEmpty) {
-            InfluxDBFactory.connect(
-              dbSettings.uri.toString,
-              dbSettings.username.getOrElse(""),
-              dbSettings.password.getOrElse("")
-            )
-          } else {
-            InfluxDBFactory.connect(dbSettings.uri.toString)
-          }
+          val x =
+            if (dbSettings.username.nonEmpty && dbSettings.password.nonEmpty) {
+              InfluxDBFactory.connect(
+                dbSettings.uri.toString,
+                dbSettings.username.getOrElse(""),
+                dbSettings.password.getOrElse("")
+              )
+            } else {
+              InfluxDBFactory.connect(dbSettings.uri.toString)
+            }
           x.setDatabase(dbSettings.db)
-          x.enableBatch(dbSettings.batchActions, dbSettings.batchFlashDuration.toSeconds.toInt, TimeUnit.SECONDS)
+          x.enableBatch(dbSettings.batchActions,
+                        dbSettings.batchFlashDuration.toSeconds.toInt,
+                        TimeUnit.SECONDS)
 
           try {
             val pong = x.ping()
-            log.info(s"Metrics will be sent to ${dbSettings.uri}/${dbSettings.db}. Connected in ${pong.getResponseTime}ms.")
+            log.info(
+              s"Metrics will be sent to ${dbSettings.uri}/${dbSettings.db}. Connected in ${pong.getResponseTime}ms.")
             db = Some(x)
           } catch {
             case NonFatal(e) =>
               log.warn("Can't connect to InfluxDB", e)
           }
         } catch {
-          case e: Throwable => log.warn(s"Failed to connect to InfluxDB (${e.getMessage()})")
+          case e: Throwable =>
+            log.warn(s"Failed to connect to InfluxDB (${e.getMessage()})")
         }
       }
 
@@ -95,7 +103,8 @@ object Metrics extends ScorexLogging {
               .time(ts, TimeUnit.MILLISECONDS)
               .build())
         } catch {
-          case e: Throwable => log.warn(s"Failed to send data to InfluxDB (${e.getMessage()})")
+          case e: Throwable =>
+            log.warn(s"Failed to send data to InfluxDB (${e.getMessage()})")
         }
       }.runAsyncLogErr
     }

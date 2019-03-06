@@ -19,7 +19,9 @@ trait PredefFunction {
 
 object PredefFunction {
 
-  case class FunctionTypeSignature(args: List[TYPEPLACEHOLDER], result: TYPEPLACEHOLDER, internalName: Short)
+  case class FunctionTypeSignature(args: List[TYPEPLACEHOLDER],
+                                   result: TYPEPLACEHOLDER,
+                                   internalName: Short)
 
   case class PredefFunctionImpl(name: String,
                                 cost: Long,
@@ -31,11 +33,16 @@ object PredefFunction {
     override def eval(args: List[Any]): TrampolinedExecResult[Any] = {
       EitherT.fromEither[Coeval](ev(args))
     }
-    override val signature              = FunctionTypeSignature(args.map(_._2), resultType, internalName)
+    override val signature =
+      FunctionTypeSignature(args.map(_._2), resultType, internalName)
     override val header: FunctionHeader = FunctionHeader(internalName)
   }
 
-  def apply(name: String, cost: Long, resultType: TYPEPLACEHOLDER, args: List[(String, TYPEPLACEHOLDER)], internalName: Short)(
+  def apply(name: String,
+            cost: Long,
+            resultType: TYPEPLACEHOLDER,
+            args: List[(String, TYPEPLACEHOLDER)],
+            internalName: Short)(
       ev: List[Any] => Either[String, Any]): PredefFunction =
     PredefFunctionImpl(name, cost, resultType, args, ev, internalName)
 

@@ -17,7 +17,8 @@ object OrderJson {
       case JsString(s) =>
         Base58.decode(s) match {
           case Success(bytes) => JsSuccess(bytes)
-          case Failure(_)     => JsError(JsPath, JsonValidationError("error.incorrect.base58"))
+          case Failure(_) =>
+            JsError(JsPath, JsonValidationError("error.incorrect.base58"))
         }
       case _ => JsError(JsPath, JsonValidationError("error.expected.jsstring"))
     }
@@ -29,9 +30,14 @@ object OrderJson {
       case JsString(s) if s.nonEmpty =>
         Base58.decode(s) match {
           case Success(bytes) => JsSuccess(Some(bytes))
-          case Failure(_)     => JsError(Seq(JsPath() -> Seq(JsonValidationError("error.incorrect.base58"))))
+          case Failure(_) =>
+            JsError(
+              Seq(
+                JsPath() -> Seq(JsonValidationError("error.incorrect.base58"))))
         }
-      case _ => JsError(Seq(JsPath() -> Seq(JsonValidationError("error.expected.jsstring"))))
+      case _ =>
+        JsError(
+          Seq(JsPath() -> Seq(JsonValidationError("error.expected.jsstring"))))
     }
   }
 
@@ -39,10 +45,17 @@ object OrderJson {
     def reads(json: JsValue) = json match {
       case JsString(s) =>
         Base58.decode(s) match {
-          case Success(bytes) if bytes.length == 32 => JsSuccess(PublicKeyAccount(bytes))
-          case _                                    => JsError(Seq(JsPath() -> Seq(JsonValidationError("error.incorrect.publicKeyAccount"))))
+          case Success(bytes) if bytes.length == 32 =>
+            JsSuccess(PublicKeyAccount(bytes))
+          case _ =>
+            JsError(
+              Seq(
+                JsPath() -> Seq(
+                  JsonValidationError("error.incorrect.publicKeyAccount"))))
         }
-      case _ => JsError(Seq(JsPath() -> Seq(JsonValidationError("error.expected.jsstring"))))
+      case _ =>
+        JsError(
+          Seq(JsPath() -> Seq(JsonValidationError("error.expected.jsstring"))))
     }
   }
 
@@ -56,11 +69,22 @@ object OrderJson {
                 expiration: Long,
                 matcherFee: Long,
                 signature: Option[Array[Byte]]): Order = {
-    Order(sender, matcher, assetPair, orderType, price, amount, timestamp, expiration, matcherFee, signature.getOrElse(Array()))
+    Order(sender,
+          matcher,
+          assetPair,
+          orderType,
+          price,
+          amount,
+          timestamp,
+          expiration,
+          matcherFee,
+          signature.getOrElse(Array()))
   }
 
-  def readAssetPair(amountAsset: Option[Option[Array[Byte]]], priceAsset: Option[Option[Array[Byte]]]): AssetPair = {
-    AssetPair(amountAsset.flatten.map(ByteStr(_)), priceAsset.flatten.map(ByteStr(_)))
+  def readAssetPair(amountAsset: Option[Option[Array[Byte]]],
+                    priceAsset: Option[Option[Array[Byte]]]): AssetPair = {
+    AssetPair(amountAsset.flatten.map(ByteStr(_)),
+              priceAsset.flatten.map(ByteStr(_)))
   }
 
   implicit val assetPairReads: Reads[AssetPair] = {
@@ -86,6 +110,7 @@ object OrderJson {
     r(readOrder _)
   }
 
-  implicit val orderFormat: Format[Order] = Format(orderReads, Writes[Order](_.json()))
+  implicit val orderFormat: Format[Order] =
+    Format(orderReads, Writes[Order](_.json()))
 
 }

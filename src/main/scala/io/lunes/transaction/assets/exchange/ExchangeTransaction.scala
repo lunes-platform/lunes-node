@@ -33,27 +33,34 @@ case class ExchangeTransaction private (buyOrder: Order,
 
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce(
     Array(builder.typeId) ++
-      Ints.toByteArray(buyOrder.bytes().length) ++ Ints.toByteArray(sellOrder.bytes().length) ++
-      buyOrder.bytes() ++ sellOrder.bytes() ++ Longs.toByteArray(price) ++ Longs.toByteArray(amount) ++
-      Longs.toByteArray(buyMatcherFee) ++ Longs.toByteArray(sellMatcherFee) ++ Longs.toByteArray(fee) ++
+      Ints.toByteArray(buyOrder.bytes().length) ++ Ints.toByteArray(
+      sellOrder.bytes().length) ++
+      buyOrder.bytes() ++ sellOrder.bytes() ++ Longs.toByteArray(price) ++ Longs
+      .toByteArray(amount) ++
+      Longs.toByteArray(buyMatcherFee) ++ Longs
+      .toByteArray(sellMatcherFee) ++ Longs.toByteArray(fee) ++
       Longs.toByteArray(timestamp))
 
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(bodyBytes() ++ signature.arr)
+  override val bytes: Coeval[Array[Byte]] =
+    Coeval.evalOnce(bodyBytes() ++ signature.arr)
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
-      "order1"         -> buyOrder.json(),
-      "order2"         -> sellOrder.json(),
-      "price"          -> price,
-      "amount"         -> amount,
-      "buyMatcherFee"  -> buyMatcherFee,
+      "order1" -> buyOrder.json(),
+      "order2" -> sellOrder.json(),
+      "price" -> price,
+      "amount" -> amount,
+      "buyMatcherFee" -> buyMatcherFee,
       "sellMatcherFee" -> sellMatcherFee
     ))
 
-  override val signedDescendants: Coeval[Seq[Order]] = Coeval.evalOnce(Seq(buyOrder, sellOrder))
+  override val signedDescendants: Coeval[Seq[Order]] =
+    Coeval.evalOnce(Seq(buyOrder, sellOrder))
 }
 
-object ExchangeTransaction extends TransactionParserFor[ExchangeTransaction] with TransactionParser.HardcodedVersion1 {
+object ExchangeTransaction
+    extends TransactionParserFor[ExchangeTransaction]
+    with TransactionParser.HardcodedVersion1 {
 
   override val typeId: Byte = 7
 
@@ -66,8 +73,18 @@ object ExchangeTransaction extends TransactionParserFor[ExchangeTransaction] wit
              sellMatcherFee: Long,
              fee: Long,
              timestamp: Long): Either[ValidationError, TransactionT] = {
-    create(buyOrder, sellOrder, price, amount, buyMatcherFee, sellMatcherFee, fee, timestamp, ByteStr.empty).right.map { unverified =>
-      unverified.copy(signature = ByteStr(crypto.sign(matcher.privateKey, unverified.bodyBytes())))
+    create(buyOrder,
+           sellOrder,
+           price,
+           amount,
+           buyMatcherFee,
+           sellMatcherFee,
+           fee,
+           timestamp,
+           ByteStr.empty).right.map { unverified =>
+      unverified.copy(
+        signature =
+          ByteStr(crypto.sign(matcher.privateKey, unverified.bodyBytes())))
     }
   }
 
@@ -80,7 +97,8 @@ object ExchangeTransaction extends TransactionParserFor[ExchangeTransaction] wit
              fee: Long,
              timestamp: Long,
              signature: ByteStr): Either[ValidationError, TransactionT] = {
-    lazy val priceIsValid: Boolean = price <= buyOrder.price && price >= sellOrder.price
+    lazy val priceIsValid
+      : Boolean = price <= buyOrder.price && price >= sellOrder.price
 
     if (fee <= 0) {
       Left(ValidationError.InsufficientFee())
@@ -103,23 +121,39 @@ object ExchangeTransaction extends TransactionParserFor[ExchangeTransaction] wit
     } else if (sellOrder.orderType != OrderType.SELL) {
       Left(GenericError("sellOrder should has OrderType.SELL"))
     } else if (buyOrder.matcherPublicKey != sellOrder.matcherPublicKey) {
-      Left(GenericError("buyOrder.matcher should be the same as sellOrder.matcher"))
+      Left(
+        GenericError(
+          "buyOrder.matcher should be the same as sellOrder.matcher"))
     } else if (buyOrder.assetPair != sellOrder.assetPair) {
       Left(GenericError("Both orders should have same AssetPair"))
     } else if (!buyOrder.isValid(timestamp)) {
-      Left(OrderValidationError(buyOrder, buyOrder.isValid(timestamp).messages()))
+      Left(
+        OrderValidationError(buyOrder, buyOrder.isValid(timestamp).messages()))
     } else if (!sellOrder.isValid(timestamp)) {
-      Left(OrderValidationError(sellOrder, sellOrder.isValid(timestamp).labels.mkString("\n")))
+      Left(
+        OrderValidationError(
+          sellOrder,
+          sellOrder.isValid(timestamp).labels.mkString("\n")))
     } else if (!priceIsValid) {
       Left(GenericError("priceIsValid"))
     } else {
-      Right(ExchangeTransaction(buyOrder, sellOrder, price, amount, buyMatcherFee, sellMatcherFee, fee, timestamp, signature))
+      Right(
+        ExchangeTransaction(buyOrder,
+                            sellOrder,
+                            price,
+                            amount,
+                            buyMatcherFee,
+                            sellMatcherFee,
+                            fee,
+                            timestamp,
+                            signature))
     }
   }
 
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  override protected def parseTail(version: Byte,
+                                   bytes: Array[Byte]): Try[TransactionT] =
     Try {
-      var from   = 0
+      var from = 0
       val o1Size = Ints.fromByteArray(bytes.slice(from, from + 4))
       from += 4
       val o2Size = Ints.fromByteArray(bytes.slice(from, from + 4))
@@ -143,8 +177,17 @@ object ExchangeTransaction extends TransactionParserFor[ExchangeTransaction] wit
       val signature = ByteStr(bytes.slice(from, from + SignatureLength))
       from += SignatureLength
 
-      create(o1, o2, price, amount, buyMatcherFee, sellMatcherFee, fee, timestamp, signature)
-        .fold(left => Failure(new Exception(left.toString)), right => Success(right))
+      create(o1,
+             o2,
+             price,
+             amount,
+             buyMatcherFee,
+             sellMatcherFee,
+             fee,
+             timestamp,
+             signature)
+        .fold(left => Failure(new Exception(left.toString)),
+              right => Success(right))
     }.flatten
 
 }

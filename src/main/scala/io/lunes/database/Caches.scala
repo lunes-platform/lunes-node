@@ -32,13 +32,16 @@ trait Caches extends Blockchain {
   protected def loadLastBlock(): Option[Block]
   override def lastBlock: Option[Block] = lastBlockCache
 
-  private val transactionIds                                       = new util.HashMap[ByteStr, Long]()
-  protected def forgetTransaction(id: ByteStr): Unit               = transactionIds.remove(id)
-  override def containsTransaction(id: ByteStr): Boolean           = transactionIds.containsKey(id)
-  override def learnTransactions(values: Map[ByteStr, Long]): Unit = transactionIds.putAll(values.asJava)
-  override def forgetTransactions(pred: (ByteStr, Long) => Boolean): Map[ByteStr, Long] = {
+  private val transactionIds = new util.HashMap[ByteStr, Long]()
+  protected def forgetTransaction(id: ByteStr): Unit = transactionIds.remove(id)
+  override def containsTransaction(id: ByteStr): Boolean =
+    transactionIds.containsKey(id)
+  override def learnTransactions(values: Map[ByteStr, Long]): Unit =
+    transactionIds.putAll(values.asJava)
+  override def forgetTransactions(
+      pred: (ByteStr, Long) => Boolean): Map[ByteStr, Long] = {
     val removedTransactions = Map.newBuilder[ByteStr, Long]
-    val iterator            = transactionIds.entrySet().iterator()
+    val iterator = transactionIds.entrySet().iterator()
     while (iterator.hasNext) {
       val e = iterator.next()
       if (pred(e.getKey, e.getValue)) {
@@ -49,36 +52,51 @@ trait Caches extends Blockchain {
     removedTransactions.result()
   }
 
-  private val portfolioCache: LoadingCache[Address, Portfolio] = cache(maxCacheSize, loadPortfolio)
+  private val portfolioCache: LoadingCache[Address, Portfolio] =
+    cache(maxCacheSize, loadPortfolio)
   protected def loadPortfolio(address: Address): Portfolio
-  protected def discardPortfolio(address: Address): Unit = portfolioCache.invalidate(address)
-  override def portfolio(a: Address): Portfolio          = portfolioCache.get(a)
+  protected def discardPortfolio(address: Address): Unit =
+    portfolioCache.invalidate(address)
+  override def portfolio(a: Address): Portfolio = portfolioCache.get(a)
 
-  private val assetDescriptionCache: LoadingCache[AssetId, Option[AssetDescription]] = cache(maxCacheSize, loadAssetDescription)
+  private val assetDescriptionCache
+    : LoadingCache[AssetId, Option[AssetDescription]] =
+    cache(maxCacheSize, loadAssetDescription)
   protected def loadAssetDescription(assetId: AssetId): Option[AssetDescription]
-  protected def discardAssetDescription(assetId: AssetId): Unit             = assetDescriptionCache.invalidate(assetId)
-  override def assetDescription(assetId: AssetId): Option[AssetDescription] = assetDescriptionCache.get(assetId)
+  protected def discardAssetDescription(assetId: AssetId): Unit =
+    assetDescriptionCache.invalidate(assetId)
+  override def assetDescription(assetId: AssetId): Option[AssetDescription] =
+    assetDescriptionCache.get(assetId)
 
-  private val volumeAndFeeCache: LoadingCache[ByteStr, VolumeAndFee] = cache(maxCacheSize, loadVolumeAndFee)
+  private val volumeAndFeeCache: LoadingCache[ByteStr, VolumeAndFee] =
+    cache(maxCacheSize, loadVolumeAndFee)
   protected def loadVolumeAndFee(orderId: ByteStr): VolumeAndFee
-  protected def discardVolumeAndFee(orderId: ByteStr): Unit       = volumeAndFeeCache.invalidate(orderId)
-  override def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee = volumeAndFeeCache.get(orderId)
+  protected def discardVolumeAndFee(orderId: ByteStr): Unit =
+    volumeAndFeeCache.invalidate(orderId)
+  override def filledVolumeAndFee(orderId: ByteStr): VolumeAndFee =
+    volumeAndFeeCache.get(orderId)
 
-  private val scriptCache: LoadingCache[Address, Option[Script]] = cache(maxCacheSize, loadScript)
+  private val scriptCache: LoadingCache[Address, Option[Script]] =
+    cache(maxCacheSize, loadScript)
   protected def loadScript(address: Address): Option[Script]
   protected def hasScriptBytes(address: Address): Boolean
-  protected def discardScript(address: Address): Unit = scriptCache.invalidate(address)
+  protected def discardScript(address: Address): Unit =
+    scriptCache.invalidate(address)
 
-  override def accountScript(address: Address): Option[Script] = scriptCache.get(address)
+  override def accountScript(address: Address): Option[Script] =
+    scriptCache.get(address)
   override def hasScript(address: Address): Boolean =
-    Option(scriptCache.getIfPresent(address)).flatten.isDefined || hasScriptBytes(address)
+    Option(scriptCache.getIfPresent(address)).flatten.isDefined || hasScriptBytes(
+      address)
 
   private var lastAddressId = loadMaxAddressId()
   protected def loadMaxAddressId(): BigInt
 
-  private val addressIdCache: LoadingCache[Address, Option[BigInt]] = cache(maxCacheSize, loadAddressId)
+  private val addressIdCache: LoadingCache[Address, Option[BigInt]] =
+    cache(maxCacheSize, loadAddressId)
   protected def loadAddressId(address: Address): Option[BigInt]
-  protected def addressId(address: Address): Option[BigInt] = addressIdCache.get(address)
+  protected def addressId(address: Address): Option[BigInt] =
+    addressIdCache.get(address)
 
   @volatile
   protected var approvedFeaturesCache: Map[Short, Int] = loadApprovedFeatures()
@@ -86,7 +104,8 @@ trait Caches extends Blockchain {
   override def approvedFeatures: Map[Short, Int] = approvedFeaturesCache
 
   @volatile
-  protected var activatedFeaturesCache: Map[Short, Int] = loadActivatedFeatures()
+  protected var activatedFeaturesCache: Map[Short, Int] =
+    loadActivatedFeatures()
   protected def loadActivatedFeatures(): Map[Short, Int]
   override def activatedFeatures: Map[Short, Int] = activatedFeaturesCache
 
@@ -111,7 +130,8 @@ trait Caches extends Blockchain {
 
     val newAddresses = Set.newBuilder[Address]
     newAddresses ++= diff.portfolios.keys.filter(addressIdCache.get(_).isEmpty)
-    for ((_, _, addresses) <- diff.transactions.values; address <- addresses if addressIdCache.get(address).isEmpty) {
+    for ((_, _, addresses) <- diff.transactions.values; address <- addresses
+         if addressIdCache.get(address).isEmpty) {
       newAddresses += address
     }
 
@@ -119,7 +139,8 @@ trait Caches extends Blockchain {
       (address, offset) <- newAddresses.result().zipWithIndex
     } yield address -> (lastAddressId + offset + 1)).toMap
 
-    def addressId(address: Address): BigInt = (newAddressIds.get(address) orElse addressIdCache.get(address)).get
+    def addressId(address: Address): BigInt =
+      (newAddressIds.get(address) orElse addressIdCache.get(address)).get
 
     lastAddressId += newAddressIds.size
 
@@ -139,7 +160,8 @@ trait Caches extends Blockchain {
       }
 
       if (portfolioDiff.assets.nonEmpty) {
-        val newAssetBalances = for { (k, v) <- portfolioDiff.assets if v != 0 } yield k -> newPortfolio.assets(k)
+        val newAssetBalances = for { (k, v) <- portfolioDiff.assets if v != 0 } yield
+          k -> newPortfolio.assets(k)
         if (newAssetBalances.nonEmpty) {
           assetBalances += addressId(address) -> newAssetBalances
         }
@@ -168,16 +190,21 @@ trait Caches extends Blockchain {
       newTransactions.result(),
       diff.issuedAssets,
       newFills,
-      diff.scripts.map { case (address, s)        => addressId(address) -> s },
-      diff.accountData.map { case (address, data) => addressId(address) -> data },
-      diff.aliases.map { case (a, address)        => a                  -> addressId(address) },
+      diff.scripts.map { case (address, s) => addressId(address) -> s },
+      diff.accountData.map {
+        case (address, data) => addressId(address) -> data
+      },
+      diff.aliases.map { case (a, address) => a -> addressId(address) },
       diff.sponsorship
     )
 
-    for ((address, id)           <- newAddressIds) addressIdCache.put(address, Some(id))
-    for ((orderId, volumeAndFee) <- newFills) volumeAndFeeCache.put(orderId, volumeAndFee)
-    for ((address, portfolio)    <- newPortfolios.result()) portfolioCache.put(address, portfolio)
-    for (id                      <- diff.issuedAssets.keySet ++ diff.sponsorship.keySet) assetDescriptionCache.invalidate(id)
+    for ((address, id) <- newAddressIds) addressIdCache.put(address, Some(id))
+    for ((orderId, volumeAndFee) <- newFills)
+      volumeAndFeeCache.put(orderId, volumeAndFee)
+    for ((address, portfolio) <- newPortfolios.result())
+      portfolioCache.put(address, portfolio)
+    for (id <- diff.issuedAssets.keySet ++ diff.sponsorship.keySet)
+      assetDescriptionCache.invalidate(id)
     scriptCache.putAll(diff.scripts.asJava)
   }
 
@@ -198,7 +225,8 @@ trait Caches extends Blockchain {
 }
 
 object Caches {
-  def cache[K <: AnyRef, V <: AnyRef](maximumSize: Int, loader: K => V): LoadingCache[K, V] =
+  def cache[K <: AnyRef, V <: AnyRef](maximumSize: Int,
+                                      loader: K => V): LoadingCache[K, V] =
     CacheBuilder
       .newBuilder()
       .maximumSize(maximumSize)

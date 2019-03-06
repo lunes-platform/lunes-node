@@ -37,7 +37,9 @@ abstract class Storage(private val db: DB) extends ScorexLogging {
     }
   }
 
-  def put(key: Array[Byte], value: Array[Byte], batch: Option[WriteBatch]): Unit = {
+  def put(key: Array[Byte],
+          value: Array[Byte],
+          batch: Option[WriteBatch]): Unit = {
     try {
       if (batch.isDefined) batch.get.put(key, value) else db.put(key, value)
     } catch {
@@ -90,11 +92,15 @@ abstract class Storage(private val db: DB) extends ScorexLogging {
 
   def removeEverything(b: Option[WriteBatch]): Unit
 
-  protected def makePrefix(prefix: Array[Byte]): Array[Byte] = Bytes.concat(prefix, Separator)
+  protected def makePrefix(prefix: Array[Byte]): Array[Byte] =
+    Bytes.concat(prefix, Separator)
 
-  protected def makeKey(prefix: Array[Byte], key: Array[Byte]): Array[Byte] = Bytes.concat(prefix, Separator, key, Separator)
+  protected def makeKey(prefix: Array[Byte], key: Array[Byte]): Array[Byte] =
+    Bytes.concat(prefix, Separator, key, Separator)
 
-  protected def makeKey(prefix: Array[Byte], key: String): Array[Byte] = makeKey(prefix, key.getBytes(Charset))
+  protected def makeKey(prefix: Array[Byte], key: String): Array[Byte] =
+    makeKey(prefix, key.getBytes(Charset))
 
-  protected def makeKey(prefix: Array[Byte], key: Int): Array[Byte] = makeKey(prefix, Ints.toByteArray(key))
+  protected def makeKey(prefix: Array[Byte], key: Int): Array[Byte] =
+    makeKey(prefix, Ints.toByteArray(key))
 }

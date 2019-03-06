@@ -47,7 +47,8 @@ object PeerDatabase extends ScorexLogging {
 
     override def blacklistedHosts: Set[InetAddress] = Set.empty
 
-    override def randomPeer(excluded: Set[InetSocketAddress]): Option[InetSocketAddress] = None
+    override def randomPeer(
+        excluded: Set[InetSocketAddress]): Option[InetSocketAddress] = None
 
     override def detailedBlacklist: Map[InetAddress, (Long, String)] = Map.empty
 
@@ -59,7 +60,8 @@ object PeerDatabase extends ScorexLogging {
 
     override val detailedSuspended: Map[InetAddress, Long] = Map.empty
 
-    override def blacklistAndClose(channel: Channel, reason: String): Unit = channel.close()
+    override def blacklistAndClose(channel: Channel, reason: String): Unit =
+      channel.close()
 
     override def suspendAndClose(channel: Channel): Unit = channel.close()
 

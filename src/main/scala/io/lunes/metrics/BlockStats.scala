@@ -13,18 +13,19 @@ object BlockStats {
   trait Named {
     private[BlockStats] val name: String = {
       val className = getClass.getName
-      className.slice(className.lastIndexOf('$', className.length - 2) + 1, className.length - 1)
+      className.slice(className.lastIndexOf('$', className.length - 2) + 1,
+                      className.length - 1)
     }
   }
 
   private sealed abstract class Event extends Named
 
   private object Event {
-    case object Inv      extends Event
+    case object Inv extends Event
     case object Received extends Event
-    case object Applied  extends Event
+    case object Applied extends Event
     case object Declined extends Event
-    case object Mined    extends Event
+    case object Mined extends Event
   }
 
   private sealed abstract class Type extends Named
@@ -38,7 +39,7 @@ object BlockStats {
 
   object Source {
     case object Broadcast extends Source
-    case object Ext       extends Source
+    case object Ext extends Source
   }
 
   def received(b: Block, source: Source, ch: Channel): Unit = write(
@@ -121,7 +122,8 @@ object BlockStats {
     measurement(Type.Micro)
       .tag("id", id(m.totalResBlockSig))
 
-  private def measurement(t: Type): Point.Builder = Point.measurement("block").tag("type", t.toString)
+  private def measurement(t: Type): Point.Builder =
+    Point.measurement("block").tag("type", t.toString)
 
   private def nodeName(ch: Channel): String = {
     Option(ch.attr(HandshakeHandler.NodeNameAttributeKey).get()).getOrElse("")
@@ -129,7 +131,11 @@ object BlockStats {
 
   private def id(x: ByteStr): String = x.toString.take(StringIdLength)
 
-  private def write(init: Point.Builder, event: Event, addFields: Seq[(String, String)]): Unit = {
-    Metrics.write(addFields.foldLeft(init.tag("event", event.name)) { case (r, (k, v)) => r.addField(k, v) })
+  private def write(init: Point.Builder,
+                    event: Event,
+                    addFields: Seq[(String, String)]): Unit = {
+    Metrics.write(addFields.foldLeft(init.tag("event", event.name)) {
+      case (r, (k, v)) => r.addField(k, v)
+    })
   }
 }

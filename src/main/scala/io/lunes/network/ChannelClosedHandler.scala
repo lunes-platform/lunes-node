@@ -9,10 +9,15 @@ import monix.reactive.subjects.ConcurrentSubject
 @Sharable
 class ChannelClosedHandler private extends ChannelHandlerAdapter {
 
-  private val closedChannelsSubject = ConcurrentSubject.publish[Channel](Scheduler.singleThread("closed-channels"))
+  private val closedChannelsSubject = ConcurrentSubject.publish[Channel](
+    Scheduler.singleThread("closed-channels"))
 
   override def handlerAdded(ctx: ChannelHandlerContext): Unit = {
-    ctx.channel().closeFuture().addListener((cf: ChannelFuture) => closedChannelsSubject.onNext(cf.channel()))
+    ctx
+      .channel()
+      .closeFuture()
+      .addListener((cf: ChannelFuture) =>
+        closedChannelsSubject.onNext(cf.channel()))
     super.handlerAdded(ctx)
   }
 

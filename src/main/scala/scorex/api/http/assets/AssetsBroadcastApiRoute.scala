@@ -18,7 +18,11 @@ import scala.util.{Left, Right}
 
 @Path("/assets/broadcast")
 @Api(value = "assets")
-case class AssetsBroadcastApiRoute(settings: RestAPISettings, utx: UtxPool, allChannels: ChannelGroup) extends ApiRoute with BroadcastRoute {
+case class AssetsBroadcastApiRoute(settings: RestAPISettings,
+                                   utx: UtxPool,
+                                   allChannels: ChannelGroup)
+    extends ApiRoute
+    with BroadcastRoute {
 
   override val route: Route = pathPrefix("assets" / "broadcast") {
     issue ~ reissue ~ transfer ~ burnRoute ~ batchTransfer ~ exchange
@@ -38,11 +42,16 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings, utx: UtxPool, allC
                            value = "Json with signed Issue transaction",
                            required = true,
                            paramType = "body",
-                           dataType = "scorex.api.http.assets.SignedIssueV1Request")))
+                           dataType =
+                             "scorex.api.http.assets.SignedIssueV1Request")))
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with signed Asset issue transaction contained Asset ID"),
-      new ApiResponse(code = 400, message = "Json with error description", response = classOf[ApiErrorResponse])
+      new ApiResponse(
+        code = 200,
+        message = "Json with signed Asset issue transaction contained Asset ID"),
+      new ApiResponse(code = 400,
+                      message = "Json with error description",
+                      response = classOf[ApiErrorResponse])
     ))
   def issue: Route = (path("issue") & post) {
     json[SignedIssueV1Request] { issueReq =>
@@ -64,11 +73,15 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings, utx: UtxPool, allC
                            value = "Json with signed Reissue transaction",
                            required = true,
                            paramType = "body",
-                           dataType = "scorex.api.http.assets.SignedReissueV1Request")))
+                           dataType =
+                             "scorex.api.http.assets.SignedReissueV1Request")))
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with signed Asset reissue transaction"),
-      new ApiResponse(code = 400, message = "Json with error description", response = classOf[ApiErrorResponse])
+      new ApiResponse(code = 200,
+                      message = "Json with signed Asset reissue transaction"),
+      new ApiResponse(code = 400,
+                      message = "Json with error description",
+                      response = classOf[ApiErrorResponse])
     ))
   def reissue: Route = (path("reissue") & post) {
     json[SignedReissueV1Request] { reissueReq =>
@@ -90,11 +103,15 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings, utx: UtxPool, allC
                            value = "Json with signed Burn transaction",
                            required = true,
                            paramType = "body",
-                           dataType = "scorex.api.http.assets.SignedBurnV1Request")))
+                           dataType =
+                             "scorex.api.http.assets.SignedBurnV1Request")))
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with signed Asset burn transaction"),
-      new ApiResponse(code = 400, message = "Json with error description", response = classOf[ApiErrorResponse])
+      new ApiResponse(code = 200,
+                      message = "Json with signed Asset burn transaction"),
+      new ApiResponse(code = 400,
+                      message = "Json with error description",
+                      response = classOf[ApiErrorResponse])
     ))
   def burnRoute: Route = (path("burn") & post) {
     json[SignedBurnV1Request] { burnReq =>
@@ -138,16 +155,20 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings, utx: UtxPool, allC
         .map { xs: List[Either[ValidationError, Transaction]] =>
           utx.batched { ops =>
             xs.map {
-              case Left(e)   => Left(e)
-              case Right(tx) => ops.putIfNew(tx).map { case (isNew, _) => (tx, isNew) }
+              case Left(e) => Left(e)
+              case Right(tx) =>
+                ops.putIfNew(tx).map { case (isNew, _) => (tx, isNew) }
             }
           }
         }
         .map { xs =>
           xs.map {
-            case Left(TransactionValidationError(_: ValidationError.AlreadyInTheState, tx)) => Right(tx -> false)
-            case Left(e)                                                                    => Left(ApiError.fromValidationError(e))
-            case Right(x)                                                                   => Right(x)
+            case Left(
+                TransactionValidationError(_: ValidationError.AlreadyInTheState,
+                                           tx)) =>
+              Right(tx -> false)
+            case Left(e)  => Left(ApiError.fromValidationError(e))
+            case Right(x) => Right(x)
           }
         }
 
@@ -179,11 +200,15 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings, utx: UtxPool, allC
                            value = "Json with signed Transfer transaction",
                            required = true,
                            paramType = "body",
-                           dataType = "scorex.api.http.assets.SignedTransferV2Request")))
+                           dataType =
+                             "scorex.api.http.assets.SignedTransferV2Request")))
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with signed Asset transfer transaction"),
-      new ApiResponse(code = 400, message = "Json with error description", response = classOf[ApiErrorResponse])
+      new ApiResponse(code = 200,
+                      message = "Json with signed Asset transfer transaction"),
+      new ApiResponse(code = 400,
+                      message = "Json with error description",
+                      response = classOf[ApiErrorResponse])
     ))
   def transfer: Route = (path("transfer") & post) {
     json[SignedTransferRequests] { transferReq =>
@@ -213,11 +238,16 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings, utx: UtxPool, allC
                            value = "Json with signed Transfer transaction",
                            required = true,
                            paramType = "body",
-                           dataType = "scorex.api.http.assets.SignedExchangeRequest")))
+                           dataType =
+                             "scorex.api.http.assets.SignedExchangeRequest")))
   @ApiResponses(
     Array(
-      new ApiResponse(code = 200, message = "Json with signed Exchange transfer transaction"),
-      new ApiResponse(code = 400, message = "Json with error description", response = classOf[ApiErrorResponse])
+      new ApiResponse(
+        code = 200,
+        message = "Json with signed Exchange transfer transaction"),
+      new ApiResponse(code = 400,
+                      message = "Json with error description",
+                      response = classOf[ApiErrorResponse])
     ))
   def exchange: Route = (path("exchange") & post) {
     json[SignedExchangeRequest] { req =>

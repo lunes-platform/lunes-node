@@ -7,19 +7,27 @@ import io.netty.channel._
 import scorex.utils.ScorexLogging
 
 @Sharable
-class WriteErrorHandler extends ChannelOutboundHandlerAdapter with ScorexLogging {
-  override def write(ctx: ChannelHandlerContext, msg: AnyRef, promise: ChannelPromise): Unit =
+class WriteErrorHandler
+    extends ChannelOutboundHandlerAdapter
+    with ScorexLogging {
+  override def write(ctx: ChannelHandlerContext,
+                     msg: AnyRef,
+                     promise: ChannelPromise): Unit =
     ctx.write(
       msg,
       promise.unvoid().addListener { (chf: ChannelFuture) =>
         if (!chf.isSuccess) {
           chf.cause() match {
             case _: ClosedChannelException =>
-              log.trace(s"${id(ctx.channel())} Channel closed while writing (${msg.getClass.getCanonicalName})")
+              log.trace(
+                s"${id(ctx.channel())} Channel closed while writing (${msg.getClass.getCanonicalName})")
             case _: java.io.IOException =>
-              log.trace(s"java.io.IOException on ${id(ctx.channel())} Write failed (${msg.getClass.getCanonicalName})")
+              log.trace(
+                s"java.io.IOException on ${id(ctx.channel())} Write failed (${msg.getClass.getCanonicalName})")
             case other =>
-              log.debug(s"${id(ctx.channel())} Write failed (${msg.getClass.getCanonicalName})", other)
+              log.debug(
+                s"${id(ctx.channel())} Write failed (${msg.getClass.getCanonicalName})",
+                other)
           }
         }
       }

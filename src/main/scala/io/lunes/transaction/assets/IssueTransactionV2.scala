@@ -34,34 +34,61 @@ case class IssueTransactionV2 private (version: Byte,
       bytesBase(),
       Deser.serializeOption(script)(s => s.bytes().arr)
     ))
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
+  override val bytes: Coeval[Array[Byte]] =
+    Coeval.evalOnce(Bytes.concat(Array(0: Byte), bodyBytes(), proofs.bytes()))
 
 }
 
-object IssueTransactionV2 extends TransactionParserFor[IssueTransactionV2] with TransactionParser.MultipleVersions {
+object IssueTransactionV2
+    extends TransactionParserFor[IssueTransactionV2]
+    with TransactionParser.MultipleVersions {
 
-  override val typeId: Byte                 = 3
+  override val typeId: Byte = 3
   override val supportedVersions: Set[Byte] = Set(2)
 
   private def networkByte = AddressScheme.current.chainId
 
-  override protected def parseTail(version: Byte, bytes: Array[Byte]): Try[TransactionT] =
+  override protected def parseTail(version: Byte,
+                                   bytes: Array[Byte]): Try[TransactionT] =
     Try {
-      val chainId                                                                                       = bytes(0)
-      val (sender, assetName, description, quantity, decimals, reissuable, fee, timestamp, scriptStart) = IssueTransaction.parseBase(bytes, 1)
-      val (scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]], scriptEnd) =
+      val chainId = bytes(0)
+      val (sender,
+           assetName,
+           description,
+           quantity,
+           decimals,
+           reissuable,
+           fee,
+           timestamp,
+           scriptStart) = IssueTransaction.parseBase(bytes, 1)
+      val (
+        scriptOptEi: Option[Either[ValidationError.ScriptParseError, Script]],
+        scriptEnd) =
         Deser.parseOption(bytes, scriptStart)(ScriptReader.fromBytes)
-      val scriptEiOpt: Either[ValidationError.ScriptParseError, Option[Script]] = scriptOptEi match {
-        case None            => Right(None)
-        case Some(Right(sc)) => Right(Some(sc))
-        case Some(Left(err)) => Left(err)
-      }
+      val scriptEiOpt
+        : Either[ValidationError.ScriptParseError, Option[Script]] =
+        scriptOptEi match {
+          case None            => Right(None)
+          case Some(Right(sc)) => Right(Some(sc))
+          case Some(Left(err)) => Left(err)
+        }
 
       (for {
         proofs <- Proofs.fromBytes(bytes.drop(scriptEnd))
         script <- scriptEiOpt
         tx <- IssueTransactionV2
-          .create(version, chainId, sender, assetName, description, quantity, decimals, reissuable, script, fee, timestamp, proofs)
+          .create(version,
+                  chainId,
+                  sender,
+                  assetName,
+                  description,
+                  quantity,
+                  decimals,
+                  reissuable,
+                  script,
+                  fee,
+                  timestamp,
+                  proofs)
       } yield tx).left.map(e => new Throwable(e.toString)).toTry
 
     }.flatten
@@ -79,10 +106,33 @@ object IssueTransactionV2 extends TransactionParserFor[IssueTransactionV2] with 
              timestamp: Long,
              proofs: Proofs): Either[ValidationError, TransactionT] =
     for {
-      _ <- Either.cond(supportedVersions.contains(version), (), UnsupportedVersion(version))
-      _ <- Either.cond(chainId == networkByte, (), GenericError(s"Wrong chainId actual: ${chainId.toInt}, expected: $networkByte"))
-      _ <- IssueTransaction.validateIssueParams(name, description, quantity, decimals, reissuable, fee)
-    } yield IssueTransactionV2(version, chainId, sender, name, description, quantity, decimals, reissuable, script, fee, timestamp, proofs)
+      _ <- Either.cond(supportedVersions.contains(version),
+                       (),
+                       UnsupportedVersion(version))
+      _ <- Either.cond(
+        chainId == networkByte,
+        (),
+        GenericError(
+          s"Wrong chainId actual: ${chainId.toInt}, expected: $networkByte"))
+      _ <- IssueTransaction.validateIssueParams(name,
+                                                description,
+                                                quantity,
+                                                decimals,
+                                                reissuable,
+                                                fee)
+    } yield
+      IssueTransactionV2(version,
+                         chainId,
+                         sender,
+                         name,
+                         description,
+                         quantity,
+                         decimals,
+                         reissuable,
+                         script,
+                         fee,
+                         timestamp,
+                         proofs)
 
   def signed(version: Byte,
              chainId: Byte,
@@ -97,8 +147,20 @@ object IssueTransactionV2 extends TransactionParserFor[IssueTransactionV2] with 
              timestamp: Long,
              signer: PrivateKeyAccount): Either[ValidationError, TransactionT] =
     for {
-      unverified <- create(version, chainId, sender, name, description, quantity, decimals, reissuable, script, fee, timestamp, Proofs.empty)
-      proofs     <- Proofs.create(Seq(ByteStr(crypto.sign(signer, unverified.bodyBytes()))))
+      unverified <- create(version,
+                           chainId,
+                           sender,
+                           name,
+                           description,
+                           quantity,
+                           decimals,
+                           reissuable,
+                           script,
+                           fee,
+                           timestamp,
+                           Proofs.empty)
+      proofs <- Proofs.create(
+        Seq(ByteStr(crypto.sign(signer, unverified.bodyBytes()))))
     } yield unverified.copy(proofs = proofs)
 
   def selfSigned(version: Byte,
@@ -112,5 +174,16 @@ object IssueTransactionV2 extends TransactionParserFor[IssueTransactionV2] with 
                  script: Option[Script],
                  fee: Long,
                  timestamp: Long): Either[ValidationError, TransactionT] =
-    signed(version, chainId, sender, name, description, quantity, decimals, reissuable, script, fee, timestamp, sender)
+    signed(version,
+           chainId,
+           sender,
+           name,
+           description,
+           quantity,
+           decimals,
+           reissuable,
+           script,
+           fee,
+           timestamp,
+           sender)
 }

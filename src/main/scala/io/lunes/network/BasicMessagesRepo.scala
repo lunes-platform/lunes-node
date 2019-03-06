@@ -31,8 +31,8 @@ object GetPeersSpec extends MessageSpec[GetPeers.type] {
 
 object PeersSpec extends MessageSpec[KnownPeers] {
   private val AddressLength = 4
-  private val PortLength    = 4
-  private val DataLength    = 4
+  private val PortLength = 4
+  private val DataLength = 4
 
   override val messageCode: Message.MessageCode = 2: Byte
 
@@ -40,26 +40,31 @@ object PeersSpec extends MessageSpec[KnownPeers] {
 
   override def deserializeData(bytes: Array[Byte]): Try[KnownPeers] = Try {
     val lengthBytes = util.Arrays.copyOfRange(bytes, 0, DataLength)
-    val length      = Ints.fromByteArray(lengthBytes)
+    val length = Ints.fromByteArray(lengthBytes)
 
-    assert(bytes.length == DataLength + (length * (AddressLength + PortLength)), "Data does not match length")
+    assert(bytes.length == DataLength + (length * (AddressLength + PortLength)),
+           "Data does not match length")
 
     KnownPeers((0 until length).map { i =>
-      val position     = lengthBytes.length + (i * (AddressLength + PortLength))
-      val addressBytes = util.Arrays.copyOfRange(bytes, position, position + AddressLength)
-      val address      = InetAddress.getByAddress(addressBytes)
-      val portBytes    = util.Arrays.copyOfRange(bytes, position + AddressLength, position + AddressLength + PortLength)
+      val position = lengthBytes.length + (i * (AddressLength + PortLength))
+      val addressBytes =
+        util.Arrays.copyOfRange(bytes, position, position + AddressLength)
+      val address = InetAddress.getByAddress(addressBytes)
+      val portBytes =
+        util.Arrays.copyOfRange(bytes,
+                                position + AddressLength,
+                                position + AddressLength + PortLength)
       new InetSocketAddress(address, Ints.fromByteArray(portBytes))
     })
   }
 
   override def serializeData(peers: KnownPeers): Array[Byte] = {
-    val length      = peers.peers.size
+    val length = peers.peers.size
     val lengthBytes = Ints.toByteArray(length)
 
     val xs = for {
       inetAddress <- peers.peers
-      address     <- Option(inetAddress.getAddress)
+      address <- Option(inetAddress.getAddress)
     } yield (address.getAddress, inetAddress.getPort)
 
     xs.foldLeft(lengthBytes) {
@@ -81,9 +86,10 @@ trait SignaturesSeqSpec[A <: AnyRef] extends MessageSpec[A] {
 
   override def deserializeData(bytes: Array[Byte]): Try[A] = Try {
     val lengthBytes = bytes.take(DataLength)
-    val length      = Ints.fromByteArray(lengthBytes)
+    val length = Ints.fromByteArray(lengthBytes)
 
-    assert(bytes.length == DataLength + (length * SignatureLength), "Data does not match length")
+    assert(bytes.length == DataLength + (length * SignatureLength),
+           "Data does not match length")
 
     wrap((0 until length).map { i =>
       val position = DataLength + (i * SignatureLength)
@@ -92,27 +98,33 @@ trait SignaturesSeqSpec[A <: AnyRef] extends MessageSpec[A] {
   }
 
   override def serializeData(v: A): Array[Byte] = {
-    val signatures  = unwrap(v)
-    val length      = signatures.size
+    val signatures = unwrap(v)
+    val length = signatures.size
     val lengthBytes = Ints.toByteArray(length)
 
     //WRITE SIGNATURES
-    signatures.foldLeft(lengthBytes) { case (bs, header) => Bytes.concat(bs, header) }
+    signatures.foldLeft(lengthBytes) {
+      case (bs, header) => Bytes.concat(bs, header)
+    }
   }
 }
 
 object GetSignaturesSpec extends SignaturesSeqSpec[GetSignatures] {
-  override def wrap(signatures: Seq[Array[Byte]]): GetSignatures = GetSignatures(signatures.map(ByteStr(_)))
+  override def wrap(signatures: Seq[Array[Byte]]): GetSignatures =
+    GetSignatures(signatures.map(ByteStr(_)))
 
-  override def unwrap(v: GetSignatures): Seq[Array[MessageCode]] = v.signatures.map(_.arr)
+  override def unwrap(v: GetSignatures): Seq[Array[MessageCode]] =
+    v.signatures.map(_.arr)
 
   override val messageCode: MessageCode = 20: Byte
 }
 
 object SignaturesSpec extends SignaturesSeqSpec[Signatures] {
-  override def wrap(signatures: Seq[Array[Byte]]): Signatures = Signatures(signatures.map(ByteStr(_)))
+  override def wrap(signatures: Seq[Array[Byte]]): Signatures =
+    Signatures(signatures.map(ByteStr(_)))
 
-  override def unwrap(v: Signatures): Seq[Array[MessageCode]] = v.signatures.map(_.arr)
+  override def unwrap(v: Signatures): Seq[Array[MessageCode]] =
+    v.signatures.map(_.arr)
 
   override val messageCode: MessageCode = 21: Byte
 }
@@ -122,7 +134,8 @@ object GetBlockSpec extends MessageSpec[GetBlock] {
 
   override val maxLength: Int = SignatureLength
 
-  override def serializeData(signature: GetBlock): Array[Byte] = signature.signature.arr
+  override def serializeData(signature: GetBlock): Array[Byte] =
+    signature.signature.arr
 
   override def deserializeData(bytes: Array[Byte]): Try[GetBlock] = Try {
     require(bytes.length == maxLength, "Data does not match length")
@@ -133,21 +146,24 @@ object GetBlockSpec extends MessageSpec[GetBlock] {
 object BlockSpec extends MessageSpec[Block] {
   override val messageCode: MessageCode = 23: Byte
 
-  override val maxLength: Int = 271 + TransactionSpec.maxLength * Block.MaxTransactionsPerBlockVer3
+  override val maxLength
+    : Int = 271 + TransactionSpec.maxLength * Block.MaxTransactionsPerBlockVer3
 
   override def serializeData(block: Block): Array[Byte] = block.bytes()
 
-  override def deserializeData(bytes: Array[Byte]): Try[Block] = Block.parseBytes(bytes)
+  override def deserializeData(bytes: Array[Byte]): Try[Block] =
+    Block.parseBytes(bytes)
 }
 
 object ScoreSpec extends MessageSpec[BigInt] {
   override val messageCode: MessageCode = 24: Byte
 
-  override val maxLength: Int = 64 // allows representing scores as high as 6.6E153
+  override val maxLength
+    : Int = 64 // allows representing scores as high as 6.6E153
 
   override def serializeData(score: BigInt): Array[Byte] = {
     val scoreBytes = score.toByteArray
-    val bb         = java.nio.ByteBuffer.allocate(scoreBytes.length)
+    val bb = java.nio.ByteBuffer.allocate(scoreBytes.length)
     bb.put(scoreBytes)
     bb.array()
   }
@@ -162,22 +178,27 @@ object CheckpointSpec extends MessageSpec[Checkpoint] {
 
   private val HeightLength = Ints.BYTES
 
-  override val maxLength: Int = 4 + Checkpoint.MaxCheckpoints * (HeightLength + SignatureLength)
+  override val maxLength
+    : Int = 4 + Checkpoint.MaxCheckpoints * (HeightLength + SignatureLength)
 
   override def serializeData(checkpoint: Checkpoint): Array[Byte] =
     Bytes.concat(checkpoint.toSign, checkpoint.signature)
 
   override def deserializeData(bytes: Array[Byte]): Try[Checkpoint] = Try {
     val lengthBytes = util.Arrays.copyOfRange(bytes, 0, Ints.BYTES)
-    val length      = Ints.fromByteArray(lengthBytes)
+    val length = Ints.fromByteArray(lengthBytes)
 
     require(length <= Checkpoint.MaxCheckpoints)
 
     val items = (0 until length).map { i =>
-      val position       = lengthBytes.length + (i * (HeightLength + SignatureLength))
-      val heightBytes    = util.Arrays.copyOfRange(bytes, position, position + HeightLength)
-      val height         = Ints.fromByteArray(heightBytes)
-      val blockSignature = util.Arrays.copyOfRange(bytes, position + HeightLength, position + HeightLength + SignatureLength)
+      val position = lengthBytes.length + (i * (HeightLength + SignatureLength))
+      val heightBytes =
+        util.Arrays.copyOfRange(bytes, position, position + HeightLength)
+      val height = Ints.fromByteArray(heightBytes)
+      val blockSignature =
+        util.Arrays.copyOfRange(bytes,
+                                position + HeightLength,
+                                position + HeightLength + SignatureLength)
       BlockCheckpoint(height, blockSignature)
     }
 
@@ -206,9 +227,17 @@ object MicroBlockInvSpec extends MessageSpec[MicroBlockInv] {
     Try(
       MicroBlockInv(
         sender = PublicKeyAccount.apply(bytes.take(KeyLength)),
-        totalBlockSig = ByteStr(bytes.view.slice(KeyLength, KeyLength + SignatureLength).toArray),
-        prevBlockSig = ByteStr(bytes.view.slice(KeyLength + SignatureLength, KeyLength + SignatureLength * 2).toArray),
-        signature = ByteStr(bytes.view.slice(KeyLength + SignatureLength * 2, KeyLength + SignatureLength * 3).toArray)
+        totalBlockSig = ByteStr(
+          bytes.view.slice(KeyLength, KeyLength + SignatureLength).toArray),
+        prevBlockSig = ByteStr(
+          bytes.view
+            .slice(KeyLength + SignatureLength, KeyLength + SignatureLength * 2)
+            .toArray),
+        signature = ByteStr(
+          bytes.view
+            .slice(KeyLength + SignatureLength * 2,
+                   KeyLength + SignatureLength * 3)
+            .toArray)
       ))
 
   override def serializeData(inv: MicroBlockInv): Array[Byte] = {
@@ -224,7 +253,8 @@ object MicroBlockRequestSpec extends MessageSpec[MicroBlockRequest] {
   override def deserializeData(bytes: Array[Byte]): Try[MicroBlockRequest] =
     Try(MicroBlockRequest(ByteStr(bytes)))
 
-  override def serializeData(req: MicroBlockRequest): Array[Byte] = req.totalBlockSig.arr
+  override def serializeData(req: MicroBlockRequest): Array[Byte] =
+    req.totalBlockSig.arr
 
   override val maxLength: Int = 500
 }
@@ -235,9 +265,11 @@ object MicroBlockResponseSpec extends MessageSpec[MicroBlockResponse] {
   override def deserializeData(bytes: Array[Byte]): Try[MicroBlockResponse] =
     MicroBlock.parseBytes(bytes).map(MicroBlockResponse)
 
-  override def serializeData(resp: MicroBlockResponse): Array[Byte] = resp.microblock.bytes()
+  override def serializeData(resp: MicroBlockResponse): Array[Byte] =
+    resp.microblock.bytes()
 
-  override val maxLength: Int = 271 + TransactionSpec.maxLength * MaxTransactionsPerMicroblock
+  override val maxLength
+    : Int = 271 + TransactionSpec.maxLength * MaxTransactionsPerMicroblock
 
 }
 
@@ -264,6 +296,7 @@ object BasicMessagesRepo {
     MicroBlockResponseSpec
   )
 
-  val specsByCodes: Map[Byte, Spec]       = specs.map(s => s.messageCode  -> s).toMap
-  val specsByClasses: Map[Class[_], Spec] = specs.map(s => s.contentClass -> s).toMap
+  val specsByCodes: Map[Byte, Spec] = specs.map(s => s.messageCode -> s).toMap
+  val specsByClasses: Map[Class[_], Spec] =
+    specs.map(s => s.contentClass -> s).toMap
 }

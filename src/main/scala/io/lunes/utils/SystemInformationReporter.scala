@@ -10,7 +10,9 @@ object SystemInformationReporter extends ScorexLogging {
       val orig = Seq(
         "lunes",
         "metrics"
-      ).foldLeft(ConfigFactory.empty()) { case (r, path) => r.withFallback(resolved.withOnlyPath(path)) }
+      ).foldLeft(ConfigFactory.empty()) {
+        case (r, path) => r.withFallback(resolved.withOnlyPath(path))
+      }
 
       Seq(
         "lunes.custom.genesis",

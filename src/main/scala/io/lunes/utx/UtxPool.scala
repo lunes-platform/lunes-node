@@ -22,12 +22,16 @@ trait UtxPool extends AutoCloseable {
 
   def transactionById(transactionId: ByteStr): Option[Transaction]
 
-  def packUnconfirmed(rest: MultiDimensionalMiningConstraint, sortInBlock: Boolean): (Seq[Transaction], MultiDimensionalMiningConstraint)
+  def packUnconfirmed(rest: MultiDimensionalMiningConstraint,
+                      sortInBlock: Boolean)
+    : (Seq[Transaction], MultiDimensionalMiningConstraint)
 
   def batched[Result](f: UtxBatchOps => Result): Result = f(createBatchOps)
 
   private[utx] def createBatchOps: UtxBatchOps = new UtxBatchOps {
-    override def putIfNew(tx: Transaction): Either[ValidationError, (Boolean, Diff)] = self.putIfNew(tx)
+    override def putIfNew(
+        tx: Transaction): Either[ValidationError, (Boolean, Diff)] =
+      self.putIfNew(tx)
   }
 
 }

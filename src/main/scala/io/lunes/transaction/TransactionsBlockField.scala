@@ -11,17 +11,19 @@ import scorex.block.BlockField
 trait TransactionsBlockField extends BlockField[Seq[Transaction]]
 
 object TransactionsBlockField {
-  def apply(version: Int, value: Seq[Transaction]): TransactionsBlockField = version match {
-    case 1 | 2 => TransactionsBlockFieldVersion1or2(value)
-    case 3     => TransactionsBlockFieldVersion3(value)
-  }
+  def apply(version: Int, value: Seq[Transaction]): TransactionsBlockField =
+    version match {
+      case 1 | 2 => TransactionsBlockFieldVersion1or2(value)
+      case 3     => TransactionsBlockFieldVersion3(value)
+    }
 
   def serTxs(value: Seq[Transaction], serTxCount: Array[Byte]): Array[Byte] = {
-    val byteBuffer = new ByteArrayOutputStream(value.size * TransactionSpec.maxLength / 2)
+    val byteBuffer = new ByteArrayOutputStream(
+      value.size * TransactionSpec.maxLength / 2)
     byteBuffer.write(serTxCount, 0, serTxCount.length)
     value.foreach { tx =>
       val txBytes = tx.bytes()
-      val txSize  = Bytes.ensureCapacity(Ints.toByteArray(txBytes.length), 4, 0)
+      val txSize = Bytes.ensureCapacity(Ints.toByteArray(txBytes.length), 4, 0)
       byteBuffer.write(txSize, 0, txSize.length)
       byteBuffer.write(txBytes, 0, txBytes.length)
     }
@@ -29,23 +31,27 @@ object TransactionsBlockField {
   }
 }
 
-case class TransactionsBlockFieldVersion1or2(override val value: Seq[Transaction]) extends TransactionsBlockField {
+case class TransactionsBlockFieldVersion1or2(
+    override val value: Seq[Transaction])
+    extends TransactionsBlockField {
   override val name = "transactions"
 
   override def j: JsObject = Json.obj(name -> JsArray(value.map(_.json())))
 
-  override def b = TransactionsBlockField.serTxs(value, Array(value.size.toByte))
+  override def b =
+    TransactionsBlockField.serTxs(value, Array(value.size.toByte))
 
 }
 
-case class TransactionsBlockFieldVersion3(override val value: Seq[Transaction]) extends TransactionsBlockField {
+case class TransactionsBlockFieldVersion3(override val value: Seq[Transaction])
+    extends TransactionsBlockField {
   override val name = "transactions"
 
   override def j: JsObject = Json.obj(name -> JsArray(value.map(_.json())))
 
   override def b = {
     val txCount = value.size
-    val bb      = ByteBuffer.allocate(4)
+    val bb = ByteBuffer.allocate(4)
     TransactionsBlockField.serTxs(value, bb.putInt(txCount).array)
   }
 }

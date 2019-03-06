@@ -33,7 +33,8 @@ sealed trait LazyVal {
 }
 
 object LazyVal {
-  private case class LazyValImpl(v: TrampolinedExecResult[Any]) extends LazyVal {
+  private case class LazyValImpl(v: TrampolinedExecResult[Any])
+      extends LazyVal {
     override val value: TrampolinedExecResult[Any] = EitherT(
       Coeval.evalOnce(
         evaluated.write(true).apply()

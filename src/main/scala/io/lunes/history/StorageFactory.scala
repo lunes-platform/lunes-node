@@ -8,8 +8,13 @@ import io.lunes.transaction.BlockchainUpdater
 import scorex.utils.Time
 
 object StorageFactory {
-  def apply(settings: LunesSettings, db: DB, time: Time): BlockchainUpdater with NG = {
-    val levelDBWriter = new LevelDBWriter(db, settings.blockchainSettings.functionalitySettings, settings.maxCacheSize)
+  def apply(settings: LunesSettings,
+            db: DB,
+            time: Time): BlockchainUpdater with NG = {
+    val levelDBWriter = new LevelDBWriter(
+      db,
+      settings.blockchainSettings.functionalitySettings,
+      settings.maxCacheSize)
     new BlockchainUpdaterImpl(levelDBWriter, settings, time)
   }
 }
