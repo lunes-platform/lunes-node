@@ -17,6 +17,7 @@ import io.lunes.db.openDB
 import io.lunes.features.api.ActivationApiRoute
 import io.lunes.history.{CheckpointServiceImpl, StorageFactory}
 import io.lunes.http.NodeApiRoute
+import io.lunes.matcher._
 import io.lunes.metrics.Metrics
 import io.lunes.mining.{Miner, MinerImpl}
 import io.lunes.network.RxExtensionLoader.RxExtensionLoaderShutdownHook
@@ -29,7 +30,7 @@ import io.lunes.state.appender.{
   MicroblockAppender
 }
 import io.lunes.utils.{SystemInformationReporter, forceStopApplication}
-import io.lunes.utx.{UtxPool, UtxPoolImpl}
+import io.lunes.utx.{MatcherUtxPool, UtxPool, UtxPoolImpl}
 import io.netty.channel.Channel
 import io.netty.channel.group.DefaultChannelGroup
 import io.netty.util.concurrent.GlobalEventExecutor
@@ -103,6 +104,7 @@ class LunesNode(val actorSystem: ActorSystem,
                                          reporter =
                                            log.error("Error in Miner", _))
 
+  private var matcher: Option[Matcher] = None
   private var rxExtensionLoaderShutdown: Option[RxExtensionLoaderShutdownHook] =
     None
   private var maybeUtx: Option[UtxPool] = None
@@ -133,7 +135,12 @@ class LunesNode(val actorSystem: ActorSystem,
                       settings.blockchainSettings.functionalitySettings,
                       settings.utxSettings)
 
-    val utxStorage = innerUtxStorage
+    val utxStorage =
+      if (settings.matcherSettings.enable)
+        new MatcherUtxPool(innerUtxStorage,
+                           settings.matcherSettings,
+                           actorSystem.eventStream)
+      else innerUtxStorage
     maybeUtx = Some(utxStorage)
 
     val knownInvalidBlocks = new InvalidBlockStorageImpl(
@@ -166,6 +173,19 @@ class LunesNode(val actorSystem: ActorSystem,
                     peerDatabase,
                     miner,
                     appenderScheduler) _
+
+    matcher = if (settings.matcherSettings.enable) {
+      val m = new Matcher(actorSystem,
+                          wallet,
+                          innerUtxStorage,
+                          allChannels,
+                          blockchainUpdater,
+                          settings.blockchainSettings,
+                          settings.restAPISettings,
+                          settings.matcherSettings)
+      m.runMatcher()
+      Some(m)
+    } else None
 
     val processCheckpoint =
       CheckpointAppender(checkpointService,
@@ -433,6 +453,8 @@ class LunesNode(val actorSystem: ActorSystem,
            if settings.networkSettings.uPnPSettings.enable) {
         upnp.deletePort(addr.getPort)
       }
+
+      matcher.foreach(_.shutdownMatcher())
 
       log.debug("Closing peer database")
       peerDatabase.close()
