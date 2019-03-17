@@ -14,6 +14,7 @@ object Constants extends ScorexLogging {
   val CoinAbr = "LNS"
   val AgentName = s"${ApplicationName} v${VersionStr}"
   val InitialBalance = 15072853761500800L
+  val NEW_FEE_ISSUE_TRANSACTION = 10000000000L
 
   val MainSchemeCharacter = '1'
   val MainDelay = 60

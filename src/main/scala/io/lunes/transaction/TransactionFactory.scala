@@ -1,6 +1,7 @@
 package io.lunes.transaction
 
 import com.google.common.base.Charsets
+import io.lunes.settings.Constants
 import io.lunes.state.ByteStr
 import scorex.account._
 import scorex.api.http.DataRequest
@@ -28,7 +29,6 @@ import scorex.utils.Time
 import scorex.wallet.Wallet
 
 object TransactionFactory {
-
   def transferAssetV1(
       request: TransferV1Request,
       wallet: Wallet,
@@ -171,7 +171,10 @@ object TransactionFactory {
         decimals = request.decimals,
         reissuable = request.reissuable,
         script = s,
-        fee = request.fee,
+        fee =
+          if (request.fee >= Constants.NEW_FEE_ISSUE_TRANSACTION)
+            request.fee
+          else 1L,
         timestamp = request.timestamp.getOrElse(time.getTimestamp()),
         signer = signer
       )
@@ -197,7 +200,9 @@ object TransactionFactory {
         request.quantity,
         request.decimals,
         request.reissuable,
-        request.fee,
+        if (request.fee >= Constants.NEW_FEE_ISSUE_TRANSACTION)
+          request.fee
+        else 1L,
         request.timestamp.getOrElse(time.getTimestamp()),
         signer
       )
