@@ -8,7 +8,7 @@ See our [wiki](https://github.com/Lunes-platform/LunesNode/wiki/Testnet:-running
 
 ## Mainnet Installation
 
-See our [wiki](https://github.com/Lunes-platform/LunesNode/wiki/Node structure and installation)
+See our [wiki](https://github.com/Lunes-platform/LunesNode/wiki/Node-structure-and-installation)
 
 ## Test enviroment
 
