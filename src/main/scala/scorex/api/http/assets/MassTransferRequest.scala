@@ -7,7 +7,6 @@ case class MassTransferRequest(assetId: Option[String],
                                sender: String,
                                transfers: List[Transfer],
                                fee: Long,
-                               attachment: Option[String],
                                timestamp: Option[Long] = None)
 
 object MassTransferRequest {

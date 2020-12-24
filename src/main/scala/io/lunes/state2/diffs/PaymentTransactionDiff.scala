@@ -10,6 +10,9 @@ import io.lunes.transaction.{PaymentTransaction, ValidationError}
 
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 object PaymentTransactionDiff {
 
   def apply(stateReader: SnapshotStateReader, height: Int, settings: FunctionalitySettings, blockTime: Long)

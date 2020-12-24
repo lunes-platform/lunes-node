@@ -16,6 +16,10 @@ import scorex.utils.ScorexLogging
 
 import scala.concurrent.duration.FiniteDuration
 
+/**
+  *
+  * @param peerDatabase
+  */
 class HandshakeDecoder(peerDatabase: PeerDatabase) extends ReplayingDecoder[Void] with ScorexLogging {
   override def decode(ctx: ChannelHandlerContext, in: ByteBuf, out: util.List[AnyRef]): Unit = try {
     out.add(Handshake.decode(in))
@@ -29,13 +33,24 @@ class HandshakeDecoder(peerDatabase: PeerDatabase) extends ReplayingDecoder[Void
   }
 }
 
+/**
+  *
+  */
 case object HandshakeTimeoutExpired
 
+/**
+  *
+  * @param handshakeTimeout
+  */
 class HandshakeTimeoutHandler(handshakeTimeout: FiniteDuration) extends ChannelInboundHandlerAdapter with ScorexLogging {
   private var timeout: Option[ScheduledFuture[_]] = None
 
   private def cancelTimeout(): Unit = timeout.foreach(_.cancel(true))
 
+  /**
+    *
+    * @param ctx
+    */
   override def channelActive(ctx: ChannelHandlerContext): Unit = {
     log.trace(s"${id(ctx)} Scheduling handshake timeout, timeout = $handshakeTimeout")
     timeout = Some(ctx.channel().eventLoop().schedule({ () =>
@@ -46,11 +61,20 @@ class HandshakeTimeoutHandler(handshakeTimeout: FiniteDuration) extends ChannelI
     super.channelActive(ctx)
   }
 
+  /**
+    *
+    * @param ctx
+    */
   override def channelInactive(ctx: ChannelHandlerContext): Unit = {
     cancelTimeout()
     super.channelInactive(ctx)
   }
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match {
     case hs: Handshake =>
       cancelTimeout()
@@ -60,6 +84,14 @@ class HandshakeTimeoutHandler(handshakeTimeout: FiniteDuration) extends ChannelI
   }
 }
 
+/**
+  *
+  * @param localHandshake
+  * @param establishedConnections
+  * @param peerConnections
+  * @param peerDatabase
+  * @param allChannels
+  */
 abstract class HandshakeHandler(
                                  localHandshake: Handshake,
                                  establishedConnections: ConcurrentMap[Channel, PeerInfo],
@@ -69,6 +101,11 @@ abstract class HandshakeHandler(
 
   import HandshakeHandler._
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match {
     case HandshakeTimeoutExpired =>
       peerDatabase.blacklistAndClose(ctx.channel(), "Timeout expired while waiting for handshake")
@@ -119,18 +156,37 @@ abstract class HandshakeHandler(
   }
 }
 
+/**
+  *
+  */
 object HandshakeHandler extends ScorexLogging {
 
   val NodeNameAttributeKey = AttributeKey.newInstance[String]("name")
 
+  /**
+    *
+    * @param remoteVersion
+    * @return
+    */
   def versionIsSupported(remoteVersion: (Int, Int, Int)): Boolean =
-    remoteVersion._1 == Constants.MinimalVersion._1 && remoteVersion._2 >= Constants.MinimalVersion._2 && remoteVersion._3 >= Constants.MinimalVersion._3
+    remoteVersion._1 == Constants.MinimalVersion._1 && remoteVersion._2 >= Constants.MinimalVersion._2 // && remoteVersion._3 >= Constants.MinimalVersion._3
 
+  /**
+    *
+    * @param ctx
+    * @param thisHandler
+    */
   def removeHandshakeHandlers(ctx: ChannelHandlerContext, thisHandler: ChannelHandler): Unit = {
     ctx.pipeline().remove(classOf[HandshakeTimeoutHandler])
     ctx.pipeline().remove(thisHandler)
   }
 
+  /**
+    *
+    * @param remoteHandshake
+    * @param channel
+    * @return
+    */
   def peerInfo(remoteHandshake: Handshake, channel: Channel): PeerInfo = PeerInfo(
     channel.remoteAddress(),
     remoteHandshake.declaredAddress,
@@ -139,6 +195,14 @@ object HandshakeHandler extends ScorexLogging {
     remoteHandshake.nodeName,
     remoteHandshake.nodeNonce)
 
+  /**
+    *
+    * @param handshake
+    * @param establishedConnections
+    * @param peerConnections
+    * @param peerDatabase
+    * @param allChannels
+    */
   @Sharable
   class Server(
                 handshake: Handshake,
@@ -153,6 +217,14 @@ object HandshakeHandler extends ScorexLogging {
     }
   }
 
+  /**
+    *
+    * @param handshake
+    * @param establishedConnections
+    * @param peerConnections
+    * @param peerDatabase
+    * @param allChannels
+    */
   @Sharable
   class Client(
                 handshake: Handshake,

@@ -12,6 +12,9 @@ import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
 
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 object LeaseTransactionsDiff {
 
   def lease(s: SnapshotStateReader, height: Int)(tx: LeaseTransaction): Either[ValidationError, Diff] = {
@@ -35,6 +38,15 @@ object LeaseTransactionsDiff {
     }
   }
 
+  /**
+    *
+    * @param s
+    * @param settings
+    * @param time
+    * @param height
+    * @param tx
+    * @return
+    */
   def leaseCancel(s: SnapshotStateReader, settings: FunctionalitySettings, time: Long, height: Int)
                  (tx: LeaseCancelTransaction): Either[ValidationError, Diff] = {
     val leaseEi = s.findTransaction[LeaseTransaction](tx.leaseId) match {

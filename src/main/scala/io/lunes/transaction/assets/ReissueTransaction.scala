@@ -11,6 +11,16 @@ import io.lunes.transaction.{ValidationError, _}
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  *
+  * @param sender
+  * @param assetId
+  * @param quantity
+  * @param reissuable
+  * @param fee
+  * @param timestamp
+  * @param signature
+  */
 case class ReissueTransaction private(sender: PublicKeyAccount,
                                       assetId: ByteStr,
                                       quantity: Long,
@@ -40,6 +50,9 @@ case class ReissueTransaction private(sender: PublicKeyAccount,
   override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(transactionType.id.toByte), signature.arr, bodyBytes()))
 }
 
+/**
+  *
+  */
 object ReissueTransaction {
   def parseTail(bytes: Array[Byte]): Try[ReissueTransaction] = Try {
     val signature = ByteStr(bytes.slice(0, SignatureLength))
@@ -57,6 +70,17 @@ object ReissueTransaction {
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
+  /**
+    *
+    * @param sender
+    * @param assetId
+    * @param quantity
+    * @param reissuable
+    * @param fee
+    * @param timestamp
+    * @param signature
+    * @return
+    */
   def create(sender: PublicKeyAccount,
              assetId: ByteStr,
              quantity: Long,
@@ -72,6 +96,16 @@ object ReissueTransaction {
       Right(ReissueTransaction(sender, assetId, quantity, reissuable, fee, timestamp, signature))
     }
 
+  /**
+    *
+    * @param sender
+    * @param assetId
+    * @param quantity
+    * @param reissuable
+    * @param fee
+    * @param timestamp
+    * @return
+    */
   def create(sender: PrivateKeyAccount,
              assetId: ByteStr,
              quantity: Long,

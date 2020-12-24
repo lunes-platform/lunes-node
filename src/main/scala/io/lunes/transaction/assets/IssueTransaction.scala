@@ -13,6 +13,18 @@ import io.lunes.transaction.{ValidationError, _}
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  *
+  * @param sender
+  * @param name
+  * @param description
+  * @param quantity
+  * @param decimals
+  * @param reissuable
+  * @param fee
+  * @param timestamp
+  * @param signature
+  */
 case class IssueTransaction private(sender: PublicKeyAccount,
                                     name: Array[Byte],
                                     description: Array[Byte],
@@ -51,17 +63,30 @@ case class IssueTransaction private(sender: PublicKeyAccount,
 
 }
 
+/**
+  *
+  */
 object IssueTransaction {
   val MaxDescriptionLength = 1000
   val MaxAssetNameLength = 16
   val MinAssetNameLength = 4
   val MaxDecimals = 8
 
+  /**
+    *
+    * @param bytes
+    * @return
+    */
   def parseBytes(bytes: Array[Byte]): Try[IssueTransaction] = Try {
     require(bytes.head == TransactionType.IssueTransaction.id)
     parseTail(bytes.tail).get
   }
 
+  /**
+    *
+    * @param bytes
+    * @return
+    */
   def parseTail(bytes: Array[Byte]): Try[IssueTransaction] = Try {
     val signature = ByteStr(bytes.slice(0, SignatureLength))
     val txId = bytes(SignatureLength)
@@ -78,6 +103,19 @@ object IssueTransaction {
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
+  /**
+    *
+    * @param sender
+    * @param name
+    * @param description
+    * @param quantity
+    * @param decimals
+    * @param reissuable
+    * @param fee
+    * @param timestamp
+    * @param signature
+    * @return
+    */
   def create(sender: PublicKeyAccount,
              name: Array[Byte],
              description: Array[Byte],
@@ -100,6 +138,18 @@ object IssueTransaction {
     Right(IssueTransaction(sender, name, description, quantity, decimals, reissuable, fee, timestamp, signature))
   }
 
+  /**
+    *
+    * @param sender
+    * @param name
+    * @param description
+    * @param quantity
+    * @param decimals
+    * @param reissuable
+    * @param fee
+    * @param timestamp
+    * @return
+    */
   def create(sender: PrivateKeyAccount,
              name: Array[Byte],
              description: Array[Byte],

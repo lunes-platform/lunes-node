@@ -11,37 +11,19 @@ import scorex.account.Address
 
 import scala.util.Right
 
+/**
+  *
+  */
 object RegistryTransactionDiff {
   def apply(state: SnapshotStateReader, s: FunctionalitySettings, blockTime: Long, height: Int)(tx: RegistryTransaction): Either[ValidationError, Diff] = {
     val sender = Address.fromPublicKey(tx.sender.publicKey)
 
     val isInvalidEi = for {
       recipient <- state.resolveAliasEi(tx.recipient)
-      portfolios = (
-        tx.assetId match {
-          case None => Map(sender -> Portfolio(-tx.amount, LeaseInfo.empty, Map.empty)).combine(
-            Map(recipient -> Portfolio(tx.amount, LeaseInfo.empty, Map.empty))
-          )
-          case Some(aid) =>
-            Map(sender -> Portfolio(0, LeaseInfo.empty, Map(aid -> -tx.amount))).combine(
-              Map(recipient -> Portfolio(0, LeaseInfo.empty, Map(aid -> tx.amount)))
-            )
-        }).combine(
-        tx.feeAssetId match {
-          case None => Map(sender -> Portfolio(-tx.fee, LeaseInfo.empty, Map.empty))
-          case Some(aid) =>
-            Map(sender -> Portfolio(0, LeaseInfo.empty, Map(aid -> -tx.fee)))
-        }
-      )
-      assetIssued = tx.assetId match {
-        case None => true
-        case Some(aid) => state.assetInfo(aid).isDefined
-      }
-      feeAssetIssued = tx.feeAssetId match {
-        case None => true
-        case Some(aid) => state.assetInfo(aid).isDefined
-      }
-    } yield (portfolios, blockTime > s.allowUnissuedAssetsUntil && !(assetIssued && feeAssetIssued))
+      portfolios = Map(sender -> Portfolio(-tx.amount, LeaseInfo.empty, Map.empty)).combine( Map(recipient -> Portfolio(tx.amount, LeaseInfo.empty, Map.empty))).combine( Map(sender -> Portfolio(-tx.fee, LeaseInfo.empty, Map.empty)))
+      assetIssued = true
+      feeAssetIssued = true
+    } yield (portfolios, (blockTime > s.allowUnissuedAssetsUntil && !(assetIssued && feeAssetIssued)))
 
     isInvalidEi match {
       case Left(e) => Left(e)

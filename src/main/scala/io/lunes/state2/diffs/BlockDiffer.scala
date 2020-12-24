@@ -23,12 +23,25 @@ import scala.collection.SortedMap
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+/** BlockDiffer Object. */
 object BlockDiffer extends ScorexLogging with Instrumented {
 
   private implicit val scheduler: SchedulerService = Scheduler.computation(name = "block-deser")
 
+  /** Returns a Diff Case the input is a Success.
+    * @param diff
+    * @return
+    */
   def right(diff: Diff): Either[ValidationError, Diff] = Right(diff)
 
+  /** Differ from a Block
+    * @param settings The Functionality Settings.
+    * @param fp Features Provider.
+    * @param s The Snapshot State Reader.
+    * @param maybePrevBlock An Option for a previous Block.
+    * @param block The Block from which to differ.
+    * @return Either a BlockDiff (case Success) or a ValidationError (case Failure).
+    */
   def fromBlock(settings: FunctionalitySettings, fp: FeatureProvider, s: SnapshotStateReader, maybePrevBlock: Option[Block], block: Block): Either[ValidationError, BlockDiff] = {
     val blockSigner = block.signerData.generator.toAddress
     val stateHeight = s.height
@@ -56,6 +69,15 @@ object BlockDiffer extends ScorexLogging with Instrumented {
     } yield r
   }
 
+  /** Differ from a Microblock
+    * @param settings The Functionality Settings.
+    * @param fp The Features Provider.
+    * @param s The Snapshot Reader.
+    * @param prevBlockTimestamp An option for the Previous Block Timestamp.
+    * @param micro The MicroBlock from which to differ.
+    * @param timestamp The Timestamp.
+    * @return Either a BlockDiff (case Success) or a Validation Error (case Failure).
+    */
   def fromMicroBlock(settings: FunctionalitySettings, fp: FeatureProvider, s: SnapshotStateReader, prevBlockTimestamp: Option[Long], micro: MicroBlock, timestamp: Long): Either[ValidationError, BlockDiff] = {
     for {
       // microblocks are processed within block which is next after 40-only-block which goes on top of activated height
@@ -65,6 +87,15 @@ object BlockDiffer extends ScorexLogging with Instrumented {
     } yield r
   }
 
+  /** Unsafe method to differ a sequnce of Blocks.
+    * @param settings The Functionality Settings.
+    * @param fp The Feature Provider.
+    * @param s The Snapshot Reader.
+    * @param prevBlock An option for the Previous Block.
+    * @param maxTxsInChunk Maximum number of Transactions in a chunck of the block.
+    * @param blocks The Sequence of Blocks to Differ.
+    * @return A non empty list of Block Diffs.
+    */
   def unsafeDiffMany(settings: FunctionalitySettings, fp: FeatureProvider, s: SnapshotStateReader, prevBlock: Option[Block], maxTxsInChunk: Int)
                     (blocks: Seq[Block]): NEL[BlockDiff] =
     blocks.foldLeft((NEL.one(BlockDiff.empty), prevBlock)) { case ((diffs, prev), block) =>
@@ -72,6 +103,15 @@ object BlockDiffer extends ScorexLogging with Instrumented {
       (prependCompactBlockDiff(blockDiff, diffs, maxTxsInChunk), Some(block))
     }._1
 
+  /** Unsafe method to Differ by a Range.
+    * @param fs Functionality Settings.
+    * @param fp The Feature Provider.
+    * @param h The history.
+    * @param maxTransactionsPerChunk Maximum Number of Transactions per chunk of the Block.
+    * @param state The Snapshot Reader.
+    * @param upto Maximum element of the History to differ.
+    * @return A non empty list of Block Diffs.
+    */
   def unsafeDiffByRange(fs: FunctionalitySettings, fp: FeatureProvider, h: History, maxTransactionsPerChunk: Int)(state: SnapshotStateReader, upto: Int): NEL[BlockDiff] = {
     val from = state.height + 1
     val blocks = measureLog(s"Reading blocks from $from up upto $upto") {
@@ -82,6 +122,19 @@ object BlockDiffer extends ScorexLogging with Instrumented {
     }
   }
 
+  /** An alternative Factory for Block Differ.
+    * @param settings The Functionality settings.
+    * @param s The Snapshot Reader.
+    * @param fp The Feature Provider.
+    * @param prevBlockTimestamp An Option for a previous Timestamp.
+    * @param blockGenerator The [[scorex.account.Address]] for the Block Generator.
+    * @param prevBlockFeeDistr The Previous Block Fee Distr.
+    * @param currentBlockFeeDistr The Current Block Fee Distr.
+    * @param timestamp The Timestamp.
+    * @param txs A Sequence of [[io.lunes.transaction.Transaction]].
+    * @param heightDiff Height of Diff.
+    * @return Returns Either a BlockDiff (case Success) of a ValidationError (case Failure).
+    */
   private def apply(settings: FunctionalitySettings, s: SnapshotStateReader, fp: FeatureProvider, prevBlockTimestamp: Option[Long])
                    (blockGenerator: Address, prevBlockFeeDistr: Option[Diff], currentBlockFeeDistr: Option[Diff],
                     timestamp: Long, txs: Seq[Transaction], heightDiff: Int): Either[ValidationError, BlockDiff] = {

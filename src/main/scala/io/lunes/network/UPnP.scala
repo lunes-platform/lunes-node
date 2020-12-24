@@ -9,6 +9,10 @@ import scorex.utils.ScorexLogging
 import scala.collection.JavaConverters._
 import scala.util.Try
 
+/**
+  *
+  * @param settings
+  */
 class UPnP(settings:UPnPSettings) extends ScorexLogging {
 
   private var gateway: Option[GatewayDevice] = None
@@ -43,6 +47,11 @@ class UPnP(settings:UPnPSettings) extends ScorexLogging {
     log.error("Unable to discover UPnP gateway devices: " + t.toString)
   }
 
+  /**
+    *
+    * @param port
+    * @return
+    */
   def addPort(port: Int): Try[Unit] = Try {
     if (gateway.get.addPortMapping(port, port, localAddress.get.getHostAddress, "TCP", "Scorex")) {
       log.debug("Mapped port [" + externalAddress.get.getHostAddress + "]:" + port)
@@ -53,6 +62,11 @@ class UPnP(settings:UPnPSettings) extends ScorexLogging {
     log.error("Unable to map port " + port + ": " + t.toString)
   }
 
+  /**
+    *
+    * @param port
+    * @return
+    */
   def deletePort(port: Int): Try[Unit] = Try {
     if (gateway.get.deletePortMapping(port, "TCP")) {
       log.debug("Mapping deleted for port " + port)

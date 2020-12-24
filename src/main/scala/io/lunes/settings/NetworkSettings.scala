@@ -13,8 +13,37 @@ import net.ceedubs.ficus.readers.ValueReader
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 
+/**
+  *
+  * @param enable
+  * @param gatewayTimeout
+  * @param discoverTimeout
+  */
 case class UPnPSettings(enable: Boolean, gatewayTimeout: FiniteDuration, discoverTimeout: FiniteDuration)
 
+/**
+  *
+  * @param file
+  * @param bindAddress
+  * @param declaredAddress
+  * @param nodeName
+  * @param nonce
+  * @param knownPeers
+  * @param peersDataResidenceTime
+  * @param blackListResidenceTime
+  * @param maxInboundConnections
+  * @param maxOutboundConnections
+  * @param maxConnectionsPerHost
+  * @param connectionTimeout
+  * @param maxUnverifiedPeers
+  * @param enablePeersExchange
+  * @param enableBlacklisting
+  * @param peersBroadcastInterval
+  * @param handshakeTimeout
+  * @param suspensionResidenceTime
+  * @param uPnPSettings
+  * @param trafficLogger
+  */
 case class NetworkSettings(file: Option[File],
                            bindAddress: InetSocketAddress,
                            declaredAddress: Option[InetSocketAddress],
@@ -36,6 +65,9 @@ case class NetworkSettings(file: Option[File],
                            uPnPSettings: UPnPSettings,
                            trafficLogger: TrafficLogger.Settings)
 
+/**
+  *
+  */
 object NetworkSettings {
   private val MaxNodeNameBytesLength = 127
   implicit val networkSettingsValueReader: ValueReader[NetworkSettings] =

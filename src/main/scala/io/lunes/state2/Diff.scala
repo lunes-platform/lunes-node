@@ -5,10 +5,22 @@ import cats.implicits._
 import scorex.account.{Address, Alias}
 import io.lunes.transaction.Transaction
 
+/** Class for holding Snapshot data.
+  * @constructor Creates a New Snapshot Object.
+  * @param prevHeight Previous Height.
+  * @param balance Account Balance.
+  * @param effectiveBalance Effective Account Balance.
+  */
 case class Snapshot(prevHeight: Int, balance: Long, effectiveBalance: Long)
 
+/** Class for holding Lease Information data.
+  * @constructor Creates a new Lease Information Object.
+  * @param leaseIn Lease Input.
+  * @param leaseOut Lease Output.
+  */
 case class LeaseInfo(leaseIn: Long, leaseOut: Long)
 
+/** LeaseInfo Companion Object.*/
 object LeaseInfo {
   val empty = LeaseInfo(0, 0)
   implicit val leaseInfoMonoid = new Monoid[LeaseInfo] {
@@ -18,8 +30,13 @@ object LeaseInfo {
   }
 }
 
+/** Class for holding Order Filling Information data.
+  * @param volume Order Volume.
+  * @param fee Order Fee.
+  */
 case class OrderFillInfo(volume: Long, fee: Long)
 
+/** OrderFillInfo companion Object*/
 object OrderFillInfo {
   implicit val orderFillInfoMonoid = new Monoid[OrderFillInfo] {
     override def empty: OrderFillInfo = OrderFillInfo(0, 0)
@@ -28,8 +45,13 @@ object OrderFillInfo {
   }
 }
 
+/** Class for Holding Asset Information data.
+  * @param isReissuable True if Asset is Reissuable.
+  * @param volume Asset Volume.
+  */
 case class AssetInfo(isReissuable: Boolean, volume: Long)
 
+/** AssetInfo Companion Object*/
 object AssetInfo {
   implicit val assetInfoMonoid = new Monoid[AssetInfo] {
     override def empty: AssetInfo = AssetInfo(isReissuable = true, 0)
@@ -39,6 +61,15 @@ object AssetInfo {
   }
 }
 
+/** Class for holding Differences in Transaction data.
+  * @constructor Creates a Standard Constructor.
+  * @param transactions Maps ID into Tuple (Int, [[io.lunes.transaction.Transaction]], Set[Address]).
+  * @param portfolios Maps [[scorex.account.Address]] into [[io.lunes.state2.Portfolio]].
+  * @param issuedAssets Maps ID into [[io.lunes.state2.AssetInfo]]
+  * @param aliases Maps [[scorex.account.Alias]] into [[scorex.account.Address]].
+  * @param orderFills Maps ID into [[io.lunes.state2.OrderFillInfo]].
+  * @param leaseState Maps ID into Boolean for LeaseState Check.
+  */
 case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
                 portfolios: Map[Address, Portfolio],
                 issuedAssets: Map[ByteStr, AssetInfo],
@@ -58,7 +89,20 @@ case class Diff(transactions: Map[ByteStr, (Int, Transaction, Set[Address])],
   }
 }
 
+/** case class Diff Companion Object */
 object Diff {
+  //TODO: tailrec
+  /** Diff Class Alternative Constructor.
+    * @param height Record Height.
+    * @param tx Inputs Transaction.
+    * @param portfolios Maps [[scorex.account.Address]] into [[io.lunes.state2.Portfolio]].
+    * @param assetInfos Maps IDs into [[io.lunes.state2.AssetInfo]].
+    * @param aliases Maps [[scorex.account.Alias]] into [[scorex.account.Address]].
+    * @param orderFills Maps ID into [[io.lunes.state2.OrderFillInfo]].
+    * @param leaseState Maps ID into Boolean for LeaseState Check.
+    * @return Returns the Created Object.
+    */
+  //TODO: tailrec
   def apply(height: Int, tx: Transaction,
             portfolios: Map[Address, Portfolio] = Map.empty,
             assetInfos: Map[ByteStr, AssetInfo] = Map.empty,
@@ -75,13 +119,25 @@ object Diff {
 
   val empty = new Diff(Map.empty, Map.empty, Map.empty, Map.empty, Map.empty, Map.empty)
 
+  /** Difference Extension Class
+    * @constructor Creates a Difference Extension Object.
+    * @param d The Original [[Diff]] object.
+    */
   implicit class DiffExt(d: Diff) {
+    /** Returns the Difference Extension as a [[io.lunes.state2.BlockDiff]].
+      * @return Returns the Created Object.
+      */
     def asBlockDiff: BlockDiff = BlockDiff(d, 0, Map.empty)
   }
 
   implicit val diffMonoid = new Monoid[Diff] {
     override def empty: Diff = Diff.empty
 
+    /** Combines two Diff Objects.
+      * @param older Older [[Diff]].
+      * @param newer Newer [[Diff]].
+      * @return Returns combined Diff Object.
+      */
     override def combine(older: Diff, newer: Diff): Diff = Diff(
       transactions = older.transactions ++ newer.transactions,
       portfolios = older.portfolios.combine(newer.portfolios),

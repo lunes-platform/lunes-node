@@ -17,8 +17,20 @@ import scorex.utils.ScorexLogging
 
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 object MicroblockAppender extends ScorexLogging with Instrumented {
-
+  /**
+    *
+    * @param checkpoint
+    * @param history
+    * @param blockchainUpdater
+    * @param utxStorage
+    * @param scheduler
+    * @param microBlock
+    * @return
+    */
   def apply(checkpoint: CheckpointService, history: History, blockchainUpdater: BlockchainUpdater, utxStorage: UtxPool,
             scheduler: Scheduler)
            (microBlock: MicroBlock): Task[Either[ValidationError, Unit]] = Task(measureSuccessful(microblockProcessingTimeStats, for {
@@ -27,7 +39,19 @@ object MicroblockAppender extends ScorexLogging with Instrumented {
     _ <- blockchainUpdater.processMicroBlock(microBlock)
   } yield utxStorage.removeAll(microBlock.transactionData))).executeOn(scheduler)
 
-
+  /**
+    *
+    * @param checkpoint
+    * @param history
+    * @param blockchainUpdater
+    * @param utxStorage
+    * @param allChannels
+    * @param peerDatabase
+    * @param scheduler
+    * @param ch
+    * @param md
+    * @return
+    */
   def apply(checkpoint: CheckpointService, history: History, blockchainUpdater: BlockchainUpdater, utxStorage: UtxPool,
             allChannels: ChannelGroup, peerDatabase: PeerDatabase, scheduler: Scheduler)(ch: Channel, md: MicroblockData): Task[Unit] = {
     import md.microBlock

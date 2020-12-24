@@ -8,12 +8,21 @@ import scorex.utils.ScorexLogging
 
 import scala.concurrent.duration.FiniteDuration
 
+/** Class for Peer-to-Peer Sunchronization.
+  * @constructor Creates a Peer-to-Peer Synchronizer object.
+  * @param peerDatabase Sets de Peer Database.
+  * @param peerRequestInterval Sets the Requests Time Out Interval.
+  */
 class PeerSynchronizer(peerDatabase: PeerDatabase, peerRequestInterval: FiniteDuration)
   extends ChannelInboundHandlerAdapter with ScorexLogging {
 
   private var peersRequested = false
   private var declaredAddress = Option.empty[InetSocketAddress]
 
+  /** Requests for Peer Connections.
+    * @param ctx Inputs Channel Handler Context.
+    */
+  //TODO: TailRec
   def requestPeers(ctx: ChannelHandlerContext): Unit = if (ctx.channel().isActive) {
     peersRequested = true
     ctx.writeAndFlush(GetPeers)
@@ -23,6 +32,10 @@ class PeerSynchronizer(peerDatabase: PeerDatabase, peerRequestInterval: FiniteDu
     }
   }
 
+  /** Reads from Channel Context.
+    * @param ctx Inputs Channel Context.
+    * @param msg Reference Message Object.
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = {
     declaredAddress.foreach(peerDatabase.touch)
     msg match {
@@ -60,6 +73,7 @@ class PeerSynchronizer(peerDatabase: PeerDatabase, peerRequestInterval: FiniteDu
   private def format[T](xs: Iterable[T]): String = xs.mkString("[", ", ", "]")
 }
 
+/** PeerSynchronizer Companion Object */
 object PeerSynchronizer {
 
   @Sharable

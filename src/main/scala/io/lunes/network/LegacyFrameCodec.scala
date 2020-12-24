@@ -17,6 +17,13 @@ class LegacyFrameCodec(peerDatabase: PeerDatabase) extends ByteToMessageCodec[Ra
   import BasicMessagesRepo.specsByCodes
   import LegacyFrameCodec._
 
+  /**
+    *
+    * @param ctx
+    * @param in
+    * @param out
+    * @return
+    */
   override def decode(ctx: ChannelHandlerContext, in: ByteBuf, out: util.List[AnyRef]) = try {
     require(in.readInt() == Magic, "invalid magic number")
 
@@ -45,6 +52,13 @@ class LegacyFrameCodec(peerDatabase: PeerDatabase) extends ByteToMessageCodec[Ra
       peerDatabase.blacklistAndClose(ctx.channel(), s"Malformed network message: $e")
   }
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    * @param out
+    * @return
+    */
   override def encode(ctx: ChannelHandlerContext, msg: RawBytes, out: ByteBuf) = {
     out.writeInt(Magic)
     out.writeByte(msg.code)
@@ -58,6 +72,9 @@ class LegacyFrameCodec(peerDatabase: PeerDatabase) extends ByteToMessageCodec[Ra
   }
 }
 
+/**
+  *
+  */
 object LegacyFrameCodec {
   val Magic = 0x12345678
 }

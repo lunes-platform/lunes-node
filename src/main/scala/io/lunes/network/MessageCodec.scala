@@ -9,11 +9,22 @@ import scorex.utils.ScorexLogging
 
 import scala.util.{Failure, Success}
 
+/**
+  *
+  * @param peerDatabase
+  */
 @Sharable
 class MessageCodec(peerDatabase: PeerDatabase) extends MessageToMessageCodec[RawBytes, Message] with ScorexLogging {
 
   import BasicMessagesRepo.specsByCodes
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    * @param out
+    * @return
+    */
   override def encode(ctx: ChannelHandlerContext, msg: Message, out: util.List[AnyRef]) = msg match {
     // Have no spec
     case r: RawBytes => out.add(r)
@@ -31,6 +42,12 @@ class MessageCodec(peerDatabase: PeerDatabase) extends MessageToMessageCodec[Raw
     case m: MicroBlockResponse => out.add(RawBytes(MicroBlockResponseSpec.messageCode, MicroBlockResponseSpec.serializeData(m)))
   }
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    * @param out
+    */
   override def decode(ctx: ChannelHandlerContext, msg: RawBytes, out: util.List[AnyRef]): Unit = {
     specsByCodes(msg.code).deserializeData(msg.data) match {
       case Success(x) => out.add(x)

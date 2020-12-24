@@ -6,35 +6,31 @@ import scorex.utils.ScorexLogging
   * System constants here.
   */
 object Constants extends ScorexLogging {
-  val VersionStr = "0.0.4"
-  val VersionTuple = (0, 0, 4)
-  val MinimalVersion = (0, 0,  4)
+  val VersionStr = "0.0.7"
+  val VersionTuple = (0, 0, 7)
+  val MinimalVersion = (0, 0, 7)
   val ApplicationName = "lunesnode"
   val CoinName = "LUNES"
   val CoinAbr = "LNS"
-  val AgentName = s"Lunes v${VersionStr}"
-  val UnitsInLunes = 100000000L
-  val TotalLunes = 600000000L
-  val InitialBalance = TotalLunes * UnitsInLunes
+  val AgentName = s"${ApplicationName} v${VersionStr}"
+  val InitialBalance = 15072853761500800L
 
-  val MainSchemeCharacter = '0'
+  val MainSchemeCharacter = '1'
   val MainDelay = 60
-  val MainTimestamp = 1523145600000L 
-  val MainSignature = "5UoT695i3nk3nd553QtRCkmWzRpyQ8oQNCn4Kdrrs6uN6gJKo8LLNskAiYeqYnxdipPfhXXNQkyKaKAA83dwqGqg"
+  val MainTimestamp = 1528077600000L
+  val MainSignature = "soKTPcsb5cD97jnm64zF3pVuVUqUYx3caaDvuPyM6PXPY7eWCxeHeYvKSE2aJwZwRpXdRFdW1g5BQMFpYkHcf85"
 
   val MainTransactions = List(
-    GenesisTransactionSettings("37cjwk5WavHeoCjNUi92vba6KsNAd1uwAso", 30000000000000000L),
-    GenesisTransactionSettings("37SGwubdwB1T8ri2Wh6XwcfkzhisqoLH45g", 20000000000000000L),
-    GenesisTransactionSettings("37cpimjxZ7kQ4akeq2pAB3rVi2eoXaze2sJ", 10000000000000000L)
+    GenesisTransactionSettings("37oqFHsx1cRtLWtnp6YyQpud5WJk4v79VPu", 5072853761500800L),
+    GenesisTransactionSettings("3826zwbgHauHXAoppU4we3hsJc9GtRCpSvz", 10000000000000000L),
   )
 
-  val TestSchemeCharacter = '1'
+  val TestSchemeCharacter = '0'
   val TestDelay = 60
-  val TestTimestamp = 1522368000000L
-  val TestSignature = "TwtrT2Q7zNNTsGSdVjZkpb3YzGBExqCuhUY4HFrFQZrQ5ZGNPKRn25QGaywgBfxVvUn132C5w5GoNf8SBA1bGsk"
-  val TestInitialBalance = TotalLunes * UnitsInLunes
+  val TestTimestamp = 1528300800000L
+  val TestSignature = "3MHtECVRc3qTe9tmvds7aQBLzX879YTdq6iYDnXwKGXrzrYZdESoYokQMGcWWSVKKZDjfocMBFPk7vBc1t8iAkBc"
+
   val TestTransactions = List(
-    GenesisTransactionSettings("3825YjBosdU7g2AWZjZNF5hN7VsRZg35RcA", 30000000000000000L),
-    GenesisTransactionSettings("37qcYthwDtBv1g9AbiWsG6o2nLE8nXxF2vr", 30000000000000000L)
+    GenesisTransactionSettings("37aF3eL4tsZ6YpqViXpYAmRQAi7ehtDdBmG", 15072853761500800L)
   )
 }

@@ -5,6 +5,23 @@ import io.lunes.metrics.Metrics
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 
+/**
+  *
+  * @param directory
+  * @param dataDirectory
+  * @param levelDbCacheSize
+  * @param networkSettings
+  * @param walletSettings
+  * @param blockchainSettings
+  * @param checkpointsSettings
+  * @param feesSettings
+  * @param minerSettings
+  * @param restAPISettings
+  * @param synchronizationSettings
+  * @param utxSettings
+  * @param featuresSettings
+  * @param metrics
+  */
 case class LunesSettings(directory: String,
                          dataDirectory: String,
                          levelDbCacheSize: Long,
@@ -21,12 +38,20 @@ case class LunesSettings(directory: String,
                          featuresSettings: FeaturesSettings,
                          metrics: Metrics.Settings)
 
+/**
+  *
+  */
 object LunesSettings {
 
   import NetworkSettings.networkSettingsValueReader
 
   val configPath: String = "lunes"
 
+  /**
+    *
+    * @param config
+    * @return
+    */
   def fromConfig(config: Config): LunesSettings = {
     val directory = config.as[String](s"$configPath.directory")
     val dataDirectory = config.as[String](s"$configPath.directory") + s"/data"

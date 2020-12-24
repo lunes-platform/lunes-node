@@ -7,11 +7,14 @@ import io.lunes.db._
 import io.lunes.utils._
 import org.iq80.leveldb.{DB, WriteBatch}
 import scorex.account.{Address, Alias}
-import scorex.serialization.Deser
 import scorex.utils.{NTP, Time}
 
 import scala.util.Try
 
+/** State Storage class which extends SubStorage.
+  * @param db LevelDB db input object.
+  * @param time [[scorex.utils.Time]] Timestamp input.
+  */
 class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") with PropertiesStorage with VersionedStorage {
 
   import StateStorage._
@@ -37,17 +40,30 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
   private val MaxAddress = "max-address"
   private val LeasesCount = "leases-count"
 
-
+  /** Get the Key Height.
+    * @return Returns Height.
+    */
   def getHeight: Int = get(makeKey(HeightPrefix, 0)).map(Ints.fromByteArray).getOrElse(0)
 
+  /** Sets Key Height.
+    * @param b Option for LevelDB WriteBatch.
+    * @param height Input Height.
+    */
   def setHeight(b: Option[WriteBatch], height: Int): Unit = {
     put(makeKey(HeightPrefix, 0), Ints.toByteArray(height), b)
   }
 
+  /** Gets a Transaction given its ID.
+    * @param id Input ID.
+    * @return Returns an Option for a Tuple (Int, Array[Byte]).
+    */
   def getTransaction(id: ByteStr): Option[(Int, Array[Byte])] =
     get(makeKey(TransactionsPrefix, id.arr)).map(TransactionsValueCodec.decode).map(_.explicitGet().value)
 
-
+  /** Puts Transactions.
+    * @param b Option for LevelDB WriteBatch.
+    * @param diff Inputs [[io.lunes.state2.Diff]].
+    */
   def putTransactions(b: Option[WriteBatch], diff: Diff): Unit = {
     diff.transactions.foreach { case (id, (h, tx, _)) =>
       put(makeKey(TransactionsPrefix, id.arr), TransactionsValueCodec.encode((h, tx.bytes())), b)
@@ -61,43 +77,100 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
     putLeases(b, diff.leaseState)
   }
 
+  /** Gets a Lunes Balance given an [[scorex.account.Address]].
+    * @param address Inputs [[scorex.account.Address]].
+    * @return Returns an Option for a Tuple (Long, Long, Long).
+    */
   def getLunesBalance(address: Address): Option[(Long, Long, Long)] =
     get(makeKey(LunesBalancePrefix, address.bytes.arr)).map(LunesBalanceValueCodec.decode).map(_.explicitGet().value)
 
+  /** Gets a Asset Balance given an [[scorex.account.Address]].
+    * @param address Inputs [[scorex.account.Address]].
+    * @param asset The requested Asset.
+    * @return Returns an Option of Long informing the current Balance for the Asset.
+    */
   def getAssetBalance(address: Address, asset: ByteStr): Option[Long] =
     get(makeKey(AssetBalancePrefix, Bytes.concat(address.bytes.arr, asset.arr))).map(Longs.fromByteArray)
 
+  /** Gets an Asset Information.
+    * @param asset Input Asset.
+    * @return Returns an Option for [[io.lunes.state2.AssetInfo]].
+    */
   def getAssetInfo(asset: ByteStr): Option[AssetInfo] =
     get(makeKey(AssetsPrefix, asset.arr)).map(AssetInfoCodec.decode).map(_.explicitGet().value)
 
+  /** Get the Account Transaction IDs given an [[scorex.account.Address]].
+    * @param address Inputs [[scorex.account.Address]].
+    * @param index The Transcation index.
+    * @return Returns an Option for ByteStr for the Transaction ID.
+    */
   def getAccountTransactionIds(address: Address, index: Int): Option[ByteStr] =
     get(makeKey(AccountTransactionIdsPrefix, accountIntKey(address, index))).map(b => ByteStr(b))
 
+  /** Get the Account Transaction Length given an [[scorex.account.Address]]
+    * @param address Inputs [[scorex.account.Address]].
+    * @return Returns an Option for Int representing the Length of Transactions.
+    */
   def getAccountTransactionsLengths(address: Address): Option[Int] =
     get(makeKey(AccountTransactionsLengthsPrefix, address.bytes.arr)).map(Ints.fromByteArray)
 
+  /** Get Balance Snapshots given an [[scorex.account.Address]].
+    * @param address Inputs [[scorex.account.Address]].
+    * @param height Inputs the Height.
+    * @return Returns an Option for Tuple (Int, Long, Long) as the Snapshot.
+    */
   def getBalanceSnapshots(address: Address, height: Int): Option[(Int, Long, Long)] =
     get(makeKey(BalanceSnapshotsPrefix, accountIntKey(address, height))).map(BalanceSnapshotValueCodec.decode).map(_.explicitGet().value)
 
+  /** Inserts a Balance Snapshot given an [[scorex.account.Address]].
+    * @param b Inputs an Option for a LevelDB WriteBatch.
+    * @param address Inputs [[scorex.account.Address]].
+    * @param height Inputs Height.
+    * @param value Snapshot Value.
+    */
   def putBalanceSnapshots(b: Option[WriteBatch], address: Address, height: Int, value: (Int, Long, Long)): Unit =
     put(makeKey(BalanceSnapshotsPrefix, accountIntKey(address, height)), BalanceSnapshotValueCodec.encode(value), b)
 
+  /** Inserts Lunes Balance given an [[scorex.account.Address]].
+    * @param b Inputs an Option for a LevelDB WriteBatch.
+    * @param address Inputs [[scorex.account.Address]].
+    * @param value The Lunes Balance Tuple.
+    */
   def putLunesBalance(b: Option[WriteBatch], address: Address, value: (Long, Long, Long)): Unit = {
     updateAddressesIndex(Seq(address.bytes.arr), b)
     put(makeKey(LunesBalancePrefix, address.bytes.arr), LunesBalanceValueCodec.encode(value), b)
   }
 
+  /** Gets an [[scorex.account.Address]] given a Alias.
+    * @param alias The given Alias.
+    * @return Returns an Option for an [[scorex.account.Address]].
+    */
   def getAddressOfAlias(alias: Alias): Option[Address] =
     get(makeKey(AliasToAddressPrefix, alias.bytes.arr)).map(b => Address.fromBytes(b).explicitGet())
 
+  /** Gets a Sequence of Aliases given an [[scorex.account.Address]].
+    * @param address Inputs [[scorex.account.Address]].
+    * @return Returns an Option of Sequence Alias.
+    */
   def getAddressAliases(address: Address): Option[Seq[Alias]] =
     get(makeKey(AddressToAliasPrefix, address.bytes.arr)).map(AliasSeqCodec.decode).map(_.explicitGet().value)
 
+  /** Gets an Order Fills.
+    * @param id Order ID.
+    * @return Returns an Option for OrderFillInfo.
+    */
   def getOrderFills(id: ByteStr): Option[OrderFillInfo] =
     get(makeKey(OrderFillsPrefix, id.arr)).map(OrderFillInfoValueCodec.decode).map(_.explicitGet().value)
 
+  /** Gets a Lease State given an ID.
+    * @param id Order ID.
+    * @return Returns an Option for Boolean.
+    */
   def getLeaseState(id: ByteStr): Option[Boolean] = get(makeKey(LeaseStatePrefix, id.arr)).map(b => b.head == 1.toByte)
 
+  /** Gets Active Leases.
+    * @return Returns an Option for Sequence for ByteStr.
+    */
   def getActiveLeases: Option[Seq[ByteStr]] = {
     val count = getIntProperty(LeasesCount).getOrElse(0)
     val result = (0 until count).foldLeft(Seq.empty[ByteStr]) { (r, i) =>
@@ -108,12 +181,24 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
     if (result.isEmpty) None else Some(result)
   }
 
+  /** Gets the Last Balance Snapshot Height given an [[scorex.account.Address]].
+    * @param address Inputs [[scorex.account.Address]].
+    * @return Returns an Option for Int representing the height.
+    */
   def getLastBalanceSnapshotHeight(address: Address): Option[Int] =
     get(makeKey(LastBalanceHeightPrefix, address.bytes.arr)).map(Ints.fromByteArray)
 
+  /** Puts Last Balance Snapshot Height given an [[scorex.account.Address]].
+    * @param b Input an Option for a LevelDB WriteBatch.
+    * @param address Inputs [[scorex.account.Address]].
+    * @param height Inputs the height.
+    */
   def putLastBalanceSnapshotHeight(b: Option[WriteBatch], address: Address, height: Int): Unit =
     put(makeKey(LastBalanceHeightPrefix, address.bytes.arr), Ints.toByteArray(height), b)
 
+  /** Maps Addresses into Portfolios.
+    * @return Returns the Map
+    */
   def allPortfolios: Map[Address, Portfolio] = {
     val maxAddressIndex = getIntProperty(MaxAddress).getOrElse(0)
     log.debug(s"Accounts count: $maxAddressIndex")
@@ -131,6 +216,10 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
     })(scala.collection.breakOut)
   }
 
+  /** Get a Map for ID into Balance given an [[scorex.account.Address]].
+    * @param address Inputs [[scorex.account.Address]].
+    * @return Returns an Option for Map an ID into a Balance.
+    */
   def getAssetBalanceMap(address: Address): Option[Map[ByteStr, Long]] = {
     val assets = get(makeKey(AddressAssetsPrefix, address.bytes.arr)).map(Id32SeqCodec.decode).map(_.explicitGet().value)
     if (assets.isDefined) {
@@ -143,13 +232,19 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
     } else None
   }
 
-
+  /** Remove all data.
+    * @param b Input an Option for a LevelDB WriteBatch.
+    */
   override def removeEverything(b: Option[WriteBatch]): Unit = {
     putIntProperty(MaxAddress, 0, b)
     putIntProperty(LeasesCount, 0, b)
     super.removeEverything(b)
   }
 
+  /** Input Order Fills.
+    * @param b Input an Option for a LevelDB WriteBatch.
+    * @param fills Input a Map for ID into OrderFillInfo.
+    */
   private def putOrderFills(b: Option[WriteBatch], fills: Map[ByteStr, OrderFillInfo]): Unit =
     fills.foreach { case (id, info) =>
       val key = makeKey(OrderFillsPrefix, id.arr)
@@ -158,6 +253,10 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
       put(key, OrderFillInfoValueCodec.encode(updated), b)
     }
 
+  /** Update Addresses Indexes.
+    * @param addresses An Iteratable of Array Byte.
+    * @param b Input an Option for a LevelDB WriteBatch.
+    */
   private def updateAddressesIndex(addresses: Iterable[Array[Byte]], b: Option[WriteBatch]): Unit = {
     val n = getIntProperty(MaxAddress).getOrElse(0)
     val newAddresses = addresses.foldLeft(n) { (c, a) =>
@@ -170,6 +269,10 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
     putIntProperty(MaxAddress, newAddresses, b)
   }
 
+  /** Insert Portfolios.
+    * @param b Input an Option for a LevelDB WriteBatch.
+    * @param portfolios Input a Map for Address into Portfolios.
+    */
   private def putPortfolios(b: Option[WriteBatch], portfolios: Map[Address, Portfolio]): Unit = {
     updateAddressesIndex(portfolios.keys.map(_.bytes.arr), b)
     portfolios.foreach { case (a, d) =>
@@ -198,6 +301,10 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
     }
   }
 
+  /** Inserts Issued Assets.
+    * @param b Input an Option for a LevelDB WriteBatch.
+    * @param issues Inputs a Map for ID into AssetInfo.
+    */
   private def putIssuedAssets(b: Option[WriteBatch], issues: Map[ByteStr, AssetInfo]): Unit =
     issues.foreach { case (id, info) =>
       val key = makeKey(AssetsPrefix, id.arr)
@@ -205,6 +312,10 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
       put(key, AssetInfoCodec.encode(existing.combine(info)), b)
     }
 
+  /** Inserts Account Transactions Ids.
+    * @param b Input an Option for a LevelDB WriteBatch.
+    * @param accountIds Inputs a Map for Netty Address into a List of IDs.
+    */
   private def putAccountTransactionsIds(b: Option[WriteBatch], accountIds: Map[Address, List[ByteStr]]): Unit =
     accountIds.foreach { case (a, ids) =>
       val key = makeKey(AccountTransactionsLengthsPrefix, a.bytes.arr)
@@ -216,6 +327,10 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
       put(key, Ints.toByteArray(end), b)
     }
 
+  /** Insert Aliases.
+    * @param b Input an Option for a LevelDB WriteBatch.
+    * @param aliases Inputs a Map for [[scorex.account.Alias]] into an [[scorex.account.Address]].
+    */
   private def putAliases(b: Option[WriteBatch], aliases: Map[Alias, Address]): Unit = {
     val map = aliases.foldLeft(Map.empty[Address, Seq[Alias]]) { (m, e) =>
       put(makeKey(AliasToAddressPrefix, e._1.bytes.arr), e._2.bytes.arr, b)
@@ -231,6 +346,10 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
     }
   }
 
+  /** Inserts Leases.
+    * @param b Input an Option for a LevelDB WriteBatch.
+    * @param leases Inputs a Map for ID into Boolean.
+    */
   private def putLeases(b: Option[WriteBatch], leases: Map[ByteStr, Boolean]): Unit = {
     val n = getIntProperty(LeasesCount).getOrElse(0)
     val count = leases.foldLeft(n) { (c, e) =>
@@ -248,10 +367,20 @@ class StateStorage private(db: DB, time: Time) extends SubStorage(db, "state") w
   }
 }
 
+/** State Storage Object*/
 object StateStorage {
-
+  /** The Application Factory Function.
+    * @param db LevelDB db object.
+    * @param dropExisting If true drop database.
+    * @param time Timestamp
+    * @return Returns the StateStorage created.
+    */
   def apply(db: DB, dropExisting: Boolean, time: Time = NTP): Try[StateStorage] = createWithVerification[StateStorage](new StateStorage(db, time))
 
+  /** Gets the Integer representing the Accounting Key given [[scorex.account.Address]].
+    * @param acc Inputs [[scorex.account.Address]].
+    * @param index Inputs the Account index.
+    * @return Returns the Array Byte Key.
+    */
   def accountIntKey(acc: Address, index: Int): Array[Byte] = Bytes.concat(acc.bytes.arr, Ints.toByteArray(index))
-
 }

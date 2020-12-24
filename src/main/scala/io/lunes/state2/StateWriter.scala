@@ -7,15 +7,33 @@ import io.lunes.metrics.Instrumented
 import io.lunes.state2.reader.StateReaderImpl
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  */
 trait StateWriter {
+  /**
+    *
+    * @param blockDiff
+    */
   def applyBlockDiff(blockDiff: BlockDiff): Unit
 
+  /**
+    *
+    */
   def clear(): Unit
 }
 
+/**
+  *
+  * @param p
+  * @param synchronizationToken
+  */
 class StateWriterImpl(p: StateStorage, synchronizationToken: ReentrantReadWriteLock)
   extends StateReaderImpl(p, synchronizationToken) with StateWriter with ScorexLogging with Instrumented {
-
+  /**
+    *
+    * @param blockDiff
+    */
   override def applyBlockDiff(blockDiff: BlockDiff): Unit = write("applyBlockDiff") { implicit l =>
     val oldHeight = sp().getHeight
     val newHeight = oldHeight + blockDiff.heightDiff
@@ -37,9 +55,12 @@ class StateWriterImpl(p: StateStorage, synchronizationToken: ReentrantReadWriteL
 
     sp().commit(b)
 
-    log.debug(s"BlockDiff commit complete. Persisted height = $newHeight")
+    log.info(s"BlockDiff commit complete. Persisted height = $newHeight")
   }
 
+  /**
+    *
+    */
   override def clear(): Unit = write("clear") { implicit l =>
     val b = sp().createBatch()
     sp().removeEverything(b)

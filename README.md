@@ -2,9 +2,13 @@
 
 Lunes Node development
 
-## Installation
+## Testnet installation
 
 See our [wiki](https://github.com/Lunes-platform/LunesNode/wiki/Testnet:-running-LunesNode)
+
+## Mainnet Installation
+
+See our [wiki](https://github.com/Lunes-platform/LunesNode/wiki/Node-structure-and-installation)
 
 ## Test enviroment
 

@@ -11,11 +11,24 @@ import play.api.libs.json._
 import scorex.api.http.ApiError
 import io.lunes.transaction.{Transaction, ValidationError}
 
+/**
+  * Play JavaScript Object Notation Exception
+  * @constructor Creates a Exception Object for JSON validation
+  * @param cause Inputs a Option for Throwable
+  * @param errors Sequence of Tuples of JsPath and a Sequence fo JsonValidationError.
+  */
 case class PlayJsonException(
     cause: Option[Throwable] = None,
     errors: Seq[(JsPath, Seq[JsonValidationError])] = Seq.empty) extends IllegalArgumentException with NoStackTrace
 
+/**
+  * Marshaller Trait for the [[io.lunes]] API.
+  */
 trait ApiMarshallers {
+  /**
+    * Type for a Response Marshaller parametrized Type.
+    * @tparam A Type Parameter
+    */
   type TRM[A] = ToResponseMarshaller[A]
 
   import akka.http.scaladsl.marshalling.PredefinedToResponseMarshallers._
@@ -35,6 +48,11 @@ trait ApiMarshallers {
   private lazy val jsonStringMarshaller =
     Marshaller.stringMarshaller(`application/json`)
 
+  /** UnMarshal as a JSON.
+    * @param reads Input a Reads Object of Parametrized Type A.
+    * @tparam A Parametrized Type.
+    * @return Returns a Unmarshalled Object of Parametrized Type A.
+    */
   implicit def playJsonUnmarshaller[A](implicit reads: Reads[A]): FromEntityUnmarshaller[A] =
     jsonStringUnmarshaller map { data =>
       val json = nonFatalCatch.withApply(t => throw PlayJsonException(cause = Some(t)))(Json.parse(data))
@@ -49,6 +67,12 @@ trait ApiMarshallers {
   implicit val stringUnmarshaller: FromEntityUnmarshaller[String] = PredefinedFromEntityUnmarshallers.stringUnmarshaller
   implicit val intUnmarshaller: FromEntityUnmarshaller[Int] = stringUnmarshaller.map(_.toInt)
 
+  /** Marshalls the Object.
+    * @param writes Inputs a Writes Object parametrized by Type A.
+    * @param printer Provides a function for better reability of JS Values.
+    * @tparam A Parametrized Type.
+    * @return Returns a Marshalled Object.
+    */
   implicit def playJsonMarshaller[A](
       implicit writes: Writes[A],
       printer: JsValue => String = Json.prettyPrint): ToEntityMarshaller[A] =
@@ -58,4 +82,5 @@ trait ApiMarshallers {
   implicit val stringMarshaller = PredefinedToEntityMarshallers.stringMarshaller(`text/plain`)
 }
 
+/** API Marshaller Object*/
 object ApiMarshallers extends ApiMarshallers

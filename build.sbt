@@ -5,7 +5,7 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 enablePlugins(GitVersioning)
 git.useGitDescribe := true
-git.baseVersion := "0.0.4"
+git.baseVersion := "0.0.7"
 name := "LunesNode"
 mainClass in Compile := Some("io.lunes.LunesNode")
 

@@ -8,6 +8,9 @@ import io.lunes.transaction.ValidationError.InvalidSignature
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+/**
+  *
+  */
 trait Signed extends Authorized {
   protected val signatureValid: Coeval[Boolean]
 
@@ -18,6 +21,9 @@ trait Signed extends Authorized {
   val signaturesValid: Coeval[Either[InvalidSignature, this.type]] = Coeval.evalOnce(Await.result(signaturesValidMemoized.runAsync(Signed.scheduler), Duration.Inf))
 }
 
+/**
+  *
+  */
 object Signed {
 
   type E[A] = Either[InvalidSignature, A]

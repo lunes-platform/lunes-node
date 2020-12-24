@@ -24,9 +24,19 @@ import scorex.utils.ScorexLogging
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
+/**
+  *
+  */
 trait NS {
+  /**
+    *
+    * @param remoteAddress
+    */
   def connect(remoteAddress: InetSocketAddress): Unit
 
+  /**
+    *
+    */
   def shutdown(): Unit
 
   val messages: Messages
@@ -34,8 +44,22 @@ trait NS {
   val closedChannels: Observable[Channel]
 }
 
+/**
+  *
+  */
 object NetworkServer extends ScorexLogging {
-
+  /**
+    *
+    * @param settings
+    * @param lastBlockInfos
+    * @param history
+    * @param historyReplier
+    * @param utxPool
+    * @param peerDatabase
+    * @param allChannels
+    * @param peerInfo
+    * @return
+    */
   def apply(settings: LunesSettings,
             lastBlockInfos: Observable[LastBlockInfo],
             history: NgHistory,
@@ -69,7 +93,7 @@ object NetworkServer extends ScorexLogging {
     }
 
     val lengthFieldPrepender = new LengthFieldPrepender(4)
-
+//TODO: Review this documentation
     // There are two error handlers by design. WriteErrorHandler adds a future listener to make sure writes to network
     // succeed. It is added to the head of pipeline (it's the closest of the two to actual network), because some writes
     // are initiated from the middle of the pipeline (e.g. extension requests). FatalErrorHandler, on the other hand,
@@ -90,6 +114,10 @@ object NetworkServer extends ScorexLogging {
     val peerConnections = new ConcurrentHashMap[PeerKey, Channel](10, 0.9f, 10)
     val serverHandshakeHandler = new HandshakeHandler.Server(handshake, peerInfo, peerConnections, peerDatabase, allChannels)
 
+    /**
+      *
+      * @return
+      */
     def peerSynchronizer: ChannelHandlerAdapter = {
       if (settings.networkSettings.enablePeersExchange) {
         new PeerSynchronizer(peerDatabase, settings.networkSettings.peersBroadcastInterval)
@@ -148,9 +176,19 @@ object NetworkServer extends ScorexLogging {
         mesageObserver,
         fatalErrorHandler)))
 
+    /**
+      *
+      * @param channel
+      * @param event
+      * @return
+      */
     def formatOutgoingChannelEvent(channel: Channel, event: String) = s"${id(channel)} $event, outgoing channel count: ${outgoingChannels.size()}"
 
-
+    /**
+      *
+      * @param remoteAddress
+      * @param closeFuture
+      */
     def handleOutgoingChannelClosed(remoteAddress: InetSocketAddress)(closeFuture: ChannelFuture): Unit = {
       outgoingChannels.remove(remoteAddress, closeFuture.channel())
       if (!shutdownInitiated) peerDatabase.suspendAndClose(closeFuture.channel())
@@ -161,6 +199,11 @@ object NetworkServer extends ScorexLogging {
         log.debug(formatOutgoingChannelEvent(closeFuture.channel(), s"Channel closed: ${Option(closeFuture.cause()).map(_.getMessage).getOrElse("no message")}"))
     }
 
+    /**
+      *
+      * @param remoteAddress
+      * @param thisConnFuture
+      */
     def handleConnectionAttempt(remoteAddress: InetSocketAddress)(thisConnFuture: ChannelFuture): Unit = {
       if (thisConnFuture.isSuccess) {
         log.trace(formatOutgoingChannelEvent(thisConnFuture.channel(), "Connection established"))
@@ -181,7 +224,10 @@ object NetworkServer extends ScorexLogging {
       }
     }
 
-
+    /**
+      *
+      * @param remoteAddress
+      */
     def doConnect(remoteAddress: InetSocketAddress): Unit =
       outgoingChannels.computeIfAbsent(remoteAddress, _ => {
         val newConnFuture = bootstrap.connect(remoteAddress)
@@ -194,11 +240,19 @@ object NetworkServer extends ScorexLogging {
       import scala.collection.JavaConverters._
       val outgoing = outgoingChannels.keySet.iterator().asScala.toVector
 
+      /**
+        *
+        * @return
+        */
       def outgoingStr = outgoing.map(_.toString).sorted.mkString("[", ", ", "]")
 
       val all = peerInfo.values().iterator().asScala.flatMap(_.declaredAddress).toVector
       val incoming = all.filterNot(outgoing.contains)
 
+      /**
+        *
+        * @return
+        */
       def incomingStr = incoming.map(_.toString).sorted.mkString("[", ", ", "]")
 
       log.trace(s"Outgoing: $outgoingStr ++ incoming: $incomingStr")
@@ -217,7 +271,9 @@ object NetworkServer extends ScorexLogging {
       )
     }
 
-
+    /**
+      *
+      */
     def doShutdown(): Unit = try {
       shutdownInitiated = true
       connectTask.cancel(false)
@@ -233,12 +289,24 @@ object NetworkServer extends ScorexLogging {
     }
 
     new NS {
+      /**
+        *
+        * @param remoteAddress
+        */
       override def connect(remoteAddress: InetSocketAddress): Unit = doConnect(remoteAddress)
 
+      /**
+        *
+        */
       override def shutdown(): Unit = doShutdown()
 
+      /**
+        *
+        */
       override val messages: Messages = newtworkMessages
-
+      /**
+        *
+        */
       override val closedChannels: Observable[Channel] = closedChannelsSubject
     }
   }

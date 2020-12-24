@@ -7,9 +7,12 @@ import io.lunes.utils.base58Length
 
 import scala.util.{Failure, Try}
 
+/**
+  *
+  */
 object TransactionParser {
 
-  object TransactionType extends Enumeration {
+  object TransactionType extends Enumeration { // talvez case objects
     val GenesisTransaction = Value(1)
     val PaymentTransaction = Value(2)
     val IssueTransaction = Value(3)
@@ -35,6 +38,11 @@ object TransactionParser {
   val KeyLength = 32
   val KeyStringLength: Int = base58Length(KeyLength)
 
+  /**
+    *
+    * @param data
+    * @return
+    */
   def parseBytes(data: Array[Byte]): Try[Transaction] =
     data.head match {
       case txType: Byte if txType == TransactionType.GenesisTransaction.id =>

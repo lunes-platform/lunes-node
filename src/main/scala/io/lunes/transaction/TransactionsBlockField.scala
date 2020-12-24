@@ -8,14 +8,26 @@ import io.lunes.network.TransactionSpec
 import play.api.libs.json.{JsArray, JsObject, Json}
 import scorex.block.BlockField
 
+/**
+  *
+  */
 trait TransactionsBlockField extends BlockField[Seq[Transaction]]
 
+/**
+  *
+  */
 object TransactionsBlockField {
   def apply(version: Int, value: Seq[Transaction]): TransactionsBlockField = version match {
     case 1 | 2 => TransactionsBlockFieldVersion1or2(value)
     case 3 => TransactionsBlockFieldVersion3(value)
   }
 
+  /**
+    *
+    * @param value
+    * @param serTxCount
+    * @return
+    */
   def serTxs(value: Seq[Transaction], serTxCount: Array[Byte]): Array[Byte] = {
     val byteBuffer = new ByteArrayOutputStream(value.size * TransactionSpec.maxLength / 2)
     byteBuffer.write(serTxCount, 0, serTxCount.length)
@@ -29,20 +41,40 @@ object TransactionsBlockField {
   }
 }
 
+/**
+  *
+  * @param value
+  */
 case class TransactionsBlockFieldVersion1or2(override val value: Seq[Transaction]) extends TransactionsBlockField {
   override val name = "transactions"
 
+  /**
+    *
+    * @return
+    */
   override def j: JsObject = Json.obj(name -> JsArray(value.map(_.json())))
 
   override def b = TransactionsBlockField.serTxs(value, Array(value.size.toByte))
 
 }
 
+/**
+  *
+  * @param value
+  */
 case class TransactionsBlockFieldVersion3(override val value: Seq[Transaction]) extends TransactionsBlockField {
   override val name = "transactions"
 
+  /**
+    *
+    * @return
+    */
   override def j: JsObject = Json.obj(name -> JsArray(value.map(_.json())))
 
+  /**
+    *
+    * @return
+    */
   override def b = {
     val txCount = value.size
     val bb = ByteBuffer.allocate(4)

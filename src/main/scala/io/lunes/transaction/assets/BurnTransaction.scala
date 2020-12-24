@@ -11,6 +11,15 @@ import io.lunes.transaction.{ValidationError, _}
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  *
+  * @param sender
+  * @param assetId
+  * @param amount
+  * @param fee
+  * @param timestamp
+  * @param signature
+  */
 case class BurnTransaction private(sender: PublicKeyAccount,
                                    assetId: ByteStr,
                                    amount: Long,
@@ -42,14 +51,25 @@ case class BurnTransaction private(sender: PublicKeyAccount,
 
 }
 
-
+/**
+  *
+  */
 object BurnTransaction {
-
+  /**
+    *
+    * @param bytes
+    * @return
+    */
   def parseBytes(bytes: Array[Byte]): Try[BurnTransaction] = Try {
     require(bytes.head == TransactionType.BurnTransaction.id)
     parseTail(bytes.tail).get
   }
 
+  /**
+    *
+    * @param bytes
+    * @return
+    */
   def parseTail(bytes: Array[Byte]): Try[BurnTransaction] = Try {
     val sender = PublicKeyAccount(bytes.slice(0, KeyLength))
     val assetId = ByteStr(bytes.slice(KeyLength, KeyLength + AssetIdLength))
@@ -64,6 +84,16 @@ object BurnTransaction {
       .fold(left => Failure(new Exception(left.toString)), right => Success(right))
   }.flatten
 
+  /**
+    *
+    * @param sender
+    * @param assetId
+    * @param quantity
+    * @param fee
+    * @param timestamp
+    * @param signature
+    * @return
+    */
   def create(sender: PublicKeyAccount,
              assetId: ByteStr,
              quantity: Long,
@@ -78,6 +108,15 @@ object BurnTransaction {
       Right(BurnTransaction(sender, assetId, quantity, fee, timestamp, signature))
     }
 
+  /**
+    *
+    * @param sender
+    * @param assetId
+    * @param quantity
+    * @param fee
+    * @param timestamp
+    * @return
+    */
   def create(sender: PrivateKeyAccount,
              assetId: ByteStr,
              quantity: Long,

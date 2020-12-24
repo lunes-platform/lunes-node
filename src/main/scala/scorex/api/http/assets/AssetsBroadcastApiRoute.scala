@@ -24,8 +24,31 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings,
                                    allChannels: ChannelGroup) extends ApiRoute with BroadcastRoute {
 
   override val route: Route = pathPrefix("assets" / "broadcast") {
-    reissue ~ transfer ~ burnRoute ~ batchTransfer ~ exchange
+    issue ~ reissue ~ transfer ~ burnRoute ~ batchTransfer ~ exchange
   }
+
+		
+	   @Path("/issue")	
+	   @ApiOperation(value = "Broadcast signed Asset issue",	
+		 notes = "Publish signed Asset issue transaction to the Blockchain",	
+		 httpMethod = "POST",	
+		 consumes = "application/json",	
+		 produces = "application/json")	
+	   @ApiImplicitParams(Array(	
+		 new ApiImplicitParam(	
+		   name = "body",	
+		   value = "Json with signed Issue transaction",	
+		   required = true,	
+		   paramType = "body",	
+		   dataType = "scorex.api.http.assets.SignedIssueRequest")))	
+	   @ApiResponses(Array(	
+		 new ApiResponse(code = 200, message = "Json with signed Asset issue transaction contained Asset ID"),	
+		 new ApiResponse(code = 400, message = "Json with error description", response = classOf[ApiErrorResponse])))	
+	   def issue: Route = (path("issue") & post) {	
+		 json[SignedIssueRequest] { issueReq =>	
+		   doBroadcast(issueReq.toTx)	
+		 }	
+	   }	
 
   @Path("/reissue")
   @ApiOperation(value = "Broadcast signed Asset reissue",
@@ -85,7 +108,7 @@ case class AssetsBroadcastApiRoute(settings: RestAPISettings,
       paramType = "body",
       dataType = "scorex.api.http.assets.SignedTransferRequest",
       allowMultiple = true,
-      defaultValue = "[{\n  \"assetId\": \"E9yZC4cVhCDfbjFJCc9CqkAtkoFy5KaCe64iaxHM2adG\",\n  \"senderPublicKey\": \"CRxqEuxhdZBEHX42MU4FfyJxuHmbDBTaHMhM3Uki7pLw\",\n  \"recipient\": \"3Mx2afTZ2KbRrLNbytyzTtXukZvqEB8SkW7\",\n  \"fee\": 100000,\n  \"amount\": 5500000000,\n  \"attachment\": \"BJa6cfyGUmzBFTj3vvvaew\",\n  \"timestamp\": 1479222433704, \n  \"signature\": \"2TyN8pNS7mS9gfCbX2ktpkWVYckoAmRmDZzKH3K35DKs6sUoXHArzukV5hvveK9t79uzT3cA8CYZ9z3Utj6CnCEo\"\n, {\n  \"assetId\": \"E9yZC4cVhCDfbjFJCc9CqkAtkoFy5KaCe64iaxHM2adG\",\n  \"senderPublicKey\": \"CRxqEuxhdZBEHX42MU4FfyJxuHmbDBTaHMhM3Uki7pLw\",\n  \"recipient\": \"3Mx2afTZ2KbRrLNbytyzTtXukZvqEB8SkW7\",\n  \"fee\": 100000,\n  \"amount\": 5500000000,\n  \"attachment\": \"BJa6cfyGUmzBFTj3vvvaew\",\n  \"timestamp\": 1479222433704, \n  \"signature\": \"2TyN8pNS7mS9gfCbX2ktpkWVYckoAmRmDZzKH3K35DKs6sUoXHArzukV5hvveK9t79uzT3cA8CYZ9z3Utj6CnCEo\"\n}]"
+      defaultValue = "[{\n  \"assetId\": \"E9yZC4cVhCDfbjFJCc9CqkAtkoFy5KaCe64iaxHM2adG\",\n  \"senderPublicKey\": \"CRxqEuxhdZBEHX42MU4FfyJxuHmbDBTaHMhM3Uki7pLw\",\n  \"recipient\": \"3Mx2afTZ2KbRrLNbytyzTtXukZvqEB8SkW7\",\n  \"fee\": 100000,\n  \"amount\": 5500000000,\n  \"timestamp\": 1479222433704, \n  \"signature\": \"2TyN8pNS7mS9gfCbX2ktpkWVYckoAmRmDZzKH3K35DKs6sUoXHArzukV5hvveK9t79uzT3cA8CYZ9z3Utj6CnCEo\"\n, {\n  \"assetId\": \"E9yZC4cVhCDfbjFJCc9CqkAtkoFy5KaCe64iaxHM2adG\",\n  \"senderPublicKey\": \"CRxqEuxhdZBEHX42MU4FfyJxuHmbDBTaHMhM3Uki7pLw\",\n  \"recipient\": \"3Mx2afTZ2KbRrLNbytyzTtXukZvqEB8SkW7\",\n  \"fee\": 100000,\n  \"amount\": 5500000000,\n  \"timestamp\": 1479222433704, \n  \"signature\": \"2TyN8pNS7mS9gfCbX2ktpkWVYckoAmRmDZzKH3K35DKs6sUoXHArzukV5hvveK9t79uzT3cA8CYZ9z3Utj6CnCEo\"\n}]"
     )
   ))
   def batchTransfer: Route = (path("batch-transfer") & post) {

@@ -14,8 +14,20 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.util.control.NonFatal
 
+/**
+  *
+  */
 object Metrics extends ScorexLogging {
 
+  /**
+    *
+    * @param uri
+    * @param db
+    * @param username
+    * @param password
+    * @param batchActions
+    * @param batchFlashDuration
+    */
   case class InfluxDbSettings(uri: URI,
                               db: String,
                               username: Option[String],
@@ -23,6 +35,12 @@ object Metrics extends ScorexLogging {
                               batchActions: Int,
                               batchFlashDuration: FiniteDuration)
 
+  /**
+    *
+    * @param enable
+    * @param nodeId
+    * @param influxDb
+    */
   case class Settings(enable: Boolean,
                       nodeId: Int,
                       influxDb: InfluxDbSettings)
@@ -32,6 +50,11 @@ object Metrics extends ScorexLogging {
   private var settings: Settings = _
   private var db: Option[InfluxDB] = None
 
+  /**
+    *
+    * @param config
+    * @return
+    */
   def start(config: Settings): Future[Boolean] = Task {
     shutdown()
     settings = config
@@ -64,10 +87,17 @@ object Metrics extends ScorexLogging {
     db.nonEmpty
   }.runAsyncLogErr
 
+  /**
+    *
+    */
   def shutdown(): Unit = Task {
     db.foreach(_.close())
   }.runAsyncLogErr
 
+  /**
+    *
+    * @param b
+    */
   def write(b: Point.Builder): Unit = {
     val time = NTP.getTimestamp()
     Task {
@@ -82,6 +112,10 @@ object Metrics extends ScorexLogging {
     }.runAsyncLogErr
   }
 
+  /**
+    *
+    * @param name
+    */
   def writeEvent(name: String): Unit = write(Point.measurement(name))
 
 }

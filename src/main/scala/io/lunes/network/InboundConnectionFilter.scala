@@ -9,6 +9,12 @@ import io.netty.channel.{ChannelFuture, ChannelHandlerContext}
 import io.netty.handler.ipfilter.AbstractRemoteAddressFilter
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  * @param peerDatabase
+  * @param maxInboundConnections
+  * @param maxConnectionsPerHost
+  */
 @Sharable
 class InboundConnectionFilter(peerDatabase: PeerDatabase, maxInboundConnections: Int, maxConnectionsPerHost: Int)
   extends AbstractRemoteAddressFilter[InetSocketAddress] with ScorexLogging {
@@ -23,6 +29,12 @@ class InboundConnectionFilter(peerDatabase: PeerDatabase, maxInboundConnections:
     emptyChannelFuture
   }
 
+  /**
+    *
+    * @param ctx
+    * @param remoteAddress
+    * @return
+    */
   override def accept(ctx: ChannelHandlerContext, remoteAddress: InetSocketAddress): Boolean = Option(remoteAddress.getAddress) match {
     case None =>
       log.debug(s"Can't obtain an address from $remoteAddress")
@@ -46,9 +58,20 @@ class InboundConnectionFilter(peerDatabase: PeerDatabase, maxInboundConnections:
       accepted
   }
 
+  /**
+    *
+    * @param ctx
+    * @param remoteAddress
+    */
   override def channelAccepted(ctx: ChannelHandlerContext, remoteAddress: InetSocketAddress): Unit =
     ctx.channel().closeFuture().addListener((_: ChannelFuture) => Option(remoteAddress.getAddress).foreach(dec))
 
+  /**
+    *
+    * @param ctx
+    * @param remoteAddress
+    * @return
+    */
   override def channelRejected(ctx: ChannelHandlerContext, remoteAddress: InetSocketAddress): ChannelFuture =
     Option(remoteAddress.getAddress).fold(emptyChannelFuture)(dec)
 }

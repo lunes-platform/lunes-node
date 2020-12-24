@@ -3,11 +3,28 @@ package io.lunes.settings
 import com.typesafe.config.Config
 import net.ceedubs.ficus.Ficus._
 
+/**
+  *
+  * @param enable
+  * @param bindAddress
+  * @param port
+  * @param apiKeyHash
+  * @param cors
+  * @param apiKeyDifferentHost
+  */
 case class RestAPISettings(enable: Boolean, bindAddress: String, port: Int, apiKeyHash: String, cors: Boolean, apiKeyDifferentHost: Boolean)
 
+/**
+  *
+  */
 object RestAPISettings {
   val configPath: String = "lunes.rest-api"
 
+  /**
+    *
+    * @param config
+    * @return
+    */
   def fromConfig(config: Config): RestAPISettings = {
     RestAPISettings(enable = config.as[Boolean](s"$configPath.enable"),
       bindAddress = config.as[String](s"$configPath.bind-address"),

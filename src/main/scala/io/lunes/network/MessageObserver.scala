@@ -8,6 +8,9 @@ import io.lunes.transaction.History.BlockchainScore
 import io.lunes.transaction.{History, Transaction}
 import scorex.utils.ScorexLogging
 
+/**
+  *
+  */
 @Sharable
 class MessageObserver extends ChannelInboundHandlerAdapter with ScorexLogging {
 
@@ -21,6 +24,11 @@ class MessageObserver extends ChannelInboundHandlerAdapter with ScorexLogging {
   private val microblockResponses = ConcurrentSubject.publish[(Channel, MicroBlockResponse)]
   private val transactions = ConcurrentSubject.publish[(Channel, Transaction)]
 
+  /**
+    *
+    * @param ctx
+    * @param msg
+    */
   override def channelRead(ctx: ChannelHandlerContext, msg: AnyRef): Unit = msg match {
     case b: Block => blocks.onNext((ctx.channel(), b))
     case sc: History.BlockchainScore => blockchainScores.onNext((ctx.channel(), sc))
@@ -33,6 +41,9 @@ class MessageObserver extends ChannelInboundHandlerAdapter with ScorexLogging {
 
   }
 
+  /**
+    *
+    */
   def shutdown(): Unit = {
     signatures.onComplete()
     blocks.onComplete()
@@ -44,9 +55,16 @@ class MessageObserver extends ChannelInboundHandlerAdapter with ScorexLogging {
   }
 }
 
+/**
+  *
+  */
 object MessageObserver {
   type Messages = (ChannelObservable[Signatures], ChannelObservable[Block], ChannelObservable[BlockchainScore], ChannelObservable[Checkpoint], ChannelObservable[MicroBlockInv], ChannelObservable[MicroBlockResponse], ChannelObservable[Transaction])
 
+  /**
+    *
+    * @return
+    */
   def apply(): (MessageObserver, Messages) = {
     val mo = new MessageObserver()
     (mo, (mo.signatures, mo.blocks, mo.blockchainScores, mo.checkpoints, mo.microblockInvs, mo.microblockResponses, mo.transactions))

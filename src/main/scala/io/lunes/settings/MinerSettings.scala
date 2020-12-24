@@ -4,6 +4,17 @@ import io.lunes.mining.Miner
 
 import scala.concurrent.duration.FiniteDuration
 
+/**
+  *
+  * @param enable
+  * @param quorum
+  * @param intervalAfterLastBlockThenGenerationIsAllowed
+  * @param microBlockInterval
+  * @param minimalBlockGenerationOffset
+  * @param maxTransactionsInKeyBlock
+  * @param maxTransactionsInMicroBlock
+  * @param minMicroBlockAge
+  */
 case class MinerSettings(
     enable: Boolean,
     quorum: Int,

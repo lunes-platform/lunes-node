@@ -12,6 +12,9 @@ import scorex.utils.ScorexLogging
 
 import scala.util.{Left, Right}
 
+/**
+  *
+  */
 object BalanceDiffValidation extends ScorexLogging with Instrumented {
 
   def apply[T <: Transaction](s: SnapshotStateReader, fs: FunctionalitySettings)(d: Diff): Either[AccountBalanceError, Diff] = {

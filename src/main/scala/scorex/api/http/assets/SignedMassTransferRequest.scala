@@ -7,7 +7,7 @@ import play.api.libs.json._
 import scorex.account.PublicKeyAccount
 import scorex.api.http.BroadcastRequest
 import io.lunes.transaction.assets.MassTransferTransaction.Transfer
-import io.lunes.transaction.assets.{MassTransferTransaction, TransferTransaction}
+import io.lunes.transaction.assets.MassTransferTransaction
 import io.lunes.transaction.{AssetIdStringLength, Proofs, ValidationError}
 
 object SignedMassTransferRequest {
@@ -17,7 +17,6 @@ object SignedMassTransferRequest {
       (JsPath \ "transfers").read[List[Transfer]] and
       (JsPath \ "fee").read[Long] and
       (JsPath \ "timestamp").read[Long] and
-      (JsPath \ "attachment").readNullable[String] and
       (JsPath \ "proofs").read[List[String]].orElse((JsPath \ "signature").read[String].map(List(_)))
     )(SignedMassTransferRequest.apply _)
 
@@ -35,8 +34,6 @@ case class SignedMassTransferRequest(@ApiModelProperty(value = "Base58 encoded s
                                      fee: Long,
                                      @ApiModelProperty(required = true)
                                      timestamp: Long,
-                                     @ApiModelProperty(value = "Base58 encoded attachment")
-                                     attachment: Option[String],
                                      @ApiModelProperty(required = true)
                                      proofs: List[String]) extends BroadcastRequest {
   def toTx: Either[ValidationError, MassTransferTransaction] = for {
@@ -44,8 +41,7 @@ case class SignedMassTransferRequest(@ApiModelProperty(value = "Base58 encoded s
     _assetId <- parseBase58ToOption(assetId.filter(_.length > 0), "invalid.assetId", AssetIdStringLength)
     _proofBytes <- proofs.traverse(s => parseBase58(s, "invalid proof", Proofs.MaxProofStringSize))
     _proofs <- Proofs.create(_proofBytes)
-    _attachment <- parseBase58(attachment.filter(_.length > 0), "invalid.attachment", TransferTransaction.MaxAttachmentStringSize)
     _transfers <- MassTransferTransaction.parseTransfersList(transfers)
-    t <- MassTransferTransaction.create(Proofs.Version, _assetId, _sender, _transfers, timestamp, fee, _attachment.arr, _proofs)
+    t <- MassTransferTransaction.create(Proofs.Version, _assetId, _sender, _transfers, timestamp, fee, _proofs)
   } yield t
 }
