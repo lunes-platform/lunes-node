@@ -2,6 +2,7 @@ package io.lunes.transaction
 
 import com.google.common.base.Charsets
 import io.lunes.security.SecurityChecker
+import io.lunes.settings.Constants
 import io.lunes.state2.ByteStr
 import io.lunes.transaction.assets._
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
@@ -72,18 +73,8 @@ object TransactionFactory {
             request.fee
           )
       } yield tx
-    } else {
-      val extendedCause =
-        if (flagConditionSender && flagConditionRecipient)
-          "Sender and Recipient were marked on security check"
-        else if (flagConditionSender) "Sender is marked on security check"
-        else "Recipient is marked on security check"
-      Left(
-        ValidationError.FrozenAssetTransaction(
-          s"The transcation could not be processed due $extendedCause"
-        )
-      )
-    }
+    } else
+      Left(ValidationError.FrozenAssetTransaction(request.sender))
   }
 
   /**
@@ -100,19 +91,12 @@ object TransactionFactory {
   ): Either[ValidationError, MassTransferTransaction] = {
     val flagConditionSender = SecurityChecker.checkAddress(request.sender)
     val flagConditionRecipient =
-      request.transfers.exists(x => SecurityChecker.checkAddress(x.recipient))
+      request.transfers.exists(
+        recipient => SecurityChecker.checkAddress(recipient.recipient)
+      )
     val flagCondition = flagConditionSender || flagConditionRecipient
     if (flagCondition) {
-      val extendedCause =
-        if (flagConditionSender && flagConditionRecipient)
-          "Sender and Recipient were marked on security check"
-        else if (flagConditionSender) "Sender is marked on security check"
-        else "Recipient is marked on security check"
-      Left(
-        ValidationError.FrozenAssetTransaction(
-          s"The transcation could not be processed due $extendedCause"
-        )
-      )
+      Left(ValidationError.FrozenAssetTransaction(request.sender))
     } else {
       for {
         senderPrivateKey <- wallet.findWallet(request.sender)
@@ -140,21 +124,25 @@ object TransactionFactory {
     */
   def issueAsset(request: IssueRequest,
                  wallet: Wallet,
-                 time: Time): Either[ValidationError, IssueTransaction] =
-    for {
-      senderPrivateKey <- wallet.findWallet(request.sender)
-      timestamp = request.timestamp.getOrElse(time.getTimestamp())
-      tx <- IssueTransaction.create(
-        senderPrivateKey,
-        request.name.getBytes(Charsets.UTF_8),
-        request.description.getBytes(Charsets.UTF_8),
-        request.quantity,
-        request.decimals,
-        request.reissuable,
-        request.fee,
-        timestamp
-      )
-    } yield tx
+                 time: Time,
+                 balance: Long): Either[ValidationError, IssueTransaction] =
+    if (balance < Constants.MinimalStakeForIssueOrReissue)
+      Left(ValidationError.InsufficientLunesInStake(request.sender, balance))
+    else
+      for {
+        senderPrivateKey <- wallet.findWallet(request.sender)
+        timestamp = request.timestamp.getOrElse(time.getTimestamp())
+        tx <- IssueTransaction.create(
+          senderPrivateKey,
+          request.name.getBytes(Charsets.UTF_8),
+          request.description.getBytes(Charsets.UTF_8),
+          request.quantity,
+          request.decimals,
+          request.reissuable,
+          request.fee,
+          timestamp
+        )
+      } yield tx
 
   /**
     *
@@ -165,7 +153,8 @@ object TransactionFactory {
     */
   def lease(request: LeaseRequest,
             wallet: Wallet,
-            time: Time): Either[ValidationError, LeaseTransaction] =
+            time: Time,
+            balance: Long): Either[ValidationError, LeaseTransaction] =
     for {
       senderPrivateKey <- wallet.findWallet(request.sender)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
@@ -229,21 +218,28 @@ object TransactionFactory {
     * @param time
     * @return
     */
-  def reissueAsset(request: ReissueRequest,
-                   wallet: Wallet,
-                   time: Time): Either[ValidationError, ReissueTransaction] =
-    for {
-      pk <- wallet.findWallet(request.sender)
-      timestamp = request.timestamp.getOrElse(time.getTimestamp())
-      tx <- ReissueTransaction.create(
-        pk,
-        ByteStr.decodeBase58(request.assetId).get,
-        request.quantity,
-        request.reissuable,
-        request.fee,
-        timestamp
-      )
-    } yield tx
+  def reissueAsset(
+    request: ReissueRequest,
+    wallet: Wallet,
+    time: Time,
+    balance: Long
+  ): Either[ValidationError, ReissueTransaction] = {
+    if (balance < Constants.MinimalStakeForIssueOrReissue)
+      Left(ValidationError.InsufficientLunesInStake(request.sender, balance))
+    else
+      for {
+        pk <- wallet.findWallet(request.sender)
+        timestamp = request.timestamp.getOrElse(time.getTimestamp())
+        tx <- ReissueTransaction.create(
+          pk,
+          ByteStr.decodeBase58(request.assetId).get,
+          request.quantity,
+          request.reissuable,
+          request.fee,
+          timestamp
+        )
+      } yield tx
+  }
 
   /**
     *

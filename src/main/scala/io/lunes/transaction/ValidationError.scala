@@ -1,10 +1,11 @@
 package io.lunes.transaction
 
 import com.google.common.base.Throwables
+import io.lunes.settings.Constants
 import io.lunes.state2.ByteStr
+import io.lunes.transaction.assets.exchange.Order
 import scorex.account.{Address, Alias}
 import scorex.block.{Block, MicroBlock}
-import io.lunes.transaction.assets.exchange.Order
 
 import scala.util.Either
 
@@ -63,5 +64,14 @@ object ValidationError {
       s"MicroBlockAppendError($err, ${microBlock.totalResBlockSig} ~> ${microBlock.prevResBlockSig.trim}])"
   }
   case class ActivationError(err: String) extends ValidationError
-  case class FrozenAssetTransaction(err: String) extends ValidationError
+  case class FrozenAssetTransaction(address: String) extends ValidationError {
+    override def toString: String =
+      s"Address $address cannot perform this transaction."
+  }
+  case class InsufficientLunesInStake(address: String, balance: Long)
+      extends ValidationError {
+    private def convertBalance(balance: Long): Double = balance / 100000000
+    override def toString: String =
+      s"Address $address does not have enough balance (${convertBalance(balance)} Lunes). Minimum balance is ${convertBalance(Constants.MinimalStakeForIssueOrReissue)}."
+  }
 }
