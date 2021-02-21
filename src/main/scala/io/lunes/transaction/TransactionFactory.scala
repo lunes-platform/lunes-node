@@ -122,12 +122,17 @@ object TransactionFactory {
     * @param time
     * @return
     */
-  def issueAsset(request: IssueRequest,
-                 wallet: Wallet,
-                 time: Time,
-                 balance: Long): Either[ValidationError, IssueTransaction] =
-    if (balance < Constants.MinimalStakeForIssueOrReissue)
-      Left(ValidationError.InsufficientLunesInStake(request.sender, balance))
+  def issueAsset(
+    request: IssueRequest,
+    wallet: Wallet,
+    time: Time,
+    balance: Option[Long] = None
+  ): Either[ValidationError, IssueTransaction] =
+    if (balance.getOrElse(0L) < Constants.MinimalStakeForIssueOrReissue)
+      Left(
+        ValidationError
+          .InsufficientLunesInStake(request.sender, balance.getOrElse(0))
+      )
     else
       for {
         senderPrivateKey <- wallet.findWallet(request.sender)
@@ -153,8 +158,7 @@ object TransactionFactory {
     */
   def lease(request: LeaseRequest,
             wallet: Wallet,
-            time: Time,
-            balance: Long): Either[ValidationError, LeaseTransaction] =
+            time: Time): Either[ValidationError, LeaseTransaction] =
     for {
       senderPrivateKey <- wallet.findWallet(request.sender)
       recipientAcc <- AddressOrAlias.fromString(request.recipient)
@@ -222,10 +226,13 @@ object TransactionFactory {
     request: ReissueRequest,
     wallet: Wallet,
     time: Time,
-    balance: Long
+    balance: Option[Long] = None
   ): Either[ValidationError, ReissueTransaction] = {
-    if (balance < Constants.MinimalStakeForIssueOrReissue)
-      Left(ValidationError.InsufficientLunesInStake(request.sender, balance))
+    if (balance.getOrElse(0L) < Constants.MinimalStakeForIssueOrReissue)
+      Left(
+        ValidationError
+          .InsufficientLunesInStake(request.sender, balance.getOrElse(0))
+      )
     else
       for {
         pk <- wallet.findWallet(request.sender)

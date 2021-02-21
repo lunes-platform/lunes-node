@@ -287,8 +287,8 @@ case class AssetsApiRoute(settings: RestAPISettings,
         )
         .getOrElse(InvalidAddress)
     } match {
-      case Balance(_, _, balance) => balance
-      case _                      => 0L
+      case Balance(_, _, balance) => Some(balance)
+      case _                      => None
     }
   }
 
