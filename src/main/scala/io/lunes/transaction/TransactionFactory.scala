@@ -136,7 +136,7 @@ object TransactionFactory {
     balance: Option[Long] = None
   ): Either[ValidationError, IssueTransaction] = {
     val requestValidator = feeValidatorSelectionForIssueRequest(request)
-    if (requestValidator.doesntSatisfyMinimalFee(balance.getOrElse(0L)))
+    if (requestValidator.dontSatisfyMinimalFee(balance.getOrElse(0L)))
       Left(requestValidator match {
         case NFTFee =>
           ValidationError.InsufficientLunesInStakeForNFT(
@@ -243,7 +243,7 @@ object TransactionFactory {
     time: Time,
     balance: Option[Long] = None
   ): Either[ValidationError, ReissueTransaction] = {
-    if (RegularAssetFee.doesntSatisfyMinimalFee(balance.getOrElse(0L)))
+    if (RegularAssetFee.dontSatisfyMinimalFee(balance.getOrElse(0L)))
       Left(
         ValidationError
           .InsufficientLunesInStake(request.sender, balance.getOrElse(0))
