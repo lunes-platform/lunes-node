@@ -45,7 +45,7 @@ object Dependencies {
 
 
   lazy val db = Seq(
-    "org.ethereum" % "leveldbjni-all" % "1.18.3"
+    "org.ethereum" %% "leveldbjni-all" % "1.18.3"
   )
 
   lazy val logging = Seq(
@@ -64,7 +64,7 @@ object Dependencies {
   lazy val matcher = Seq(
     akkaModule("persistence"),
     "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.4.18.1" % "test",
-    "org.ethereum" % "leveldbjni-all" % "1.18.3"
+    "org.ethereum" %% "leveldbjni-all" % "1.18.3"
     )
 
   lazy val metrics = Seq("core", "system-metrics").map(kamonModule) ++ Seq(
