@@ -26,7 +26,7 @@ scalacOptions ++= Seq(
   "-Xlint"
 )
 
-resolvers += Resolver.bintrayRepo("ethereum", "maven")
+resolvers += Resolver.bintrayRepo("fusesource", "maven")
 
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
