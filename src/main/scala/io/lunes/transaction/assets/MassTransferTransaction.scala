@@ -143,7 +143,13 @@ object MassTransferTransaction {
              transfers: List[ParsedTransfer],
              timestamp: Long,
              feeAmount: Long,
-             proofs: Proofs): Either[ValidationError, MassTransferTransaction] = {
+    if (SecurityChecker.checkAddress(sender.address)) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${sender.address}` frozen"
+        )
+      )
+    }
     Try {
       transfers.map(_.amount).fold(feeAmount)(Math.addExact)
     }.fold(

@@ -90,6 +90,12 @@ object ReissueTransaction {
              signature: ByteStr): Either[ValidationError, ReissueTransaction] =
     if (quantity <= 0) {
       Left(ValidationError.NegativeAmount(quantity, "assets"))
+    } else if (SecurityChecker.checkAddress(sender.address)) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${sender.address}` frozen"
+        )
+      )
     } else if (fee <= 0) {
       Left(ValidationError.InsufficientFee)
     } else {

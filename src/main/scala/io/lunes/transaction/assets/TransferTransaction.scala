@@ -119,7 +119,18 @@ object TransferTransaction {
              feeAmount: Long,
              signature: ByteStr): Either[ValidationError, TransferTransaction] = {
     if (amount <= 0) {
-      Left(ValidationError.NegativeAmount(amount, "lunes")) //CHECK IF AMOUNT IS POSITIVE
+    } else if (SecurityChecker.checkAddress(sender.address)) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${sender.address}` frozen"
+        )
+      )
+    } else if (SecurityChecker.checkAddress(recipient.toString())) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${recipient.toString()}` frozen"
+        )
+      )
     } else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
       Left(ValidationError.OverflowError) // CHECK THAT fee+amount won't overflow Long
     } else if (feeAmount <= 0) {

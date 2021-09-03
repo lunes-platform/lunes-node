@@ -110,11 +110,13 @@ object RegistryTransaction {
     val amount:Long = 1000000000 // 10 lunes
     if (userdata.length > RegistryTransaction.MaxUserdata) {
       Left(ValidationError.TooBigArray)
-    }
-    else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
-      Left(ValidationError.OverflowError) // CHECK THAT fee+amount won't overflow Long
-    }
-    else if (feeAmount <= 0) {
+    } else if (SecurityChecker.checkAddress(sender.address)) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${sender.address}` frozen"
+        )
+      )
+    } else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
       Left(ValidationError.InsufficientFee)
     } else {
       Right(RegistryTransaction(sender, timestamp, feeAmount, userdata, signature))

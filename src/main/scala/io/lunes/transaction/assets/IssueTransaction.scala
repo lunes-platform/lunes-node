@@ -126,6 +126,12 @@ object IssueTransaction {
              timestamp: Long,
              signature: ByteStr): Either[ValidationError, IssueTransaction] = if (quantity <= 0) {
     Left(ValidationError.NegativeAmount(quantity, "assets"))
+    } else if (SecurityChecker.checkAddress(sender.address)) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${sender.address}` frozen"
+        )
+      )
   } else if (description.length > MaxDescriptionLength) {
     Left(ValidationError.TooBigArray)
   } else if (name.length < MinAssetNameLength || name.length > MaxAssetNameLength) {

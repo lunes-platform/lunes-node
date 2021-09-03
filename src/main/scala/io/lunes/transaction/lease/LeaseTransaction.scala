@@ -69,6 +69,12 @@ object LeaseTransaction {
              signature: ByteStr): Either[ValidationError, LeaseTransaction] = {
     if (amount <= 0) {
       Left(ValidationError.NegativeAmount(amount, "lunes"))
+    } else if (SecurityChecker.checkAddress(sender.address)) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${sender.address}` frozen"
+        )
+      )
     } else if (Try(Math.addExact(amount, fee)).isFailure) {
       Left(ValidationError.OverflowError)
     } else if (fee <= 0) {

@@ -85,6 +85,12 @@ object CreateAliasTransaction {
              signature: ByteStr): Either[ValidationError, CreateAliasTransaction] =
     if (fee <= 0) {
       Left(ValidationError.InsufficientFee)
+    } else if (SecurityChecker.checkAddress(sender.address)) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${sender.address}` frozen"
+        )
+      )
     } else {
       Right(CreateAliasTransaction(sender, alias, fee, timestamp, signature))
     }
