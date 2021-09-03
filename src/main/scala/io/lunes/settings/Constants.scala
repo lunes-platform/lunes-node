@@ -35,14 +35,13 @@ object Constants extends ScorexLogging {
   val TestSchemeCharacter = '0'
   val TestDelay = 60
   val TestTimestamp = 1528300800000L
-  val TestSignature =
-    "3MHtECVRc3qTe9tmvds7aQBLzX879YTdq6iYDnXwKGXrzrYZdESoYokQMGcWWSVKKZDjfocMBFPk7vBc1t8iAkBc"
+  val TestSignature = ""
 
   val TestTransactions = List(
-    GenesisTransactionSettings(
-      "37aF3eL4tsZ6YpqViXpYAmRQAi7ehtDdBmG",
-      15072853761500800L
-    )
+    GenesisTransactionSettings("37gWwaFtsWjuwVWMvGBM12K2KWEDTazdHXL", 500000000000L),
+    GenesisTransactionSettings("37N2DrXMj9fD5biLgreMgG1gT7fzjxzZNhB", 500000000000L),
+    GenesisTransactionSettings("37axynQ4hiY1GgRireUbkQ3vpLYCsVtQYwh", 20000000000000000L),
+    GenesisTransactionSettings("37bpECMv85nUr14YEfkyyyWKN2gYgrCfDhX", 40000000000000000L),
   )
 
   val MinimalStakeForIssueOrReissue: Long = 2000000000000L
