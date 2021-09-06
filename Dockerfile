@@ -14,14 +14,14 @@ WORKDIR /root
 ENTRYPOINT ["java", "-jar", "/root/lunesnode-latest.jar", "/root/lunesnode.conf"]
 
 # To build image
-# docker build -t lunesnode:0.1.3 .
+# docker build -t your-image-name .
 
 # To Create silently
 # docker run \
-# --name lunesnode \
-# --restart always \
-# --mount source=/root,target=/root/ \
 # -d \
 # -p 7770:7770 \
-# -p 80:5555 \
-# lunesplatform/node:0.1.3
+# -p 5555:5555 \
+# -v lunes-blockchain-data:/root/ \
+# --name lunesnode \
+# --restart always \
+# your-image-name
