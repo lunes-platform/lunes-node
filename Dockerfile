@@ -1,9 +1,9 @@
 FROM alpine:latest
+RUN apk add --no-cache openjdk8-jre
+RUN apk add --no-cache vim
 
 COPY ./target/lunesnode-latest.jar /root/lunesnode-latest.jar
 COPY ./lunesnode.conf /root/
-
-RUN apk add openjdk8-jre
 
 VOLUME [ "/root/" ]
 
