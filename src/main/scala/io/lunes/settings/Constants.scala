@@ -35,7 +35,7 @@ object Constants extends ScorexLogging {
   val TestSchemeCharacter = '0'
   val TestDelay = 60
   val TestTimestamp = 1528300800000L
-  val TestSignature = ""
+  val TestSignature = "2FdB2ivVHxi3jTvX1F4WXZKXwoUDR8YYVDhn2QepDxd3qtrhfpDeCDLSG4kt8PAWrCCdFLWVhKcJKKnEzRN8aSu4"
 
   val TestTransactions = List(
     GenesisTransactionSettings("37gWwaFtsWjuwVWMvGBM12K2KWEDTazdHXL", 500000000000L),
