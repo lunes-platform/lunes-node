@@ -341,11 +341,16 @@ object LunesNode extends ScorexLogging {
    */
   def main(args: Array[String]): Unit = {
     fixNTP()
-
     SLF4JBridgeHandler.removeHandlersForRootLogger()
     SLF4JBridgeHandler.install()
+    
+    val pathOfConfig = args.headOption match {
+      case None => Some("./lunesnode.conf")
+      case _ => args.headOption
+    }
 
-    val config = readConfig(args.headOption)
+    val config = readConfig(pathOfConfig)
+    
     System.setProperty("lunes.directory", config.getString("lunes.directory"))
 
     log.info("Starting...")
