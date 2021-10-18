@@ -1,9 +1,11 @@
+ARG node_version="v0.1.4"
+ARG url="https://github.com/Lunes-platform/LunesNode"
 FROM alpine:latest
 RUN apk add --no-cache openjdk8-jre
 RUN apk add --no-cache vim
 
-RUN  wget -O - "https://github.com/Lunes-platform/LunesNode/releases/download/v0.1.4/lunesnode-latest.jar" > /root/lunesnode-latest.jar
-RUN wget -O - "https://github.com/Lunes-platform/LunesNode/raw/v0.1.4/lunesnode.conf" > /root/lunesnode.conf
+RUN  wget -O - "$url/releases/download/$node_version/lunesnode-latest.jar" > /root/lunesnode-latest.jar
+RUN wget -O - "$url/raw/$node_version/lunesnode.conf" > /root/lunesnode.conf
 
 VOLUME [ "/root" ]
 WORKDIR /root
