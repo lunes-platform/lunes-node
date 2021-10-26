@@ -38,11 +38,11 @@ object Constants extends ScorexLogging {
   val TestSignature = ""
 
   val TestTransactions = List(
-    GenesisTransactionSettings("37UHoHBydMkaQaZThXLVQce6NLsqXHEhnBF", 40000000000000000L),
-    GenesisTransactionSettings("37NC89DsnG57nimtL9gS5Tbih1quMVDJswV", 40000000000000000L),
-    GenesisTransactionSettings("37Ubk12FdcdhjJyuZE4FMPBjKMRbXVqwevR", 40000000000000000L),
-    GenesisTransactionSettings("37M3jShfU8kpqTPu8UPkviM1UTehQZ79U7B", 40000000000000000L),
-  )
+      GenesisTransactionSettings("37UHoHBydMkaQaZThXLVQce6NLsqXHEhnBF", 40000000000000000L),
+      GenesisTransactionSettings("37NC89DsnG57nimtL9gS5Tbih1quMVDJswV", 40000000000000000L),
+      GenesisTransactionSettings("37Ubk12FdcdhjJyuZE4FMPBjKMRbXVqwevR", 40000000000000000L),
+      GenesisTransactionSettings("37M3jShfU8kpqTPu8UPkviM1UTehQZ79U7B", 40000000000000000L)
+    )
 
   val MinimalStakeForIssueOrReissue: Long = 2000000000000L
 }
