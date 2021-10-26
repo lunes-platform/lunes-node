@@ -1,8 +1,0 @@
-version: "3.3"
-services:
-
-  lunesnode:
-    image: "lunesplatform/lunesnode:0.1.4-testnet"
-
-  test-environment:
-    image: "lunesplatform/sbt-alpine"
