@@ -18,3 +18,6 @@ RUN wget -qO - "https://github.com/sbt/sbt/releases/download/v$sbt_version/sbt-$
 RUN tar xzf /tmp/sbt.tgz -C "$sbt_home" --strip-components=1
 
 RUN ln -sv "$sbt_home"/bin/sbt /usr/bin/sbt
+
+WORKDIR /root/
+VOLUME /root/
