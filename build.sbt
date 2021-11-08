@@ -4,10 +4,12 @@ import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import sbtassembly.MergeStrategy
 
-enablePlugins(JavaServerAppPackaging,
-              JDebPackaging,
-              SystemdPlugin,
-              GitVersioning)
+enablePlugins(
+  JavaServerAppPackaging,
+  JDebPackaging,
+  SystemdPlugin,
+  GitVersioning
+)
 scalafmtOnCompile in ThisBuild := true
 
 val network = SettingKey[Network]("network")
@@ -25,15 +27,18 @@ inThisBuild(
     scalaVersion := "2.12.6",
     organization := "io.lunes",
     crossPaths := false,
-    scalacOptions ++= Seq("-feature",
-                          "-deprecation",
-                          "-language:higherKinds",
-                          "-language:implicitConversions",
-                          "-Ywarn-unused:-implicits",
-                          "-Xlint")
-  ))
+    scalacOptions ++= Seq(
+      "-feature",
+      "-deprecation",
+      "-language:higherKinds",
+      "-language:implicitConversions",
+      "-Ywarn-unused:-implicits",
+      "-Xlint"
+    )
+  )
+)
 
-resolvers += Resolver.bintrayRepo("ethereum", "maven")
+resolvers += Resolver.bintrayRepo("fusesource", "maven")
 
 fork in run := true
 javaOptions in run ++= Seq(
@@ -46,13 +51,19 @@ val aopMerge: MergeStrategy = new MergeStrategy {
   import scala.xml._
   import scala.xml.dtd._
 
-  def apply(tempDir: File,
-            path: String,
-            files: Seq[File]): Either[String, Seq[(File, String)]] = {
-    val dt = DocType("aspectj",
-                     PublicID("-//AspectJ//DTD//EN",
-                              "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"),
-                     Nil)
+  def apply(
+      tempDir: File,
+      path: String,
+      files: Seq[File]
+  ): Either[String, Seq[(File, String)]] = {
+    val dt = DocType(
+      "aspectj",
+      PublicID(
+        "-//AspectJ//DTD//EN",
+        "http://www.eclipse.org/aspectj/dtd/aspectj.dtd"
+      ),
+      Nil
+    )
     val file = MergeStrategy.createMergeTarget(tempDir, path)
     val xmls: Seq[Elem] = files.map(XML.loadFile)
     val aspectsChildren: Seq[Node] =
@@ -88,12 +99,14 @@ inTask(assembly)(
       case PathList("META-INF", "aop.xml") => aopMerge
       case other                           => (assemblyMergeStrategy in assembly).value(other)
     }
-  ))
+  )
+)
 
 inConfig(Compile)(
   Seq(
     mainClass := Some("io.lunes.LunesNode")
-  ))
+  )
+)
 
 inConfig(Universal)(
   Seq(
@@ -116,7 +129,8 @@ inConfig(Universal)(
       "-J-XX:+ParallelRefProcEnabled",
       "-J-XX:+UseStringDeduplication"
     )
-  ))
+  )
+)
 
 lazy val lang =
   crossProject(JSPlatform, JVMPlatform)
@@ -148,7 +162,9 @@ lazy val lang =
       libraryDependencies ++= Seq(
         "org.scala-js" %% "scalajs-stubs" % "0.6.22" % "provided"
       ) ++ Dependencies.logging
-        .map(_ % "test") // scrypto logs an error if a signature verification was failed
+        .map(
+          _ % "test"
+        ) // scrypto logs an error if a signature verification was failed
     )
 
 lazy val langJS = lang.js

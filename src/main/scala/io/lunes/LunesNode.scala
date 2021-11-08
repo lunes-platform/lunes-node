@@ -57,10 +57,11 @@ import scala.concurrent.duration._
 import scala.reflect.runtime.universe._
 import scala.util.Try
 
-class LunesNode(val actorSystem: ActorSystem,
-                val settings: LunesSettings,
-                configRoot: ConfigObject)
-    extends ScorexLogging {
+class LunesNode(
+    val actorSystem: ActorSystem,
+    val settings: LunesSettings,
+    configRoot: ConfigObject
+) extends ScorexLogging {
 
   import monix.execution.Scheduler.Implicits.{global => scheduler}
 
@@ -72,37 +73,47 @@ class LunesNode(val actorSystem: ActorSystem,
 
   private val checkpointService =
     new CheckpointServiceImpl(db, settings.checkpointsSettings)
-  private lazy val upnp = new UPnP(settings.networkSettings.uPnPSettings) // don't initialize unless enabled
+  private lazy val upnp =
+    new UPnP(
+      settings.networkSettings.uPnPSettings
+    ) // don't initialize unless enabled
 
-  private val wallet: Wallet = try {
-    Wallet(settings.walletSettings)
-  } catch {
-    case e: IllegalStateException =>
-      log.error(
-        s"Failed to open wallet file '${settings.walletSettings.file.get.getAbsolutePath}")
-      throw e
-  }
+  private val wallet: Wallet =
+    try {
+      Wallet(settings.walletSettings)
+    } catch {
+      case e: IllegalStateException =>
+        log.error(
+          s"Failed to open wallet file '${settings.walletSettings.file.get.getAbsolutePath}"
+        )
+        throw e
+    }
   private val peerDatabase = new PeerDatabaseImpl(settings.networkSettings)
 
   private val extensionLoaderScheduler = singleThread(
     "rx-extension-loader",
-    reporter = log.error("Error in Extension Loader", _))
+    reporter = log.error("Error in Extension Loader", _)
+  )
   private val microblockSynchronizerScheduler = singleThread(
     "microblock-synchronizer",
-    reporter = log.error("Error in Microblock Synchronizer", _))
+    reporter = log.error("Error in Microblock Synchronizer", _)
+  )
   private val scoreObserverScheduler = singleThread(
     "rx-score-observer",
-    reporter = log.error("Error in Score Observer", _))
+    reporter = log.error("Error in Score Observer", _)
+  )
   private val appenderScheduler =
     singleThread("appender", reporter = log.error("Error in Appender", _))
   private val historyRepliesScheduler = fixedPool(
     "history-replier",
     poolSize = 2,
-    reporter = log.error("Error in History Replier", _))
-  private val minerScheduler = fixedPool("miner-pool",
-                                         poolSize = 2,
-                                         reporter =
-                                           log.error("Error in Miner", _))
+    reporter = log.error("Error in History Replier", _)
+  )
+  private val minerScheduler = fixedPool(
+    "miner-pool",
+    poolSize = 2,
+    reporter = log.error("Error in Miner", _)
+  )
 
   private var matcher: Option[Matcher] = None
   private var rxExtensionLoaderShutdown: Option[RxExtensionLoaderShutdownHook] =
@@ -129,72 +140,85 @@ class LunesNode(val actorSystem: ActorSystem,
     val establishedConnections = new ConcurrentHashMap[Channel, PeerInfo]
     val allChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE)
     val innerUtxStorage =
-      new UtxPoolImpl(time,
-                      blockchainUpdater,
-                      feeCalculator,
-                      settings.blockchainSettings.functionalitySettings,
-                      settings.utxSettings)
+      new UtxPoolImpl(
+        time,
+        blockchainUpdater,
+        feeCalculator,
+        settings.blockchainSettings.functionalitySettings,
+        settings.utxSettings
+      )
 
     val utxStorage =
       if (settings.matcherSettings.enable)
-        new MatcherUtxPool(innerUtxStorage,
-                           settings.matcherSettings,
-                           actorSystem.eventStream)
+        new MatcherUtxPool(
+          innerUtxStorage,
+          settings.matcherSettings,
+          actorSystem.eventStream
+        )
       else innerUtxStorage
     maybeUtx = Some(utxStorage)
 
     val knownInvalidBlocks = new InvalidBlockStorageImpl(
-      settings.synchronizationSettings.invalidBlocksStorage)
+      settings.synchronizationSettings.invalidBlocksStorage
+    )
 
     val pos = new PoSSelector(blockchainUpdater, settings.blockchainSettings)
 
     val miner =
       if (settings.minerSettings.enable)
-        new MinerImpl(allChannels,
-                      blockchainUpdater,
-                      checkpointService,
-                      settings,
-                      time,
-                      utxStorage,
-                      wallet,
-                      pos,
-                      minerScheduler,
-                      appenderScheduler)
+        new MinerImpl(
+          allChannels,
+          blockchainUpdater,
+          checkpointService,
+          settings,
+          time,
+          utxStorage,
+          wallet,
+          pos,
+          minerScheduler,
+          appenderScheduler
+        )
       else Miner.Disabled
 
     val processBlock =
-      BlockAppender(checkpointService,
-                    blockchainUpdater,
-                    time,
-                    utxStorage,
-                    pos,
-                    settings,
-                    allChannels,
-                    peerDatabase,
-                    miner,
-                    appenderScheduler) _
+      BlockAppender(
+        checkpointService,
+        blockchainUpdater,
+        time,
+        utxStorage,
+        pos,
+        settings,
+        allChannels,
+        peerDatabase,
+        miner,
+        appenderScheduler
+      ) _
 
     matcher = if (settings.matcherSettings.enable) {
-      val m = new Matcher(actorSystem,
-                          wallet,
-                          innerUtxStorage,
-                          allChannels,
-                          blockchainUpdater,
-                          settings.blockchainSettings,
-                          settings.restAPISettings,
-                          settings.matcherSettings)
+      val m = new Matcher(
+        actorSystem,
+        wallet,
+        innerUtxStorage,
+        allChannels,
+        blockchainUpdater,
+        settings.blockchainSettings,
+        settings.restAPISettings,
+        settings.matcherSettings
+      )
       m.runMatcher()
       Some(m)
     } else None
 
     val processCheckpoint =
-      CheckpointAppender(checkpointService,
-                         blockchainUpdater,
-                         blockchainUpdater,
-                         peerDatabase,
-                         miner,
-                         allChannels,
-                         appenderScheduler) _
+      CheckpointAppender(
+        checkpointService,
+        blockchainUpdater,
+        blockchainUpdater,
+        peerDatabase,
+        miner,
+        allChannels,
+        appenderScheduler
+      ) _
 
     val processFork = ExtensionAppender(
       checkpointService,
@@ -210,12 +234,14 @@ class LunesNode(val actorSystem: ActorSystem,
       appenderScheduler
     ) _
     val processMicroBlock =
-      MicroblockAppender(checkpointService,
-                         blockchainUpdater,
-                         utxStorage,
-                         allChannels,
-                         peerDatabase,
-                         appenderScheduler) _
+      MicroblockAppender(
+        checkpointService,
+        blockchainUpdater,
+        utxStorage,
+        allChannels,
+        peerDatabase,
+        appenderScheduler
+      ) _
 
     import blockchainUpdater.lastBlockInfo
 
@@ -230,26 +256,32 @@ class LunesNode(val actorSystem: ActorSystem,
         allChannels.broadcast(LocalScoreChanged(x))
       }(scheduler)
 
-    val historyReplier = new HistoryReplier(blockchainUpdater,
-                                            settings.synchronizationSettings,
-                                            historyRepliesScheduler)
+    val historyReplier = new HistoryReplier(
+      blockchainUpdater,
+      settings.synchronizationSettings,
+      historyRepliesScheduler
+    )
     val network =
-      NetworkServer(settings,
-                    lastBlockInfo,
-                    blockchainUpdater,
-                    historyReplier,
-                    utxStorage,
-                    peerDatabase,
-                    allChannels,
-                    establishedConnections)
+      NetworkServer(
+        settings,
+        lastBlockInfo,
+        blockchainUpdater,
+        historyReplier,
+        utxStorage,
+        peerDatabase,
+        allChannels,
+        establishedConnections
+      )
     maybeNetwork = Some(network)
-    val (signatures,
-         blocks,
-         blockchainScores,
-         checkpoints,
-         microblockInvs,
-         microblockResponses,
-         transactions) = network.messages
+    val (
+      signatures,
+      blocks,
+      blockchainScores,
+      checkpoints,
+      microblockInvs,
+      microblockResponses,
+      transactions
+    ) = network.messages
 
     val timeoutSubject: ConcurrentSubject[Channel, Channel] =
       ConcurrentSubject.publish[Channel]
@@ -276,7 +308,9 @@ class LunesNode(val actorSystem: ActorSystem,
       settings.synchronizationSettings.synchronizationTimeout,
       Coeval(
         blockchainUpdater.lastBlockIds(
-          settings.synchronizationSettings.maxRollback)),
+          settings.synchronizationSettings.maxRollback
+        )
+      ),
       peerDatabase,
       knownInvalidBlocks,
       blocks,
@@ -292,12 +326,14 @@ class LunesNode(val actorSystem: ActorSystem,
       utxStorage,
       settings.synchronizationSettings.utxSynchronizerSettings,
       allChannels,
-      transactions)
+      transactions
+    )
     val microBlockSink =
       microblockDatas.mapTask(scala.Function.tupled(processMicroBlock))
     val blockSink = newBlocks.mapTask(scala.Function.tupled(processBlock))
     val checkpointSink = checkpoints.mapTask {
-      case (s, c) => processCheckpoint(Some(s), c)
+      case (s, c) =>
+        processCheckpoint(Some(s), c)
     }
 
     Observable.merge(microBlockSink, blockSink, checkpointSink).subscribe()
@@ -313,35 +349,47 @@ class LunesNode(val actorSystem: ActorSystem,
 
     if (settings.restAPISettings.enable) {
       val apiRoutes = Seq(
-        NodeApiRoute(settings.restAPISettings,
-                     blockchainUpdater,
-                     () => apiShutdown()),
-        BlocksApiRoute(settings.restAPISettings,
-                       blockchainUpdater,
-                       allChannels,
-                       c => processCheckpoint(None, c)),
-        TransactionsApiRoute(settings.restAPISettings,
-                             wallet,
-                             blockchainUpdater,
-                             utxStorage,
-                             allChannels,
-                             time),
-        NxtConsensusApiRoute(settings.restAPISettings,
-                             blockchainUpdater,
-                             settings.blockchainSettings.functionalitySettings),
+        NodeApiRoute(
+          settings.restAPISettings,
+          blockchainUpdater,
+          () => apiShutdown()
+        ),
+        BlocksApiRoute(
+          settings.restAPISettings,
+          blockchainUpdater,
+          allChannels,
+          c => processCheckpoint(None, c)
+        ),
+        TransactionsApiRoute(
+          settings.restAPISettings,
+          wallet,
+          blockchainUpdater,
+          utxStorage,
+          allChannels,
+          time
+        ),
+        NxtConsensusApiRoute(
+          settings.restAPISettings,
+          blockchainUpdater,
+          settings.blockchainSettings.functionalitySettings
+        ),
         WalletApiRoute(settings.restAPISettings, wallet),
         UtilsApiRoute(time, settings.restAPISettings),
-        PeersApiRoute(settings.restAPISettings,
-                      network.connect,
-                      peerDatabase,
-                      establishedConnections),
-        AddressApiRoute(settings.restAPISettings,
-                        wallet,
-                        blockchainUpdater,
-                        utxStorage,
-                        allChannels,
-                        time,
-                        settings.blockchainSettings.functionalitySettings),
+        PeersApiRoute(
+          settings.restAPISettings,
+          network.connect,
+          peerDatabase,
+          establishedConnections
+        ),
+        AddressApiRoute(
+          settings.restAPISettings,
+          wallet,
+          blockchainUpdater,
+          utxStorage,
+          allChannels,
+          time,
+          settings.blockchainSettings.functionalitySettings
+        ),
         DebugApiRoute(
           settings,
           wallet,
@@ -360,37 +408,51 @@ class LunesNode(val actorSystem: ActorSystem,
           scoreStatsReporter,
           configRoot
         ),
-        AssetsApiRoute(settings.restAPISettings,
-                       wallet,
-                       utxStorage,
-                       allChannels,
-                       blockchainUpdater,
-                       time),
-        ActivationApiRoute(settings.restAPISettings,
-                           settings.blockchainSettings.functionalitySettings,
-                           settings.featuresSettings,
-                           blockchainUpdater),
-        AssetsBroadcastApiRoute(settings.restAPISettings,
-                                utxStorage,
-                                allChannels),
-        LeaseApiRoute(settings.restAPISettings,
-                      wallet,
-                      blockchainUpdater,
-                      utxStorage,
-                      allChannels,
-                      time),
-        LeaseBroadcastApiRoute(settings.restAPISettings,
-                               utxStorage,
-                               allChannels),
-        AliasApiRoute(settings.restAPISettings,
-                      wallet,
-                      utxStorage,
-                      allChannels,
-                      time,
-                      blockchainUpdater),
-        AliasBroadcastApiRoute(settings.restAPISettings,
-                               utxStorage,
-                               allChannels)
+        AssetsApiRoute(
+          settings.restAPISettings,
+          wallet,
+          utxStorage,
+          allChannels,
+          blockchainUpdater,
+          time
+        ),
+        ActivationApiRoute(
+          settings.restAPISettings,
+          settings.blockchainSettings.functionalitySettings,
+          settings.featuresSettings,
+          blockchainUpdater
+        ),
+        AssetsBroadcastApiRoute(
+          settings.restAPISettings,
+          utxStorage,
+          allChannels
+        ),
+        LeaseApiRoute(
+          settings.restAPISettings,
+          wallet,
+          blockchainUpdater,
+          utxStorage,
+          allChannels,
+          time
+        ),
+        LeaseBroadcastApiRoute(
+          settings.restAPISettings,
+          utxStorage,
+          allChannels
+        ),
+        AliasApiRoute(
+          settings.restAPISettings,
+          wallet,
+          utxStorage,
+          allChannels,
+          time,
+          blockchainUpdater
+        ),
+        AliasBroadcastApiRoute(
+          settings.restAPISettings,
+          utxStorage,
+          allChannels
+        )
       )
 
       val apiTypes = Seq(
@@ -415,14 +477,17 @@ class LunesNode(val actorSystem: ActorSystem,
         actorSystem,
         apiTypes,
         apiRoutes,
-        settings.restAPISettings).loggingCompositeRoute
+        settings.restAPISettings
+      ).loggingCompositeRoute
       val httpFuture = Http().bindAndHandle(
         combinedRoute,
         settings.restAPISettings.bindAddress,
-        settings.restAPISettings.port)
+        settings.restAPISettings.port
+      )
       serverBinding = Await.result(httpFuture, 20.seconds)
       log.info(
-        s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
+        s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}"
+      )
     }
 
     //on unexpected shutdown
@@ -481,9 +546,11 @@ class LunesNode(val actorSystem: ActorSystem,
     }
   }
 
-  private def shutdownAndWait(scheduler: SchedulerService,
-                              name: String,
-                              timeout: FiniteDuration = 1.minute): Unit = {
+  private def shutdownAndWait(
+      scheduler: SchedulerService,
+      name: String,
+      timeout: FiniteDuration = 1.minute
+  ): Unit = {
     scheduler.shutdown()
     val r =
       Await.result(scheduler.awaitTermination(timeout, global), Duration.Inf)
@@ -562,16 +629,26 @@ object LunesNode extends ScorexLogging {
           Metrics.write(
             Point
               .measurement("config")
-              .addField("miner-micro-block-interval",
-                        miner.microBlockInterval.toMillis)
-              .addField("miner-max-transactions-in-key-block",
-                        miner.maxTransactionsInKeyBlock)
-              .addField("miner-max-transactions-in-micro-block",
-                        miner.maxTransactionsInMicroBlock)
-              .addField("miner-min-micro-block-age",
-                        miner.minMicroBlockAge.toMillis)
-              .addField("mbs-wait-response-timeout",
-                        microBlockSynchronizer.waitResponseTimeout.toMillis)
+              .addField(
+                "miner-micro-block-interval",
+                miner.microBlockInterval.toMillis
+              )
+              .addField(
+                "miner-max-transactions-in-key-block",
+                miner.maxTransactionsInKeyBlock
+              )
+              .addField(
+                "miner-max-transactions-in-micro-block",
+                miner.maxTransactionsInMicroBlock
+              )
+              .addField(
+                "miner-min-micro-block-age",
+                miner.minMicroBlockAge.toMillis
+              )
+              .addField(
+                "mbs-wait-response-timeout",
+                microBlockSynchronizer.waitResponseTimeout.toMillis
+              )
           )
         }
       }
@@ -582,8 +659,15 @@ object LunesNode extends ScorexLogging {
           settings.blockchainSettings.addressSchemeCharacter.toByte
       }
 
+      settings.blockchainSettings.addressSchemeCharacter match {
+        case '1' => log.info("\033[92mRunning in Mainnet\033[0m")
+        case '0' => log.info("\033[92mRunning in Testnet\033[0m")
+        case _   => log.info("\033[92mRunning in Devnet\033[0m")
+      }
+
       log.info(
-        s"${Constants.AgentName} Blockchain Id: ${settings.blockchainSettings.addressSchemeCharacter}")
+        s"${Constants.AgentName} Blockchain Id: ${settings.blockchainSettings.addressSchemeCharacter}"
+      )
 
       new LunesNode(actorSystem, settings, config.root()).run()
     }
