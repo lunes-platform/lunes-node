@@ -92,7 +92,7 @@ val aopMerge: MergeStrategy = new MergeStrategy {
 inTask(assembly)(
   Seq(
     test := {},
-    assemblyJarName := s"lunesnode-${version.value}.jar",
+    assemblyJarName := "lunesnode-latest.jar",
     assemblyMergeStrategy := {
       case PathList("META-INF", "io.netty.versions.properties") =>
         MergeStrategy.concat
