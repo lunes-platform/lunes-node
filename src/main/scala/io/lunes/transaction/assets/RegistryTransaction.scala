@@ -13,26 +13,28 @@ import scorex.crypto.encode.Base58
 import scorex.serialization.Deser
 
 import scala.util.{Failure, Success, Try}
+import io.lunes.security.SecurityChecker
 
-/**
-  *
-  * @param sender
-  * @param timestamp
+/** @param sender
+  *   @param timestamp
   * @param fee
-  * @param userdata
+  *   @param userdata
   * @param signature
   */
-case class RegistryTransaction private(
-                                       sender: PublicKeyAccount,
-                                       timestamp: Long,
-                                       fee: Long,
-                                       userdata: Array[Byte],
-                                       signature: ByteStr)
-  extends SignedTransaction with FastHashId {
+case class RegistryTransaction private (
+    sender: PublicKeyAccount,
+    timestamp: Long,
+    fee: Long,
+    userdata: Array[Byte],
+    signature: ByteStr
+) extends SignedTransaction
+    with FastHashId {
 
-  val recipient : AddressOrAlias = (AddressOrAlias.fromString("lunes")).toOption.get
-  val amount:Long = 1000000000 // 10 lunes
-  override val transactionType: TransactionType.Value = TransactionType.RegistryTransaction
+  val recipient: AddressOrAlias =
+    (AddressOrAlias.fromString("lunes")).toOption.get
+  val amount: Long = 1000000000 // 10 lunes
+  override val transactionType: TransactionType.Value =
+    TransactionType.RegistryTransaction
 
   override val assetFee: (Option[AssetId], Long) = (None, fee)
 
@@ -41,46 +43,58 @@ case class RegistryTransaction private(
     val amountBytes = Longs.toByteArray(amount)
     val feeBytes = Longs.toByteArray(fee)
 
-    Bytes.concat(Array(transactionType.id.toByte),
+    Bytes.concat(
+      Array(transactionType.id.toByte),
       sender.publicKey,
       timestampBytes,
       amountBytes,
       feeBytes,
       recipient.bytes.arr,
-      Deser.serializeArray(userdata))
+      Deser.serializeArray(userdata)
+    )
   }
 
-  override val json: Coeval[JsObject] = Coeval.evalOnce(jsonBase() ++ Json.obj(
-    "recipient" -> recipient.stringRepr,
-    "amount" -> amount,
-    "userdata" -> Base58.encode(userdata)
-  ))
+  override val json: Coeval[JsObject] = Coeval.evalOnce(
+    jsonBase() ++ Json.obj(
+      "recipient" -> recipient.stringRepr,
+      "amount" -> amount,
+      "userdata" -> Base58.encode(userdata)
+    )
+  )
 
-  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(Bytes.concat(Array(transactionType.id.toByte), signature.arr, bodyBytes()))
+  override val bytes: Coeval[Array[Byte]] = Coeval.evalOnce(
+    Bytes.concat(Array(transactionType.id.toByte), signature.arr, bodyBytes())
+  )
 
 }
 
-/**
-  *
-  */
+/** */
 object RegistryTransaction {
 
   val MaxUserdata = 140
   val MaxUserdataLength = base58Length(MaxUserdata)
 
-  /**
-    *
-    * @param bytes
-    * @return
+  /** @param bytes
+    *   @return
     */
   def parseTail(bytes: Array[Byte]): Try[RegistryTransaction] = Try {
 
     val signature = ByteStr(bytes.slice(0, SignatureLength))
     val txId = bytes(SignatureLength)
-    require(txId == TransactionType.RegistryTransaction.id.toByte, s"Signed tx id is not match")
-    val sender = PublicKeyAccount(bytes.slice(SignatureLength + 1, SignatureLength + KeyLength + 1))
-    val (assetIdOpt, s0) = Deser.parseByteArrayOption(bytes, SignatureLength + KeyLength + 1, AssetIdLength)
-    val (feeAssetIdOpt, s1) = Deser.parseByteArrayOption(bytes, s0, AssetIdLength)
+    require(
+      txId == TransactionType.RegistryTransaction.id.toByte,
+      s"Signed tx id is not match"
+    )
+    val sender = PublicKeyAccount(
+      bytes.slice(SignatureLength + 1, SignatureLength + KeyLength + 1)
+    )
+    val (assetIdOpt, s0) = Deser.parseByteArrayOption(
+      bytes,
+      SignatureLength + KeyLength + 1,
+      AssetIdLength
+    )
+    val (feeAssetIdOpt, s1) =
+      Deser.parseByteArrayOption(bytes, s0, AssetIdLength)
     val timestamp = Longs.fromByteArray(bytes.slice(s1, s1 + 8))
     val feeAmount = Longs.fromByteArray(bytes.slice(s1 + 16, s1 + 24))
 
@@ -88,54 +102,72 @@ object RegistryTransaction {
       recRes <- AddressOrAlias.fromBytes(bytes, s1 + 24)
       (recipient, recipientEnd) = recRes
       (userdata, _) = Deser.parseArraySize(bytes, recipientEnd)
-      tt <- RegistryTransaction.create( sender, timestamp, feeAmount, userdata, signature)
-    } yield tt).fold(left => Failure(new Exception(left.toString)), right => Success(right))
+      tt <- RegistryTransaction.create(
+        sender,
+        timestamp,
+        feeAmount,
+        userdata,
+        signature
+      )
+    } yield tt).fold(
+      left => Failure(new Exception(left.toString)),
+      right => Success(right)
+    )
   }.flatten
 
-  /**
-    *
-    * @param sender
-    * @param timestamp
+  /** @param sender
+    *   @param timestamp
     * @param feeAmount
-    * @param userdata
+    *   @param userdata
     * @param signature
-    * @return
+    *   @return
     */
   def create(
-             sender: PublicKeyAccount,
-             timestamp: Long,
-             feeAmount: Long,
-             userdata: Array[Byte],
-             signature: ByteStr): Either[ValidationError, RegistryTransaction] = {
-    val amount:Long = 1000000000 // 10 lunes
+      sender: PublicKeyAccount,
+      timestamp: Long,
+      feeAmount: Long,
+      userdata: Array[Byte],
+      signature: ByteStr
+  ): Either[ValidationError, RegistryTransaction] = {
+    val amount: Long = 1000000000 // 10 lunes
     if (userdata.length > RegistryTransaction.MaxUserdata) {
       Left(ValidationError.TooBigArray)
-    }
-    else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
-      Left(ValidationError.OverflowError) // CHECK THAT fee+amount won't overflow Long
-    }
-    else if (feeAmount <= 0) {
+    } else if (SecurityChecker.checkAddress(sender.address)) {
+      Left(
+        ValidationError.FrozenAssetTransaction(
+          s"address `${sender.address}` frozen"
+        )
+      )
+    } else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
+      Left(
+        ValidationError.OverflowError
+      ) // CHECK THAT fee+amount won't overflow Long
+    } else if (feeAmount <= 0) {
       Left(ValidationError.InsufficientFee)
     } else {
-      Right(RegistryTransaction(sender, timestamp, feeAmount, userdata, signature))
+      Right(
+        RegistryTransaction(sender, timestamp, feeAmount, userdata, signature)
+      )
     }
   }
 
-  /**
-    *
-    * @param sender
-    * @param timestamp
+  /** @param sender
+    *   @param timestamp
     * @param feeAmount
-    * @param userdata
+    *   @param userdata
     * @return
     */
   def create(
-             sender: PrivateKeyAccount,
-             timestamp: Long,
-             feeAmount: Long,
-             userdata: Array[Byte]): Either[ValidationError, RegistryTransaction] = {
-    create(sender,  timestamp, feeAmount, userdata, ByteStr.empty).right.map { unsigned =>
-      unsigned.copy(signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
+      sender: PrivateKeyAccount,
+      timestamp: Long,
+      feeAmount: Long,
+      userdata: Array[Byte]
+  ): Either[ValidationError, RegistryTransaction] = {
+    create(sender, timestamp, feeAmount, userdata, ByteStr.empty).right.map {
+      unsigned =>
+        unsigned.copy(signature =
+          ByteStr(crypto.sign(sender, unsigned.bodyBytes()))
+        )
     }
   }
 }

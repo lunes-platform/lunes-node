@@ -76,7 +76,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
     val combinedRoute: Route = CompositeHttpService(actorSystem, tags, routes, settings.restAPISettings).compositeRoute
     val httpFuture = Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
     serverBinding = Await.result(httpFuture, 10.seconds)
-    log.debug(s"Node REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
+    log.info(s"Node REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
     (tags, routes)
   }
 
@@ -229,7 +229,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
         Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
       }
       serverBinding = Await.result(httpFuture, 20.seconds)
-      log.debug(s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
+      log.info(s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
     }
 
     //on unexpected shutdown
@@ -341,11 +341,16 @@ object LunesNode extends ScorexLogging {
    */
   def main(args: Array[String]): Unit = {
     fixNTP()
-
     SLF4JBridgeHandler.removeHandlersForRootLogger()
     SLF4JBridgeHandler.install()
+    
+    val pathOfConfig = args.headOption match {
+      case None => Some("./lunesnode.conf")
+      case _ => args.headOption
+    }
 
-    val config = readConfig(args.headOption)
+    val config = readConfig(pathOfConfig)
+    
     System.setProperty("lunes.directory", config.getString("lunes.directory"))
 
     log.info("Starting...")

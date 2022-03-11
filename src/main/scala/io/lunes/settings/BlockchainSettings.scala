@@ -68,8 +68,8 @@ object FunctionalitySettings {
 
 
   val TESTNET = apply(
-    featureCheckBlocksPeriod = 3000,
-    blocksForFeatureActivation = 2700,
+    featureCheckBlocksPeriod = 10,
+    blocksForFeatureActivation = 7,
     allowTemporaryNegativeUntil = Constants.TestTimestamp,
     requireSortedTransactionsAfter = Constants.TestTimestamp,
     generationBalanceDepthFrom50To1000AfterHeight = 0,

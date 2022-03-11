@@ -161,6 +161,13 @@ abstract class HandshakeHandler(
   */
 object HandshakeHandler extends ScorexLogging {
 
+  private def tupleToInt(tuple: (Int,Int,Int)): Int = {
+    val major = s"${tuple._1}".toInt * 100
+    val minor = s"${tuple._2}".toInt * 10
+    val patch = s"${tuple._3}".toInt * 1
+    major + minor + patch
+  }
+
   val NodeNameAttributeKey = AttributeKey.newInstance[String]("name")
 
   /**
@@ -168,9 +175,15 @@ object HandshakeHandler extends ScorexLogging {
     * @param remoteVersion
     * @return
     */
-  def versionIsSupported(remoteVersion: (Int, Int, Int)): Boolean =
-    remoteVersion._1 == Constants.MinimalVersion._1 && remoteVersion._2 >= Constants.MinimalVersion._2 // && remoteVersion._3 >= Constants.MinimalVersion._3
+  def versionIsSupported(remoteVersion: (Int, Int, Int)): Boolean = {
+    val remoteVersionInt: Int = tupleToInt(remoteVersion)  
+    val MinimumCompatibilityVersionInt: Int = tupleToInt(Constants.MinimumCompatibilityVersion)
 
+    if (remoteVersionInt <= MinimumCompatibilityVersionInt) 
+      false
+    else
+      true
+    }
   /**
     *
     * @param ctx

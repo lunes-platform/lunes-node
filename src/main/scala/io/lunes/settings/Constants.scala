@@ -6,9 +6,9 @@ import scorex.utils.ScorexLogging
   * System constants here.
   */
 object Constants extends ScorexLogging {
-  val VersionStr = "0.1.2"
-  val VersionTuple = (0, 1, 2)
-  val MinimalVersion = (0, 1, 2)
+  val VersionStr = "0.1.4"
+  val VersionTuple = (0, 1, 4)
+  val MinimumCompatibilityVersion = (0, 0, 1)
   val ApplicationName = "lunesnode"
   val CoinName = "LUNES"
   val CoinAbr = "LNS"
@@ -35,15 +35,14 @@ object Constants extends ScorexLogging {
   val TestSchemeCharacter = '0'
   val TestDelay = 60
   val TestTimestamp = 1528300800000L
-  val TestSignature =
-    "3MHtECVRc3qTe9tmvds7aQBLzX879YTdq6iYDnXwKGXrzrYZdESoYokQMGcWWSVKKZDjfocMBFPk7vBc1t8iAkBc"
+  val TestSignature = ""
 
   val TestTransactions = List(
-    GenesisTransactionSettings(
-      "37aF3eL4tsZ6YpqViXpYAmRQAi7ehtDdBmG",
-      15072853761500800L
+      GenesisTransactionSettings("37UHoHBydMkaQaZThXLVQce6NLsqXHEhnBF", 40000000000000000L),
+      GenesisTransactionSettings("37NC89DsnG57nimtL9gS5Tbih1quMVDJswV", 40000000000000000L),
+      GenesisTransactionSettings("37Ubk12FdcdhjJyuZE4FMPBjKMRbXVqwevR", 40000000000000000L),
+      GenesisTransactionSettings("37M3jShfU8kpqTPu8UPkviM1UTehQZ79U7B", 40000000000000000L)
     )
-  )
 
   val MinimalStakeForIssueOrReissue: Long = 2000000000000L
 }

@@ -8,12 +8,8 @@ object SecurityChecker {
 
   val bannedAddress: BanAddressList = BanAddressList(
     List(
-      BanAddress("37ms8U8BDPrC24DoUrivA8Lxuu1J1gWNb79"),
-      BanAddress("37uDxz6BQX88fPCCEBwhY4GoCW6YWwZsAQS"),
-      BanAddress("37ms8U8BDPrC24DoUrivA8Lxuu1J1gWNb79"),
-      BanAddress("387LjpQ5fdBdcY4nRcfDU7gPYdesbc1Md4D"),
-      BanAddress("37w7WprthdjVQ3vc9k6sfXX3DKWU5Xt6FFS"),
-    )
+      BanAddress(""),
+      )
   )
 
   val essentialAssetName: List[String] = List("LUNES")
