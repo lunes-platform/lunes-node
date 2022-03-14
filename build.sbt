@@ -3,9 +3,10 @@ import sbt.Keys.{sourceGenerators, _}
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
+val nodeVersion = "0.1.4"
 enablePlugins(GitVersioning)
 git.useGitDescribe := true
-git.baseVersion := "0.1.4"
+git.baseVersion := nodeVersion
 name := "LunesNode"
 mainClass in Compile := Some("io.lunes.LunesNode")
 
@@ -55,7 +56,7 @@ lazy val node = project
   )
 
 //assembly settings
-assemblyJarName in assembly := "lunesnode-latest.jar"
+assemblyJarName in assembly := s"lunesnode-${nodeVersion}.jar"
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", "io.netty.versions.properties") =>
     MergeStrategy.concat
