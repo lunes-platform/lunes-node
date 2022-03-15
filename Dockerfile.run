@@ -1,6 +1,6 @@
 FROM openjdk:8
 
-ARG lunes_node=lunesnode-0.14.0.jar
+ARG lunes_node=lunesnode-0.1.5.jar
 
 WORKDIR /app/build
 COPY target/"$lunes_node" .
@@ -22,4 +22,4 @@ WORKDIR /app
 COPY lunesnode.conf .
 RUN mv ./build/"$lunes_node" . && rm -rf ./build
 
-CMD ["java", "-jar", "lunesnode-0.14.0.jar"]
+CMD ["java", "-jar", "lunesnode-0.1.5.jar"]
