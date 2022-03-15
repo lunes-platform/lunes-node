@@ -1,7 +1,6 @@
 package scorex.api.http.assets
 
 import akka.http.scaladsl.server.Route
-import akka.stream.impl.Stages.DefaultAttributes.log
 import io.lunes.settings.RestAPISettings
 import io.lunes.state2.{ByteStr, StateReader}
 import io.lunes.transaction.assets.exchange.Order
@@ -24,13 +23,14 @@ import scala.util.{Failure, Success}
 
 @Path("/assets")
 @Api(value = "assets")
-case class AssetsApiRoute(settings: RestAPISettings,
-                          wallet: Wallet,
-                          utx: UtxPool,
-                          allChannels: ChannelGroup,
-                          state: StateReader,
-                          time: Time)
-    extends ApiRoute
+case class AssetsApiRoute(
+    settings: RestAPISettings,
+    wallet: Wallet,
+    utx: UtxPool,
+    allChannels: ChannelGroup,
+    state: StateReader,
+    time: Time
+) extends ApiRoute
     with BroadcastRoute {
   val MaxAddressesPerRequest = 1000
 
@@ -233,7 +233,7 @@ case class AssetsApiRoute(settings: RestAPISettings,
       (r: IssueRequest) =>
         doBroadcast(
           TransactionFactory.issueAsset(r, wallet, time, balance(r.sender))
-      )
+        )
     )
 
   @Path("/reissue")
@@ -263,7 +263,7 @@ case class AssetsApiRoute(settings: RestAPISettings,
       (r: ReissueRequest) =>
         doBroadcast(
           TransactionFactory.reissueAsset(r, wallet, time, balance(r.sender))
-      )
+        )
     )
 
   private def balance(address: String, confirmations: Int = 4) = {
@@ -272,17 +272,15 @@ case class AssetsApiRoute(settings: RestAPISettings,
       Address
         .fromString(address)
         .right
-        .map(
-          acc =>
-            Balance(
-              acc.address,
-              confirmations,
-              s.effectiveBalanceAtHeightWithConfirmations(
-                  acc,
-                  s.height,
-                  confirmations
-                )
-                .get
+        .map(acc =>
+          Balance(
+            acc.address,
+            confirmations,
+            s.effectiveBalanceAtHeightWithConfirmations(
+              acc,
+              s.height,
+              confirmations
+            ).get
           )
         )
         .getOrElse(InvalidAddress)
@@ -320,41 +318,41 @@ case class AssetsApiRoute(settings: RestAPISettings,
         doBroadcast(TransactionFactory.burnAsset(b, wallet, time))
     )
 
-  private def balanceJson(address: String,
-                          assetIdStr: String): Either[ApiError, JsObject] = {
+  private def balanceJson(
+      address: String,
+      assetIdStr: String
+  ): Either[ApiError, JsObject] = {
     ByteStr.decodeBase58(assetIdStr) match {
       case Success(assetId) =>
         (for {
           acc <- Address.fromString(address)
-        } yield
-          Json.obj(
-            "address" -> acc.address,
-            "assetId" -> assetIdStr,
-            "balance" -> state().assetBalance(acc, assetId)
-          )).left.map(ApiError.fromValidationError)
+        } yield Json.obj(
+          "address" -> acc.address,
+          "assetId" -> assetIdStr,
+          "balance" -> state().assetBalance(acc, assetId)
+        )).left.map(ApiError.fromValidationError)
       case _ => Left(InvalidAddress)
     }
   }
 
   private def fullAccountAssetsInfo(
-    address: String
+      address: String
   ): Either[ApiError, JsObject] =
     (for {
       acc <- Address.fromString(address)
     } yield {
       val balances: Seq[JsObject] = state()
         .getAccountBalance(acc)
-        .map {
-          case ((assetId, (balance, reissuable, quantity, issueTx))) =>
-            JsObject(
-              Seq(
-                "assetId" -> JsString(assetId.base58),
-                "balance" -> JsNumber(balance),
-                "reissuable" -> JsBoolean(reissuable),
-                "quantity" -> JsNumber(quantity),
-                "issueTransaction" -> issueTx.json()
-              )
+        .map { case ((assetId, (balance, reissuable, quantity, issueTx))) =>
+          JsObject(
+            Seq(
+              "assetId" -> JsString(assetId.base58),
+              "balance" -> JsNumber(balance),
+              "reissuable" -> JsBoolean(reissuable),
+              "quantity" -> JsNumber(quantity),
+              "issueTransaction" -> issueTx.json()
             )
+          )
         }
         .toSeq
       Json.obj("address" -> acc.address, "balances" -> JsArray(balances))
@@ -379,9 +377,12 @@ case class AssetsApiRoute(settings: RestAPISettings,
     )
   )
   def signOrder: Route =
-    processRequest("order", (order: Order) => {
-      wallet
-        .privateKeyAccount(order.senderPublicKey)
-        .map(pk => Order.sign(order, pk))
-    })
+    processRequest(
+      "order",
+      (order: Order) => {
+        wallet
+          .privateKeyAccount(order.senderPublicKey)
+          .map(pk => Order.sign(order, pk))
+      }
+    )
 }

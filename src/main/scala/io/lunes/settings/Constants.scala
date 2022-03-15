@@ -2,12 +2,12 @@ package io.lunes.settings
 
 import scorex.utils.ScorexLogging
 
-/**
-  * System constants here.
+/** System constants here.
   */
 object Constants extends ScorexLogging {
-  val VersionStr = "0.1.4"
-  val VersionTuple = (0, 1, 4)
+  val VersionTuple = (0, 1, 5)
+  val VersionStr =
+    VersionTuple.toString.replace(",", ".").replace("(", "").replace(")", "")
   val MinimumCompatibilityVersion = (0, 0, 1)
   val ApplicationName = "lunesnode"
   val CoinName = "LUNES"
@@ -29,7 +29,7 @@ object Constants extends ScorexLogging {
     GenesisTransactionSettings(
       "3826zwbgHauHXAoppU4we3hsJc9GtRCpSvz",
       10000000000000000L
-    ),
+    )
   )
 
   val TestSchemeCharacter = '0'
@@ -38,11 +38,23 @@ object Constants extends ScorexLogging {
   val TestSignature = ""
 
   val TestTransactions = List(
-      GenesisTransactionSettings("37UHoHBydMkaQaZThXLVQce6NLsqXHEhnBF", 40000000000000000L),
-      GenesisTransactionSettings("37NC89DsnG57nimtL9gS5Tbih1quMVDJswV", 40000000000000000L),
-      GenesisTransactionSettings("37Ubk12FdcdhjJyuZE4FMPBjKMRbXVqwevR", 40000000000000000L),
-      GenesisTransactionSettings("37M3jShfU8kpqTPu8UPkviM1UTehQZ79U7B", 40000000000000000L)
+    GenesisTransactionSettings(
+      "37UHoHBydMkaQaZThXLVQce6NLsqXHEhnBF",
+      40000000000000000L
+    ),
+    GenesisTransactionSettings(
+      "37NC89DsnG57nimtL9gS5Tbih1quMVDJswV",
+      40000000000000000L
+    ),
+    GenesisTransactionSettings(
+      "37Ubk12FdcdhjJyuZE4FMPBjKMRbXVqwevR",
+      40000000000000000L
+    ),
+    GenesisTransactionSettings(
+      "37M3jShfU8kpqTPu8UPkviM1UTehQZ79U7B",
+      40000000000000000L
     )
+  )
 
   val MinimalStakeForIssueOrReissue: Long = 2000000000000L
 }
