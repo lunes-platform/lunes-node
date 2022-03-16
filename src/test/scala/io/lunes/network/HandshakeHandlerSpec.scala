@@ -6,12 +6,12 @@ class HandshakeHandlerSpec extends AnyFunSuite {
 
   test("Version (2, 0, 0) should be compatible") {
     assert(
-      true == HandshakeHandler.versionIsSupported((2, 0, 0))
+      false == HandshakeHandler.versionIsSupported((2, 0, 0))
     )
   }
   test("Version (1, 21, 1) should be compatible") {
     assert(
-      true == HandshakeHandler.versionIsSupported((1, 21, 1))
+      false == HandshakeHandler.versionIsSupported((1, 21, 1))
     )
   }
   test("Version (0, 1, 2) should be compatible") {
