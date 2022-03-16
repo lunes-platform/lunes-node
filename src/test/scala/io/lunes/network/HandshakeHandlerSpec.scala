@@ -4,12 +4,12 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class HandshakeHandlerSpec extends AnyFunSuite {
 
-  test("Version (2, 0, 0) should be compatible") {
+  test("Version (2, 0, 0) should be NOT compatible") {
     assert(
       false == HandshakeHandler.versionIsSupported((2, 0, 0))
     )
   }
-  test("Version (1, 21, 1) should be compatible") {
+  test("Version (1, 21, 1) should be NOT compatible") {
     assert(
       false == HandshakeHandler.versionIsSupported((1, 21, 1))
     )
@@ -25,19 +25,19 @@ class HandshakeHandlerSpec extends AnyFunSuite {
     )
   }
 
-  test("Version between (0, 0, 13) should be NOT compatible") {
+  test("Version between (0, 0, 13) should be compatible") {
     assert(
-      false == HandshakeHandler.versionIsSupported((0, 0, 13))
+      true == HandshakeHandler.versionIsSupported((0, 0, 13))
     )
   }
-  test("Version between (0, 0, 9) should be NOT compatible") {
+  test("Version between (0, 0, 9) should be compatible") {
     assert(
-      false == HandshakeHandler.versionIsSupported((0, 0, 9))
+      true == HandshakeHandler.versionIsSupported((0, 0, 9))
     )
   }
-  test("Version between (0, 0, 1) should be NOT compatible") {
+  test("Version between (0, 0, 1) should be compatible") {
     assert(
-      false == HandshakeHandler.versionIsSupported((0, 0, 1))
+      true == HandshakeHandler.versionIsSupported((0, 0, 1))
     )
   }
 
