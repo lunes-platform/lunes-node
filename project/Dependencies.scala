@@ -82,8 +82,8 @@ object Dependencies {
   lazy val ficus = Seq("com.iheart" %% "ficus" % "1.4.2")
   lazy val scorex = Seq(("org.scorexfoundation" %% "scrypto" % "2.0.4").exclude("org.slf4j", "slf4j-api"))
   lazy val commons_net = Seq("commons-net" % "commons-net" % "3.+")
-  lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.0.3")
-  lazy val scalactic = Seq("org.scalactic" %% "scalactic" % "3.0.3")
+  lazy val scalatest = Seq("org.scalatest" %% "scalatest" % "3.2.11")
+//  lazy val scalactic = Seq("org.scalactic" %% "scalactic" % "3.2.11")
   lazy val cats = Seq("org.typelevel" %% "cats-core" % "1.0.1")
   lazy val scalacheck = Seq(
     "org.scalacheck" %% "scalacheck" % "1.13.5",

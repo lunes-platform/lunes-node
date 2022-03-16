@@ -47,6 +47,7 @@ lazy val node = project
         Dependencies.testKit.map(_ % "test") ++
         Dependencies.logging ++
         Dependencies.matcher ++
+        Dependencies.scalatest ++
         Dependencies.metrics ++
         Dependencies.fp ++
         Dependencies.ficus ++
@@ -62,7 +63,6 @@ assemblyMergeStrategy in assembly := {
     MergeStrategy.concat
   case other => (assemblyMergeStrategy in assembly).value(other)
 }
-test in assembly := {}
 
 javaOptions in Universal ++= Seq(
   // -J prefix is required by the bash script
