@@ -76,7 +76,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
     val combinedRoute: Route = CompositeHttpService(actorSystem, tags, routes, settings.restAPISettings).compositeRoute
     val httpFuture = Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
     serverBinding = Await.result(httpFuture, 10.seconds)
-    log.info(s"Node REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
+    log.debug(s"Node REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
     (tags, routes)
   }
 
@@ -124,7 +124,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
         forceStopApplication()
     }
 
-    log.info("wallet: {} ", wallet.privateKeyAccounts.mkString("[",",","]"))
+    log.debug("wallet: {} ", wallet.privateKeyAccounts.mkString("[",",","]"))
 
     val feeCalculator = new FeeCalculator(settings.feesSettings)
     val time: Time = NTP
@@ -229,7 +229,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
         Http().bindAndHandle(combinedRoute, settings.restAPISettings.bindAddress, settings.restAPISettings.port)
       }
       serverBinding = Await.result(httpFuture, 20.seconds)
-      log.info(s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
+      log.debug(s"REST API was bound on ${settings.restAPISettings.bindAddress}:${settings.restAPISettings.port}")
     }
 
     //on unexpected shutdown
@@ -290,7 +290,7 @@ class LunesNode(val actorSystem: ActorSystem, val settings: LunesSettings, confi
       log.debug("Closing storage")
       db.close()
 
-      log.info("Shutdown complete")
+      log.debug("Shutdown complete")
     }
   }
 
@@ -353,7 +353,7 @@ object LunesNode extends ScorexLogging {
     
     System.setProperty("lunes.directory", config.getString("lunes.directory"))
 
-    log.info("Starting...")
+    log.debug("Starting...")
     sys.addShutdownHook {
       SystemInformationReporter.report(config)
     }
@@ -386,7 +386,7 @@ object LunesNode extends ScorexLogging {
         override val chainId: Byte = settings.blockchainSettings.addressSchemeCharacter.toByte
       }
 
-      log.info(s"${Constants.AgentName} Blockchain Id: ${settings.blockchainSettings.addressSchemeCharacter}")
+      log.debug(s"${Constants.AgentName} Blockchain Id: ${settings.blockchainSettings.addressSchemeCharacter}")
 
       new LunesNode(actorSystem, settings, config.root()).run()
     }
