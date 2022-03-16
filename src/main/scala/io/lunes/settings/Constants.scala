@@ -5,7 +5,7 @@ import scorex.utils.ScorexLogging
 /** System constants here.
   */
 object Constants extends ScorexLogging {
-  val VersionTuple = (0, 1, 5)
+  val VersionTuple = (0, 1, 0)
   val VersionStr =
     VersionTuple.toString.replace(",", ".").replace("(", "").replace(")", "")
   val MinimumCompatibilityVersion = List(0, 0, 1)

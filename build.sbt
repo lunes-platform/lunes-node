@@ -3,7 +3,7 @@ import sbt.Keys.{sourceGenerators, _}
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
-val nodeVersion = "0.1.5"
+val nodeVersion = "0.1.0"
 enablePlugins(GitVersioning)
 git.useGitDescribe := true
 git.baseVersion := nodeVersion
