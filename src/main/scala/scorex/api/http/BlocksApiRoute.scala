@@ -38,7 +38,7 @@ case class BlocksApiRoute(
 
   override lazy val route =
     pathPrefix("blocks") {
-      signature ~ first ~ last ~ lastHeaderOnly ~ at ~ atHeaderOnly ~ seq ~ seqHeaderOnly ~ height ~ heightEncoded ~ child ~ address ~ delay ~ checkpoint
+      signature ~ genesis ~ last ~ lastHeaderOnly ~ at ~ atHeaderOnly ~ seq ~ seqHeaderOnly ~ height ~ heightEncoded ~ child ~ address ~ delay ~ checkpoint
     }
 
   @Path("/address/{address}/{from}/{to}")
@@ -377,13 +377,13 @@ case class BlocksApiRoute(
     })
   }
 
-  @Path("/first")
+  @Path("/genesis")
   @ApiOperation(
     value = "First",
     notes = "Get genesis block data",
     httpMethod = "GET"
   )
-  def first: Route = (path("first") & get) {
+  def genesis: Route = (path("genesis") & get) {
     complete(history.genesis.json() + ("height" -> Json.toJson(1)))
   }
 
