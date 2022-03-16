@@ -172,19 +172,8 @@ abstract class HandshakeHandler(
 object HandshakeHandler extends ScorexLogging {
   val NodeNameAttributeKey = AttributeKey.newInstance[String]("name")
   def versionIsSupported(remoteVersion: (Int, Int, Int)): Boolean = {
-    def compare(versionList: List[(Int, Int)]): Boolean = {
-      versionList match {
-        case Nil => true
-        case (a, b) :: version =>
-          if (a > b) true else if (a < b) false else compare(version)
-      }
-    }
-    compare(
-      List(remoteVersion._1, remoteVersion._2, remoteVersion._3)
-        .zip(
-          Constants.MinimumCompatibilityVersion
-        ).toList
-    )
+    remoteVersion._1 == Constants.MinimumCompatibilityVersion(0) &&
+    remoteVersion._2 >= Constants.MinimumCompatibilityVersion(1)
   }
 
   def removeHandshakeHandlers(
