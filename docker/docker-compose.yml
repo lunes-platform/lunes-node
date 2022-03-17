@@ -1,0 +1,39 @@
+version: "3"
+networks:
+  lunes:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.0.0.0/16
+services:
+  master_node:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        - node_type=master
+    networks:
+      lunes:
+        ipv4_address: 172.0.0.5
+    ports:
+      - 5555:5555
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+
+  node:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        - node_type=node
+    networks:
+      - lunes
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
