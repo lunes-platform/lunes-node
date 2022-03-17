@@ -5,6 +5,7 @@ networks:
       driver: default
       config:
         - subnet: 172.0.0.0/16
+
 services:
   master_node:
     build:
