@@ -6,8 +6,10 @@ import scorex.utils.ScorexLogging
   */
 object Constants extends ScorexLogging {
   val VersionTuple = (0, 1, 0)
-  val VersionStr =
-    VersionTuple.toString.replace(",", ".").replace("(", "").replace(")", "")
+  val VersionStr = VersionTuple.toString
+    .replaceAllLiterally(",", ".")
+    .replace("(", "")
+    .replace(")", "")
   val MinimumCompatibilityVersion = List(0, 0, 1)
   val ApplicationName = "lunesnode"
   val CoinName = "LUNES"
