@@ -14,7 +14,7 @@ services:
       args:
         - node_type=master
     volumes:
-      - ./blockchain:/home/node
+      - ./blockchain:/home/master
     networks:
       lunes:
         ipv4_address: 172.0.0.5
