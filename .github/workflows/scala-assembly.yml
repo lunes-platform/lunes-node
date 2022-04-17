@@ -21,3 +21,8 @@ jobs:
         distribution: 'temurin'
     - name: Run assembly
       run: sbt assembly
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.0.0
+      with:
+        name: lunesnode 0.1.0
+        path: target/lunesnode-0.1.0.jar
