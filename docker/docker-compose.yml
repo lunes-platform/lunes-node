@@ -14,7 +14,7 @@ services:
       args:
         - node_type=master
     volumes:
-      - ./blockchain:/home/master
+      - ./blockchain/master:/home
     networks:
       lunes:
         ipv4_address: 172.0.0.5
@@ -33,7 +33,7 @@ services:
       args:
         - node_type=node
     volumes:
-      - ./blockchain:/home/node
+      - ./blockchain/node:/home
     networks:
       lunes:
         ipv4_address: 172.0.0.10
