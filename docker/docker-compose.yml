@@ -13,11 +13,13 @@ services:
       context: .
       args:
         - node_type=master
+    volumes:
+      - ./blockchain:/home/node
     networks:
       lunes:
         ipv4_address: 172.0.0.5
     ports:
-      - 5555:5555
+      - 80:5555
     deploy:
       restart_policy:
         condition: any
@@ -30,8 +32,12 @@ services:
       context: .
       args:
         - node_type=node
+    volumes:
+      - ./blockchain:/home/node
     networks:
       - lunes
+    ports:
+      - 81:5555
     deploy:
       replicas: 3
       restart_policy:
