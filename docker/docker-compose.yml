@@ -35,7 +35,8 @@ services:
     volumes:
       - ./blockchain:/home/node
     networks:
-      - lunes
+      lunes:
+        ipv4_address: 172.0.0.10
     ports:
       - 81:5555
     deploy:
