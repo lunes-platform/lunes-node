@@ -14,7 +14,7 @@ services:
       args:
         - node_type=master
     volumes:
-      - ./blockchain/master:/home
+      - ./blockchain/master:/home/master/
     networks:
       lunes:
         ipv4_address: 172.0.0.5
@@ -33,14 +33,14 @@ services:
       args:
         - node_type=node
     volumes:
-      - ./blockchain/node:/home
+      - ./blockchain/node:/home/node/
     networks:
       lunes:
         ipv4_address: 172.0.0.10
     ports:
       - 81:5555
     deploy:
-      replicas: 3
+      replicas: 1
       restart_policy:
         condition: any
         delay: 5s
