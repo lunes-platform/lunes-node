@@ -16,7 +16,7 @@ val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
 name := "lunes"
 normalizedName := s"${name.value}${network.value.packageSuffix}"
-version := "0.1.1"
+version := "0.0.8"
 
 git.useGitDescribe := true
 git.uncommittedSignifier := Some("DIRTY")

@@ -15,11 +15,11 @@ object BlockchainFeatures {
   private val dict = Seq(
     NG,
     MassTransfer,
-//    SmartAccounts,
-//    DataTransaction,
-//    BurnAnyTokens,
-//    FeeSponsorship,
-//    FairPoS
+    SmartAccounts,
+    DataTransaction,
+    BurnAnyTokens,
+    FeeSponsorship,
+    //  FairPoS
   ).map(f => f.id -> f).toMap
 
   val implemented: Set[Short] = dict.keySet
