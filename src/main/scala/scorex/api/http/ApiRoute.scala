@@ -3,7 +3,7 @@ package scorex.api.http
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server._
 import io.lunes.crypto
-import io.lunes.http.{ApiMarshallers, PlayJsonException, api_key, deprecated_api_key}
+import io.lunes.core.storage.http.{ApiMarshallers, PlayJsonException, api_key, deprecated_api_key}
 import io.lunes.settings.RestAPISettings
 import play.api.libs.json.Reads
 import scorex.crypto.encode.Base58
