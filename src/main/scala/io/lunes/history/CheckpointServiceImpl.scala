@@ -1,7 +1,7 @@
 package io.lunes.history
 
 import io.lunes.crypto
-import io.lunes.db.{CheckpointCodec, PropertiesStorage, SubStorage}
+import io.lunes.core.storage.db.{CheckpointCodec, PropertiesStorage, SubStorage}
 import io.lunes.network.Checkpoint
 import io.lunes.settings.CheckpointsSettings
 import org.iq80.leveldb.DB

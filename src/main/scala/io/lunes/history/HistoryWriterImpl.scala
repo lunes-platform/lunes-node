@@ -3,7 +3,7 @@ package io.lunes.history
 import java.util.concurrent.locks.ReentrantReadWriteLock
 
 import com.google.common.primitives.{Ints, Shorts}
-import io.lunes.db._
+import io.lunes.core.storage.db._
 import io.lunes.features.{FeatureProvider, FeaturesProperties}
 import io.lunes.settings.{FeaturesSettings, FunctionalitySettings}
 import io.lunes.state2._

@@ -3,7 +3,7 @@ package io.lunes
 import java.security.Security
 
 import com.google.common.base.Throwables
-import io.lunes.db.{Storage, VersionedStorage}
+import io.lunes.core.storage.db.{Storage, VersionedStorage}
 import monix.execution.UncaughtExceptionReporter
 import org.joda.time.Duration
 import org.joda.time.format.PeriodFormat

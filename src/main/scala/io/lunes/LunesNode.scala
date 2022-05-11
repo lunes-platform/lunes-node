@@ -16,7 +16,7 @@ import cats.instances.all._
 import com.typesafe.config._
 import io.lunes.utx._
 import io.lunes.root.RootActorSystem
-import io.lunes.db.openDB
+import io.lunes.core.storage.db.openDB
 import io.lunes.features.api.ActivationApiRoute
 import io.lunes.history.{CheckpointServiceImpl, StorageFactory}
 import io.lunes.http.NodeApiRoute

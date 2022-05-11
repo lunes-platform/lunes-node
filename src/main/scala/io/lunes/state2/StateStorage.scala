@@ -3,7 +3,7 @@ package io.lunes.state2
 import cats.Monoid
 import cats.implicits._
 import com.google.common.primitives.{Bytes, Ints, Longs}
-import io.lunes.db._
+import io.lunes.core.storage.db._
 import io.lunes.utils._
 import org.iq80.leveldb.{DB, WriteBatch}
 import scorex.account.{Address, Alias}
