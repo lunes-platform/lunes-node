@@ -18,7 +18,7 @@ import io.lunes.utx._
 import io.lunes.root.RootActorSystem
 import io.lunes.core.storage.db.openDB
 import io.lunes.features.api.ActivationApiRoute
-import io.lunes.history.{CheckpointServiceImpl, StorageFactory}
+import io.lunes.core.storage.history.{CheckpointServiceImpl, StorageFactory}
 import io.lunes.http.NodeApiRoute
 import io.lunes.metrics.Metrics
 import io.lunes.mining.{Miner, MinerImpl}
