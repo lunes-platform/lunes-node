@@ -25,9 +25,9 @@ import monix.eval.Task
 import monix.execution.Scheduler
 import scorex.account.Address
 import scorex.consensus.TransactionsOrdering
-import io.lunes.core.runtime.tx.ValidationError.{GenericError, SenderIsBlacklisted}
-import io.lunes.core.runtime.tx._
-import io.lunes.core.runtime.tx.assets.{MassTransferTransaction, TransferTransaction}
+import io.lunes.transaction.ValidationError.{GenericError, SenderIsBlacklisted}
+import io.lunes.transaction._
+import io.lunes.transaction.assets.{MassTransferTransaction, TransferTransaction}
 import scorex.utils.{ScorexLogging, Time}
 
 import scala.collection.JavaConverters._
