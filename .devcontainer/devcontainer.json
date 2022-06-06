@@ -1,0 +1,6 @@
+{
+	"name": "Existing Dockerfile",
+	"runArgs": ["--init"],
+	"context": "..",
+	"dockerFile": "./Dockerfile",
+}

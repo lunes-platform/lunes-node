@@ -1,44 +1,14 @@
-LUNES/
-# IDE/Editor files
+.bsp
+lunes.*
+lunesblockchain/*
+project/project/*
+project/target/*
+target/*
+.bsp
 .idea
-.ensime
-.ensime_cache/
-
-# scala build folders and files
-target
-*.tgz
-*.jar
-!third-party/yourkit/yjp-controller-api-redist.jar
-
-# vim
-*.*~
-
-# dotfiles
-.dockerignore
-.editorconfig
-.DS_Store
-
-# logs
-*.log
-
-# local settings
-localsettings.json
-local.conf
-
-# Text files
-*.txt
-*.ods
-*.csv
-*.dat
-
-# standalone docker
-Dockerfile
-
-# logs
-*.log
-LOG
-LOG.old
-
-package
-!src/package
-native
+.idea_modules
+.classpath
+.project
+.settings
+.metals
+.bloop

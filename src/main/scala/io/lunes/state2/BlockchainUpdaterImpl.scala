@@ -5,7 +5,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import cats.data.{NonEmptyList => NEL}
 import cats.implicits._
 import io.lunes.features.{BlockchainFeatures, FeatureProvider, FeaturesProperties}
-import io.lunes.history.HistoryWriterImpl
+import io.lunes.core.storage.history.HistoryWriterImpl
 import io.lunes.metrics.{Instrumented, TxsInBlockchainStats}
 import io.lunes.mining.MiningEstimators
 import io.lunes.settings.LunesSettings

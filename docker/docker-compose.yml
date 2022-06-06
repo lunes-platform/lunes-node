@@ -1,0 +1,47 @@
+version: "3"
+networks:
+  lunes:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.0.0.0/16
+
+services:
+  master_node:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        - node_type=master
+    volumes:
+      - ./blockchain/master:/home/master/
+    networks:
+      lunes:
+        ipv4_address: 172.0.0.5
+    ports:
+      - 80:5555
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s
+
+  node:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        - node_type=node
+    volumes:
+      - ./blockchain/node:/home/node/
+    networks:
+      lunes:
+        ipv4_address: 172.0.0.10
+    ports:
+      - 81:5555
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 120s

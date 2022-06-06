@@ -2,9 +2,9 @@ package scorex.api.http
 
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import io.lunes.state2.diffs.TransactionDiffer.TransactionValidationError
+import io.lunes.transaction.{Transaction, ValidationError}
 import play.api.libs.json._
 import scorex.account.{Address, AddressOrAlias, Alias}
-import io.lunes.transaction.{Transaction, ValidationError}
 
 case class ApiErrorResponse(error: Int, message: String)
 
@@ -20,30 +20,37 @@ trait ApiError {
   lazy val json = Json.obj("error" -> id, "message" -> message)
 }
 
-
 object ApiError {
   def fromValidationError(e: ValidationError): ApiError = e match {
-    case ValidationError.InvalidAddress(_) => InvalidAddress
-    case ValidationError.NegativeAmount(x, of) => NegativeAmount(s"$x of $of")
-    case ValidationError.InsufficientFee => InsufficientFee
-    case ValidationError.InvalidName => InvalidName
-    case ValidationError.InvalidSignature(_, _) => InvalidSignature
+    case ValidationError.InvalidAddress(_)       => InvalidAddress
+    case ValidationError.NegativeAmount(x, of)   => NegativeAmount(s"$x of $of")
+    case ValidationError.InsufficientFee         => InsufficientFee
+    case ValidationError.InvalidName             => InvalidName
+    case ValidationError.InvalidSignature(_, _)  => InvalidSignature
     case ValidationError.InvalidRequestSignature => InvalidSignature
-    case ValidationError.TooBigArray => TooBigArrayAllocation
-    case ValidationError.OverflowError => OverflowError
-    case ValidationError.ToSelf => ToSelfError
+    case ValidationError.TooBigArray             => TooBigArrayAllocation
+    case ValidationError.OverflowError           => OverflowError
+    case ValidationError.ToSelf                  => ToSelfError
     case ValidationError.MissingSenderPrivateKey => MissingSenderPrivateKey
-    case ValidationError.GenericError(ge) => CustomValidationError(ge)
-    case ValidationError.AlreadyInTheState(tx, txHeight) => CustomValidationError(s"Transaction $tx is already in the state on a height of $txHeight")
-    case ValidationError.AccountBalanceError(errs) => CustomValidationError(errs.values.mkString(", "))
-    case ValidationError.AliasNotExists(tx) => AliasNotExists(tx)
+    case ValidationError.GenericError(ge)        => CustomValidationError(ge)
+    case ValidationError.AlreadyInTheState(tx, txHeight) =>
+      CustomValidationError(
+        s"Transaction $tx is already in the state on a height of $txHeight"
+      )
+    case ValidationError.AccountBalanceError(errs) =>
+      CustomValidationError(errs.values.mkString(", "))
+    case ValidationError.AliasNotExists(tx)         => AliasNotExists(tx)
     case ValidationError.OrderValidationError(_, m) => CustomValidationError(m)
-    case ValidationError.UnsupportedTransactionType => CustomValidationError("UnsupportedTransactionType")
+    case ValidationError.UnsupportedTransactionType =>
+      CustomValidationError("UnsupportedTransactionType")
     case ValidationError.Mistiming(err) => Mistiming(err)
-    case TransactionValidationError(error, tx) => error match {
-      case ValidationError.Mistiming(errorMessage) => Mistiming(errorMessage)
-      case _ => StateCheckFailed(tx, fromValidationError(error).message)
-    }
+    case TransactionValidationError(error, tx) =>
+      error match {
+        case ValidationError.Mistiming(errorMessage) => Mistiming(errorMessage)
+        case _                                       => StateCheckFailed(tx, fromValidationError(error).message)
+      }
+    case ValidationError.FrozenAssetTransaction(x) =>
+      FrozenAssetTransaction(x)
     case error => CustomValidationError(error.toString)
   }
 }
@@ -55,8 +62,9 @@ case object Unknown extends ApiError {
 }
 
 case class WrongJson(
-                        cause: Option[Throwable] = None,
-                        errors: Seq[(JsPath, Seq[JsonValidationError])] = Seq.empty) extends ApiError {
+  cause: Option[Throwable] = None,
+  errors: Seq[(JsPath, Seq[JsonValidationError])] = Seq.empty
+) extends ApiError {
   override val id = 1
   override val code = StatusCodes.BadRequest
   override lazy val message = "failed to parse json message"
@@ -86,7 +94,6 @@ case object TooBigArrayAllocation extends ApiError {
   override val message: String = "Too big sequences requested"
   override val code: StatusCode = StatusCodes.BadRequest
 }
-
 
 //VALIDATION
 case object InvalidSignature extends ApiError {
@@ -159,7 +166,8 @@ case class StateCheckFailed(tx: Transaction, err: String) extends ApiError {
   override val id: Int = 112
   override val message: String = s"State check failed. Reason: $err"
   override val code: StatusCode = StatusCodes.BadRequest
-  override lazy val json = Json.obj("error" -> id, "message" -> message, "tx" -> tx.json())
+  override lazy val json =
+    Json.obj("error" -> id, "message" -> message, "tx" -> tx.json())
 }
 
 case object OverflowError extends ApiError {
@@ -197,7 +205,7 @@ case class AliasNotExists(aoa: AddressOrAlias) extends ApiError {
   override val code = StatusCodes.NotFound
   private lazy val msgReason = aoa match {
     case a: Address => s"for address '${a.stringRepr}'"
-    case a: Alias => s"'${a.stringRepr}'"
+    case a: Alias   => s"'${a.stringRepr}'"
   }
   override val message: String = s"alias $msgReason doesn't exist"
 }
@@ -210,4 +218,11 @@ case class Mistiming(errorMessage: String) extends ApiError {
 
 object Mistiming {
   val Id = 303
+}
+
+case class FrozenAssetTransaction(msg: String) extends ApiError {
+  override val id: Int = 116
+  override val message: String =
+    s"The Request Transaction Asset has been issued with a Freeze Order: $msg"
+  override val code: StatusCode = StatusCodes.BadRequest
 }

@@ -2,13 +2,15 @@ package io.lunes.settings
 
 import scorex.utils.ScorexLogging
 
-/**
-  * System constants here.
+/** System constants here.
   */
 object Constants extends ScorexLogging {
-  val VersionStr = "0.0.7"
-  val VersionTuple = (0, 0, 7)
-  val MinimalVersion = (0, 0, 7)
+  val VersionTuple = (0, 1, 0)
+  val VersionStr = VersionTuple.toString
+    .replaceAllLiterally(",", ".")
+    .replace("(", "")
+    .replace(")", "")
+  val MinimumCompatibilityVersion = List(0, 0, 1)
   val ApplicationName = "lunesnode"
   val CoinName = "LUNES"
   val CoinAbr = "LNS"
@@ -18,19 +20,42 @@ object Constants extends ScorexLogging {
   val MainSchemeCharacter = '1'
   val MainDelay = 60
   val MainTimestamp = 1528077600000L
-  val MainSignature = "soKTPcsb5cD97jnm64zF3pVuVUqUYx3caaDvuPyM6PXPY7eWCxeHeYvKSE2aJwZwRpXdRFdW1g5BQMFpYkHcf85"
+  val MainSignature =
+    "soKTPcsb5cD97jnm64zF3pVuVUqUYx3caaDvuPyM6PXPY7eWCxeHeYvKSE2aJwZwRpXdRFdW1g5BQMFpYkHcf85"
 
   val MainTransactions = List(
-    GenesisTransactionSettings("37oqFHsx1cRtLWtnp6YyQpud5WJk4v79VPu", 5072853761500800L),
-    GenesisTransactionSettings("3826zwbgHauHXAoppU4we3hsJc9GtRCpSvz", 10000000000000000L),
+    GenesisTransactionSettings(
+      "37oqFHsx1cRtLWtnp6YyQpud5WJk4v79VPu",
+      5072853761500800L
+    ),
+    GenesisTransactionSettings(
+      "3826zwbgHauHXAoppU4we3hsJc9GtRCpSvz",
+      10000000000000000L
+    )
   )
 
   val TestSchemeCharacter = '0'
   val TestDelay = 60
   val TestTimestamp = 1528300800000L
-  val TestSignature = "3MHtECVRc3qTe9tmvds7aQBLzX879YTdq6iYDnXwKGXrzrYZdESoYokQMGcWWSVKKZDjfocMBFPk7vBc1t8iAkBc"
+  val TestSignature =
+    "JfDSLhi8qd2bi8xoC3AqV7mjXdUSZXHUU5KbYQT9AuXDEJSqVuZJ4vS4nfRbJ64tZQeeXdbJJniTNChWQv8YPfh"
 
   val TestTransactions = List(
-    GenesisTransactionSettings("37aF3eL4tsZ6YpqViXpYAmRQAi7ehtDdBmG", 15072853761500800L)
+    GenesisTransactionSettings(
+      "37buuGA1KBFiaMmgtZojvkaRwifCdZbUNuq",
+      5000000000000L
+    ),
+    GenesisTransactionSettings(
+      "37VVpvgHjnNY9hfggyAbfMzvaD6Ewo7Cfcj",
+      5000000000000L
+    ),
+    GenesisTransactionSettings(
+      "37gKHykxhd8n5MhzjsETtVi9Pp12ximAkY7",
+      40000000000000000L
+    ),
+    GenesisTransactionSettings(
+      "37d1vG9NPjnkpyFErNdnyKXLoRzoEYGyxYu",
+      40000000000000000L
+    )
   )
 }
