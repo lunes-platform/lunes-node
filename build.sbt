@@ -1,7 +1,7 @@
 name         := "lunes-node"
 organization := "io.lunes"
 scalaVersion := "2.12.14"
-version      := "0.7.1"
+version      := "0.0.8"
 fork in run  := true
 
 mainClass in Compile := Some("io.lunes.LunesNode")
