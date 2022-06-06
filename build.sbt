@@ -1,39 +1,15 @@
-import com.typesafe.sbt.packager.archetypes.TemplateWriter
-import sbt.Keys.{sourceGenerators, _}
-import sbt._
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
+name := "lunes-node"
+scalaVersion := "2.12.14"
+organization := "io.lunes"
+fork in run := true
 
-val nodeVersion = "0.1.0"
-enablePlugins(GitVersioning)
-git.useGitDescribe := true
-git.baseVersion := nodeVersion
-name := "LunesNode"
 mainClass in Compile := Some("io.lunes.LunesNode")
-
-inThisBuild(
-  Seq(
-    scalaVersion := "2.12.14",
-    organization := "io.lunes",
-    crossPaths := false
-  )
-)
-
-scalacOptions ++= Seq(
-  "-feature",
-  "-deprecation",
-  "-language:higherKinds",
-  "-language:implicitConversions",
-  "-Ywarn-unused:-implicits",
-  "-Xlint"
-)
-
 resolvers += Resolver.bintrayRepo("fusesource", "maven")
 
 val network = SettingKey[Network]("network")
 network := { Network(sys.props.get("network")) }
 normalizedName := network.value.name
 
-fork in run := true
 
 lazy val node = project
   .in(file("."))
@@ -44,9 +20,7 @@ lazy val node = project
         Dependencies.http ++
         Dependencies.akka ++
         Dependencies.serialization ++
-        Dependencies.testKit.map(_ % "test") ++
         Dependencies.logging ++
-        Dependencies.matcher ++
         Dependencies.scalatest ++
         Dependencies.metrics ++
         Dependencies.fp ++
@@ -56,32 +30,9 @@ lazy val node = project
         Dependencies.monix.value
   )
 
-//assembly settings
-assemblyJarName in assembly := s"lunesnode-${nodeVersion}.jar"
+assemblyJarName in assembly := s"lunesnode-latest.jar"
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", "io.netty.versions.properties") =>
     MergeStrategy.concat
   case other => (assemblyMergeStrategy in assembly).value(other)
 }
-
-javaOptions in Universal ++= Seq(
-  // -J prefix is required by the bash script
-  "-J-server",
-  // JVM memory tuning for 2g ram
-  "-J-Xms128m",
-  "-J-Xmx2g",
-  "-J-XX:+ExitOnOutOfMemoryError",
-  // Java 9 support
-  "-J-XX:+IgnoreUnrecognizedVMOptions",
-  "-J--add-modules=java.xml.bind",
-
-  // from https://groups.google.com/d/msg/akka-user/9s4Yl7aEz3E/zfxmdc0cGQAJ
-  "-J-XX:+UseG1GC",
-  "-J-XX:+UseNUMA",
-  "-J-XX:+AlwaysPreTouch",
-
-  // probably can't use these with jstack and others tools
-  "-J-XX:+PerfDisableSharedMem",
-  "-J-XX:+ParallelRefProcEnabled",
-  "-J-XX:+UseStringDeduplication"
-)
