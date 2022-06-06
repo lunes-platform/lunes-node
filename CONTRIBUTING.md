@@ -4,9 +4,12 @@
 ## WORKFLOW
 
 1. Create and describe your **proposal/bug** in an _issue_.
-2. Create a new **branch** and **pull request** with the pattern `1-my-feature`.
+2. Create a new **branch** AND **pull request** with the pattern `1-my-feature`.
 
-<img width="1172" alt="Gitlab Flow" src="https://user-images.githubusercontent.com/50037567/165442258-072abfe6-2295-40d6-a573-92f851878c4c.png">
+## Deploy Features First in Testnet
+
+<img width="1744" alt="Untitled" src="https://user-images.githubusercontent.com/50037567/172264971-106c4dfd-0871-4799-9863-6fe60960662c.png">
+
 
 ---
 
