@@ -8,7 +8,7 @@ on:
 
 
 jobs:
-  assembly:
+  compile:
 
     runs-on: ubuntu-latest
 
