@@ -58,6 +58,4 @@ object Constants extends ScorexLogging {
       40000000000000000L
     )
   )
-
-  val MinimalStakeForIssueOrReissue: Long = 2000000000000L
 }

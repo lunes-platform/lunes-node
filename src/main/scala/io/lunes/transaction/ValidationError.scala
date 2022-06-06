@@ -65,11 +65,4 @@ object ValidationError {
     override def toString: String =
       s"Address $address cannot perform this transaction."
   }
-
-  case class InsufficientLunesInStake(address: String, balance: Long)
-    extends ValidationError {
-      private def convertBalance(balance: Long): Double = balance / 100000000
-      override def toString: String =
-        s"Address $address does not have enough balance (${convertBalance(balance)} Lunes). Minimum balance is ${convertBalance(Constants.MinimalStakeForIssueOrReissue)}."
-  }
 }

@@ -128,12 +128,6 @@ object TransactionFactory {
     time: Time,
     balance: Option[Long] = None
   ): Either[ValidationError, IssueTransaction] =
-    if (balance.getOrElse(0L) < Constants.MinimalStakeForIssueOrReissue)
-      Left(
-        ValidationError
-          .InsufficientLunesInStake(request.sender, balance.getOrElse(0))
-      )
-    else
       for {
         senderPrivateKey <- wallet.findWallet(request.sender)
         timestamp = request.timestamp.getOrElse(time.getTimestamp())
@@ -228,12 +222,6 @@ object TransactionFactory {
     time: Time,
     balance: Option[Long] = None
   ): Either[ValidationError, ReissueTransaction] = {
-    if (balance.getOrElse(0L) < Constants.MinimalStakeForIssueOrReissue)
-      Left(
-        ValidationError
-          .InsufficientLunesInStake(request.sender, balance.getOrElse(0))
-      )
-    else
       for {
         pk <- wallet.findWallet(request.sender)
         timestamp = request.timestamp.getOrElse(time.getTimestamp())
