@@ -1,24 +1,25 @@
-# Lunes Node
+# 🌎 Lunes Node
 
-Lunes Node development
+🌎 Full Node is the application that connects you to the Lunes Network to store, validate and propagate Lunes Blockchain
 
-## Testnet installation
+![GitHub last commit](https://img.shields.io/github/last-commit/lunes-platform/lunes-node)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/lunes-platform/lunes-node)
+![Discord](https://img.shields.io/discord/958424925453058158)
 
-See our [wiki](https://github.com/Lunes-platform/LunesNode/wiki/Testnet:-running-LunesNode)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-## Mainnet Installation
+## Contributing
 
-See our [wiki](https://github.com/Lunes-platform/LunesNode/wiki/Node-structure-and-installation)
+**Lunes Node** is still under development. Contributions are always welcome! Please follow the [Developers Guide](CONTRIBUTING.md) if you want to help.
 
-## Test enviroment
+Thanks to the following people who have contributed to this project:
 
-Lunes development network is open for tests.
+[![GitHub Contributors Image](https://contrib.rocks/image?repo=lunes-platform/lunes-node)](https://github.com/lunes-platform/lunes-node/graphs/contributors)
 
-## Credits
+## Contact
 
-This project is a fork only from source code: [Waves](https://github.com/wavesplatform/Waves/commit/0e0ee641b0fa48344849e4e7eadb3814bb13ae90).
+If you want to contact me you can reach me at <development@lunes.io>.
 
 ## License
 
-Apache2 © [https://www.lunes.io](https://www.lunes.io)
-
+telescope is licensed under [Apache License v2.0](LICENSE)
