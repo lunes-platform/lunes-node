@@ -8,10 +8,7 @@
             "type": "scala",
             "name": "Debug LunesNode",
             "request": "launch",
-            "mainClass": "io.lunes.LunesNode",
-            "args": [
-                "lunesnode.conf"
-            ]
+            "mainClass": "io.lunes.LunesNode"
         }
     ]
 }
