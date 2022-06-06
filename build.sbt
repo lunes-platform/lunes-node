@@ -1,6 +1,6 @@
 name         := "lunes-node"
-scalaVersion := "2.12.14"
 organization := "io.lunes"
+scalaVersion := "2.12.14"
 version      := "0.7.1"
 fork in run  := true
 
@@ -30,7 +30,7 @@ lazy val node = project
         Dependencies.monix.value
   )
 
-assemblyJarName in assembly := s"lunesnode-latest.jar"
+assemblyJarName in assembly := s"lunesnode-${version.value}.jar"
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", "io.netty.versions.properties") =>
     MergeStrategy.concat

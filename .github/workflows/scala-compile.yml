@@ -20,4 +20,4 @@ jobs:
       uses: actions/upload-artifact@v3.0.0
       with:
         name: lunesnode 0.1.0
-        path: target/lunesnode-0.1.0.jar
+        path: target/scala-2.12/lunesnode-0.1.0.jar
