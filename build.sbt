@@ -1,15 +1,15 @@
-name := "lunes-node"
+name         := "lunes-node"
 scalaVersion := "2.12.14"
 organization := "io.lunes"
-fork in run := true
+version      := "0.7.1"
+fork in run  := true
 
 mainClass in Compile := Some("io.lunes.LunesNode")
 resolvers += Resolver.bintrayRepo("fusesource", "maven")
 
 val network = SettingKey[Network]("network")
-network := { Network(sys.props.get("network")) }
+network        := { Network(sys.props.get("network")) }
 normalizedName := network.value.name
-
 
 lazy val node = project
   .in(file("."))
