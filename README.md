@@ -9,13 +9,13 @@ Full Node is the application that connects you to the Lunes Network to store, va
 
 **MAINNET**
 
-[![Compile](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-compile.yml/badge.svg?branch=testnet)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-compile.yml)
-[![Test](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml/badge.svg?branch=testnet)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml)
+[![Compile](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-compile.yml/badge.svg?branch=mainnet)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-compile.yml)
+[![Test](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml/badge.svg?branch=mainnet)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml)
 
 **TESTNET**
 
-[![Compile](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-compile.yml/badge.svg?branch=mainnet)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-compile.yml)
-[![Test](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml/badge.svg?branch=mainnet)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml)
+[![Compile](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-compile.yml/badge.svg?branch=testnet)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-compile.yml)
+[![Test](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml/badge.svg?branch=testnet)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml)
 
 ---
 
