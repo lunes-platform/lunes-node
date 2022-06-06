@@ -519,22 +519,21 @@ object LunesNode extends ScorexLogging {
       case Some(value) => new File(value)
     }
 
-    file match {
-      case None =>
-        log.error("🚨 No configuration file was provided!")
-        forceStopApplication()
-        ConfigFactory.load()
-
-      case Some(file) =>
-        loadConfig(
-          ConfigFactory.parseFile(file)
-        )
+    if (!file.exists()) {
+      log.error("🚨 No configuration file was provided!")
+      forceStopApplication()
+      ConfigFactory.load()
+    } else {
+      loadConfig(
+        ConfigFactory.parseFile(file)
+      )
     }
   }
 
   /**
    * # Main executable method
-   * @param args Command Line arguments must be pass relative `lunes.conf` path
+   * @param args
+   *   Command Line arguments must be pass relative `lunes.conf` path
    */
   def main(args: Array[String]): Unit = {
     fixNTP()
