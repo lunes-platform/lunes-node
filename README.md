@@ -2,6 +2,8 @@
 
 🌎 Full Node is the application that connects you to the Lunes Network to store, validate and propagate Lunes Blockchain
 
+[![Assembly](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-assembly.yml/badge.svg?branch=main)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-assembly.yml)
+[![Test](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml/badge.svg?branch=main)](https://github.com/lunes-platform/lunes-node/actions/workflows/scala-test.yml)
 ![GitHub last commit](https://img.shields.io/github/last-commit/lunes-platform/lunes-node)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/lunes-platform/lunes-node)
 ![Discord](https://img.shields.io/discord/958424925453058158)
