@@ -16,7 +16,7 @@ object SecurityChecker {
       // BanAddress("3887fR55i8i4xwk4jXSGJ5DkoyuEdrbyAZx"),
       BanAddress("37QDCbeJkYJ9oBxqneiAfarH168dJaMasFW"),
       BanAddress("37N1YLXmLxKiSWxqjuxrBpzt3vCYuo6e3gS"),
-      BanAddress("37TPtNeUdc9FuEayWUnudHH43c5cCeECnua"),
+      BanAddress("37TPtNeUdc9FuEayWUnudHH43c5cCeECnua")
     )
   )
 
@@ -24,6 +24,8 @@ object SecurityChecker {
   addFrozenAssetName(essentialAssetName.head)
 
   def checkAddress(input: String): Boolean = bannedAddress.banned(input)
+
+  def checkListOfAddress(listAddress: List[String]): Boolean = listAddress.exists(checkAddress)
 
   def addFrozenAssetName(input: String): Unit =
     if (!frozenAssetName.exists(_ == input))

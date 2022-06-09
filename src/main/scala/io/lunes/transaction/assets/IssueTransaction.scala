@@ -14,26 +14,27 @@ import io.lunes.transaction.{ValidationError, _}
 import scala.util.{Failure, Success, Try}
 import io.lunes.security.SecurityChecker
 
-/** @param sender
-  *   @param name
-  * @param description
-  *   @param quantity
-  * @param decimals
-  *   @param reissuable
-  * @param fee
-  *   @param timestamp
-  * @param signature
-  */
+/**
+ * @param sender
+ * @param name
+ * @param description
+ * @param quantity
+ * @param decimals
+ * @param reissuable
+ * @param fee
+ * @param timestamp
+ * @param signature
+ */
 case class IssueTransaction private (
-    sender: PublicKeyAccount,
-    name: Array[Byte],
-    description: Array[Byte],
-    quantity: Long,
-    decimals: Byte,
-    reissuable: Boolean,
-    fee: Long,
-    timestamp: Long,
-    signature: ByteStr
+  sender: PublicKeyAccount,
+  name: Array[Byte],
+  description: Array[Byte],
+  quantity: Long,
+  decimals: Byte,
+  reissuable: Boolean,
+  fee: Long,
+  timestamp: Long,
+  signature: ByteStr
 ) extends SignedTransaction
     with FastHashId {
 
@@ -59,12 +60,12 @@ case class IssueTransaction private (
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
-      "assetId" -> assetId().base58,
-      "name" -> new String(name, Charsets.UTF_8),
+      "assetId"     -> assetId().base58,
+      "name"        -> new String(name, Charsets.UTF_8),
       "description" -> new String(description, Charsets.UTF_8),
-      "quantity" -> quantity,
-      "decimals" -> decimals,
-      "reissuable" -> reissuable
+      "quantity"    -> quantity,
+      "decimals"    -> decimals,
+      "reissuable"  -> reissuable
     )
   )
 
@@ -74,27 +75,30 @@ case class IssueTransaction private (
 
 }
 
-/** */
+/**
+ */
 object IssueTransaction {
   val MaxDescriptionLength = 1000
-  val MaxAssetNameLength = 16
-  val MinAssetNameLength = 4
-  val MaxDecimals = 8
+  val MaxAssetNameLength   = 16
+  val MinAssetNameLength   = 4
+  val MaxDecimals          = 8
 
-  /** @param bytes
-    *   @return
-    */
+  /**
+   * @param bytes
+   * @return
+   */
   def parseBytes(bytes: Array[Byte]): Try[IssueTransaction] = Try {
     require(bytes.head == TransactionType.IssueTransaction.id)
     parseTail(bytes.tail).get
   }
 
-  /** @param bytes
-    *   @return
-    */
+  /**
+   * @param bytes
+   * @return
+   */
   def parseTail(bytes: Array[Byte]): Try[IssueTransaction] = Try {
     val signature = ByteStr(bytes.slice(0, SignatureLength))
-    val txId = bytes(SignatureLength)
+    val txId      = bytes(SignatureLength)
     require(
       txId == TransactionType.IssueTransaction.id.toByte,
       s"Signed tx id is not match"
@@ -133,41 +137,40 @@ object IssueTransaction {
       )
   }.flatten
 
-  /** @param sender
-    *   @param name
-    * @param description
-    *   @param quantity
-    * @param decimals
-    *   @param reissuable
-    * @param fee
-    *   @param timestamp
-    * @param signature
-    *   @return
-    */
+  /**
+   * @param sender
+   * @param name
+   * @param description
+   * @param quantity
+   * @param decimals
+   * @param reissuable
+   * @param fee
+   * @param timestamp
+   * @param signature
+   * @return
+   */
   def create(
-      sender: PublicKeyAccount,
-      name: Array[Byte],
-      description: Array[Byte],
-      quantity: Long,
-      decimals: Byte,
-      reissuable: Boolean,
-      fee: Long,
-      timestamp: Long,
-      signature: ByteStr
+    sender: PublicKeyAccount,
+    name: Array[Byte],
+    description: Array[Byte],
+    quantity: Long,
+    decimals: Byte,
+    reissuable: Boolean,
+    fee: Long,
+    timestamp: Long,
+    signature: ByteStr
   ): Either[ValidationError, IssueTransaction] =
-    if (quantity <= 0) {
-      Left(ValidationError.NegativeAmount(quantity, "assets"))
-    } else if (SecurityChecker.checkAddress(sender.address)) {
+    if (SecurityChecker.checkAddress(sender.address)) {
       Left(
         ValidationError.FrozenAssetTransaction(
           s"address `${sender.address}` frozen"
         )
       )
+    } else if (quantity <= 0) {
+      Left(ValidationError.NegativeAmount(quantity, "assets"))
     } else if (description.length > MaxDescriptionLength) {
       Left(ValidationError.TooBigArray)
-    } else if (
-      name.length < MinAssetNameLength || name.length > MaxAssetNameLength
-    ) {
+    } else if (name.length < MinAssetNameLength || name.length > MaxAssetNameLength) {
       Left(ValidationError.InvalidName)
     } else if (decimals < 0 || decimals > MaxDecimals) {
       Left(ValidationError.TooBigArray)
@@ -189,25 +192,26 @@ object IssueTransaction {
       )
     }
 
-  /** @param sender
-    *   @param name
-    * @param description
-    *   @param quantity
-    * @param decimals
-    *   @param reissuable
-    * @param fee
-    *   @param timestamp
-    * @return
-    */
+  /**
+   * @param sender
+   * @param name
+   * @param description
+   * @param quantity
+   * @param decimals
+   * @param reissuable
+   * @param fee
+   * @param timestamp
+   * @return
+   */
   def create(
-      sender: PrivateKeyAccount,
-      name: Array[Byte],
-      description: Array[Byte],
-      quantity: Long,
-      decimals: Byte,
-      reissuable: Boolean,
-      fee: Long,
-      timestamp: Long
+    sender: PrivateKeyAccount,
+    name: Array[Byte],
+    description: Array[Byte],
+    quantity: Long,
+    decimals: Byte,
+    reissuable: Boolean,
+    fee: Long,
+    timestamp: Long
   ): Either[ValidationError, IssueTransaction] =
     create(
       sender,
@@ -220,8 +224,6 @@ object IssueTransaction {
       timestamp,
       ByteStr.empty
     ).right.map { unverified =>
-      unverified.copy(signature =
-        ByteStr(crypto.sign(sender, unverified.bodyBytes()))
-      )
+      unverified.copy(signature = ByteStr(crypto.sign(sender, unverified.bodyBytes())))
     }
 }

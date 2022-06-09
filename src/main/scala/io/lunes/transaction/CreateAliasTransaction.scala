@@ -12,18 +12,19 @@ import io.lunes.transaction.TransactionParser._
 import scala.util.{Failure, Success, Try}
 import io.lunes.security.SecurityChecker
 
-/** @param sender
-  *   @param alias
-  * @param fee
-  *   @param timestamp
-  * @param signature
-  */
+/**
+ * @param sender
+ * @param alias
+ * @param fee
+ * @param timestamp
+ * @param signature
+ */
 case class CreateAliasTransaction private (
-    sender: PublicKeyAccount,
-    alias: Alias,
-    fee: Long,
-    timestamp: Long,
-    signature: ByteStr
+  sender: PublicKeyAccount,
+  alias: Alias,
+  fee: Long,
+  timestamp: Long,
+  signature: ByteStr
 ) extends SignedTransaction {
 
   override val transactionType: TransactionType.Value =
@@ -45,8 +46,8 @@ case class CreateAliasTransaction private (
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
-      "alias" -> alias.name,
-      "fee" -> fee,
+      "alias"     -> alias.name,
+      "fee"       -> fee,
       "timestamp" -> timestamp
     )
   )
@@ -57,77 +58,78 @@ case class CreateAliasTransaction private (
 
 }
 
-/** */
+/**
+ */
 object CreateAliasTransaction {
 
-  /** @param bytes
-    *   @return
-    */
+  /**
+   * @param bytes
+   * @return
+   */
   def parseTail(bytes: Array[Byte]): Try[CreateAliasTransaction] = Try {
-    val sender = PublicKeyAccount(bytes.slice(0, KeyLength))
+    val sender                 = PublicKeyAccount(bytes.slice(0, KeyLength))
     val (aliasBytes, aliasEnd) = Deser.parseArraySize(bytes, KeyLength)
     (for {
-      alias <- Alias.fromBytes(aliasBytes)
-      fee = Longs.fromByteArray(bytes.slice(aliasEnd, aliasEnd + 8))
+      alias    <- Alias.fromBytes(aliasBytes)
+      fee       = Longs.fromByteArray(bytes.slice(aliasEnd, aliasEnd + 8))
       timestamp = Longs.fromByteArray(bytes.slice(aliasEnd + 8, aliasEnd + 16))
       signature = ByteStr(
-        bytes.slice(aliasEnd + 16, aliasEnd + 16 + SignatureLength)
-      )
+                    bytes.slice(aliasEnd + 16, aliasEnd + 16 + SignatureLength)
+                  )
       tx <- CreateAliasTransaction.create(
-        sender,
-        alias,
-        fee,
-        timestamp,
-        signature
-      )
+              sender,
+              alias,
+              fee,
+              timestamp,
+              signature
+            )
     } yield tx).fold(
       left => Failure(new Exception(left.toString)),
       right => Success(right)
     )
   }.flatten
 
-  /** @param sender
-    *   @param alias
-    * @param fee
-    *   @param timestamp
-    * @param signature
-    *   @return
-    */
+  /**
+   * @param sender
+   * @param alias
+   * @param fee
+   * @param timestamp
+   * @param signature
+   * @return
+   */
   def create(
-      sender: PublicKeyAccount,
-      alias: Alias,
-      fee: Long,
-      timestamp: Long,
-      signature: ByteStr
+    sender: PublicKeyAccount,
+    alias: Alias,
+    fee: Long,
+    timestamp: Long,
+    signature: ByteStr
   ): Either[ValidationError, CreateAliasTransaction] =
-    if (fee <= 0) {
-      Left(ValidationError.InsufficientFee)
-    } else if (SecurityChecker.checkAddress(sender.address)) {
+    if (SecurityChecker.checkAddress(sender.address)) {
       Left(
         ValidationError.FrozenAssetTransaction(
           s"address `${sender.address}` frozen"
         )
       )
+    } else if (fee <= 0) {
+      Left(ValidationError.InsufficientFee)
     } else {
       Right(CreateAliasTransaction(sender, alias, fee, timestamp, signature))
     }
 
-  /** @param sender
-    *   @param alias
-    * @param fee
-    *   @param timestamp
-    * @return
-    */
+  /**
+   * @param sender
+   * @param alias
+   * @param fee
+   * @param timestamp
+   * @return
+   */
   def create(
-      sender: PrivateKeyAccount,
-      alias: Alias,
-      fee: Long,
-      timestamp: Long
-  ): Either[ValidationError, CreateAliasTransaction] = {
+    sender: PrivateKeyAccount,
+    alias: Alias,
+    fee: Long,
+    timestamp: Long
+  ): Either[ValidationError, CreateAliasTransaction] =
     create(sender, alias, fee, timestamp, ByteStr.empty).right.map { unsigned =>
-      unsigned.copy(signature =
-        ByteStr(crypto.sign(sender, unsigned.bodyBytes()))
-      )
+      unsigned.copy(signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
     }
-  }
 }
