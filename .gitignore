@@ -1,9 +1,9 @@
-.bsp
 lunes.*
 lunesblockchain/*
 project/project/*
 project/target/*
 target/*
+data
 .bsp
 .idea
 .idea_modules
