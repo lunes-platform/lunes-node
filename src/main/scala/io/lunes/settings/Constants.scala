@@ -5,7 +5,7 @@ import scorex.utils.ScorexLogging
 /** System constants here.
   */
 object Constants extends ScorexLogging {
-  val VersionTuple = (0, 1, 0)
+  val VersionTuple = (0, 0, 9)
   val VersionStr = VersionTuple.toString
     .replaceAllLiterally(",", ".")
     .replace("(", "")
