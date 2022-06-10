@@ -11,30 +11,28 @@ import scorex.serialization.Deser
 import io.lunes.transaction.TransactionParser._
 import io.lunes.transaction.ValidationError.Validation
 import io.lunes.transaction._
-import io.lunes.transaction.assets.MassTransferTransaction.{
-  ParsedTransfer,
-  toJson
-}
+import io.lunes.transaction.assets.MassTransferTransaction.{ParsedTransfer, toJson}
 
 import scala.util.{Either, Failure, Success, Try}
 import io.lunes.security.SecurityChecker
 
-/** @param version
-  *   @param assetId
-  * @param sender
-  *   @param transfers
-  * @param timestamp
-  *   @param fee
-  * @param proofs
-  */
+/**
+ * @param version
+ * @param assetId
+ * @param sender
+ * @param transfers
+ * @param timestamp
+ * @param fee
+ * @param proofs
+ */
 case class MassTransferTransaction private (
-    version: Byte,
-    assetId: Option[AssetId],
-    sender: PublicKeyAccount,
-    transfers: List[ParsedTransfer],
-    timestamp: Long,
-    fee: Long,
-    proofs: Proofs
+  version: Byte,
+  assetId: Option[AssetId],
+  sender: PublicKeyAccount,
+  transfers: List[ParsedTransfer],
+  timestamp: Long,
+  fee: Long,
+  proofs: Proofs
 ) extends ProvenTransaction
     with FastHashId {
   override val transactionType: TransactionType.Value =
@@ -45,10 +43,9 @@ case class MassTransferTransaction private (
   override val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     val assetIdBytes =
       assetId.map(a => (1: Byte) +: a.arr).getOrElse(Array(0: Byte))
-    val transferBytes = transfers
-      .map { case ParsedTransfer(recipient, amount) =>
-        recipient.bytes.arr ++ Longs.toByteArray(amount)
-      }
+    val transferBytes = transfers.map { case ParsedTransfer(recipient, amount) =>
+      recipient.bytes.arr ++ Longs.toByteArray(amount)
+    }
       .fold(Array())(_ ++ _)
 
     Bytes.concat(
@@ -64,10 +61,10 @@ case class MassTransferTransaction private (
   }
 
   override def jsonBase(): JsObject = super.jsonBase() ++ Json.obj(
-    "version" -> version,
-    "assetId" -> assetId.map(_.base58),
+    "version"       -> version,
+    "assetId"       -> assetId.map(_.base58),
     "transferCount" -> transfers.size,
-    "totalAmount" -> transfers.map(_.amount).sum
+    "totalAmount"   -> transfers.map(_.amount).sum
   )
 
   override val json: Coeval[JsObject] = Coeval.evalOnce {
@@ -82,33 +79,37 @@ case class MassTransferTransaction private (
     Coeval.evalOnce(Bytes.concat(bodyBytes(), proofs.bytes()))
 }
 
-/** */
+/**
+ */
 object MassTransferTransaction {
   val MaxTransferCount = 100
 
-  /** @param recipient
-    *   @param amount
-    */
+  /**
+   * @param recipient
+   * @param amount
+   */
   case class Transfer(recipient: String, amount: Long)
 
-  /** @param address
-    *   @param amount
-    */
+  /**
+   * @param address
+   * @param amount
+   */
   case class ParsedTransfer(address: AddressOrAlias, amount: Long)
 
   implicit val transferFormat: Format[Transfer] = Json.format
 
-  /** @param bytes
-    *   @return
-    */
+  /**
+   * @param bytes
+   * @return
+   */
   def parseTail(bytes: Array[Byte]): Try[MassTransferTransaction] = Try {
     val version = bytes(0)
-    val sender = PublicKeyAccount(bytes.slice(1, KeyLength + 1))
+    val sender  = PublicKeyAccount(bytes.slice(1, KeyLength + 1))
     val (assetIdOpt, s0) =
       Deser.parseByteArrayOption(bytes, KeyLength + 1, AssetIdLength)
     val transferCount = Shorts.fromByteArray(bytes.slice(s0, s0 + 2))
 
-    def readTransfer(offset: Int): (Validation[ParsedTransfer], Int) = {
+    def readTransfer(offset: Int): (Validation[ParsedTransfer], Int) =
       AddressOrAlias.fromBytes(bytes, offset) match {
         case Right((addr, ofs)) =>
           val amount = Longs.fromByteArray(bytes.slice(ofs, ofs + 8))
@@ -120,7 +121,6 @@ object MassTransferTransaction {
           )
         case Left(e) => (Left(e), offset)
       }
-    }
 
     val transfersList: List[(Validation[ParsedTransfer], Int)] =
       List.iterate(readTransfer(s0 + 2), transferCount) { case (_, offset) =>
@@ -129,20 +129,20 @@ object MassTransferTransaction {
 
     val s1 = transfersList.lastOption.map(_._2).getOrElse(s0 + 2)
     val tx: Validation[MassTransferTransaction] = for {
-      transfers <- transfersList.map { case (ei, _) => ei }.sequence
-      timestamp = Longs.fromByteArray(bytes.slice(s1, s1 + 8))
-      feeAmount = Longs.fromByteArray(bytes.slice(s1 + 8, s1 + 16))
+      transfers              <- transfersList.map { case (ei, _) => ei }.sequence
+      timestamp               = Longs.fromByteArray(bytes.slice(s1, s1 + 8))
+      feeAmount               = Longs.fromByteArray(bytes.slice(s1 + 8, s1 + 16))
       (attachment, attachEnd) = Deser.parseArraySize(bytes, s1 + 16)
-      proofs <- Proofs.fromBytes(bytes.drop(attachEnd))
+      proofs                 <- Proofs.fromBytes(bytes.drop(attachEnd))
       mtt <- MassTransferTransaction.create(
-        version,
-        assetIdOpt.map(ByteStr(_)),
-        sender,
-        transfers,
-        timestamp,
-        feeAmount,
-        proofs
-      )
+               version,
+               assetIdOpt.map(ByteStr(_)),
+               sender,
+               transfers,
+               timestamp,
+               feeAmount,
+               proofs
+             )
     } yield mtt
     tx.fold(
       left => Failure(new Exception(left.toString)),
@@ -150,23 +150,24 @@ object MassTransferTransaction {
     )
   }.flatten
 
-  /** @param version
-    *   @param assetId
-    * @param sender
-    *   @param transfers
-    * @param timestamp
-    *   @param feeAmount
-    * @param proofs
-    *   @return
-    */
+  /**
+   * @param version
+   * @param assetId
+   * @param sender
+   * @param transfers
+   * @param timestamp
+   * @param feeAmount
+   * @param proofs
+   * @return
+   */
   def create(
-      version: Byte,
-      assetId: Option[AssetId],
-      sender: PublicKeyAccount,
-      transfers: List[ParsedTransfer],
-      timestamp: Long,
-      feeAmount: Long,
-      proofs: Proofs
+    version: Byte,
+    assetId: Option[AssetId],
+    sender: PublicKeyAccount,
+    transfers: List[ParsedTransfer],
+    timestamp: Long,
+    feeAmount: Long,
+    proofs: Proofs
   ): Either[ValidationError, MassTransferTransaction] = {
     if (SecurityChecker.checkAddress(sender.address)) {
       Left(
@@ -180,7 +181,13 @@ object MassTransferTransaction {
     }.fold(
       ex => Left(ValidationError.OverflowError),
       totalAmount =>
-        if (transfers.lengthCompare(MaxTransferCount) > 0) {
+        if (SecurityChecker.checkListOfAddress(transfers.map(_.address.toString()))) {
+          Left(
+            ValidationError.FrozenAssetTransaction(
+              s"address `${transfers.map(_.address)}` frozen"
+            )
+          )
+        } else if (transfers.lengthCompare(MaxTransferCount) > 0) {
           Left(
             ValidationError.GenericError(
               s"Number of transfers is greater than $MaxTransferCount"
@@ -210,22 +217,23 @@ object MassTransferTransaction {
     )
   }
 
-  /** @param version
-    *   @param assetId
-    * @param sender
-    *   @param transfers
-    * @param timestamp
-    *   @param feeAmount
-    * @return
-    */
+  /**
+   * @param version
+   * @param assetId
+   * @param sender
+   * @param transfers
+   * @param timestamp
+   * @param feeAmount
+   * @return
+   */
   def selfSigned(
-      version: Byte,
-      assetId: Option[AssetId],
-      sender: PrivateKeyAccount,
-      transfers: List[ParsedTransfer],
-      timestamp: Long,
-      feeAmount: Long
-  ): Either[ValidationError, MassTransferTransaction] = {
+    version: Byte,
+    assetId: Option[AssetId],
+    sender: PrivateKeyAccount,
+    transfers: List[ParsedTransfer],
+    timestamp: Long,
+    feeAmount: Long
+  ): Either[ValidationError, MassTransferTransaction] =
     create(
       version,
       assetId,
@@ -241,18 +249,17 @@ object MassTransferTransaction {
           .explicitGet()
       )
     }
-  }
 
-  /** @param transfers
-    *   @return
-    */
+  /**
+   * @param transfers
+   * @return
+   */
   def parseTransfersList(
-      transfers: List[Transfer]
-  ): Validation[List[ParsedTransfer]] = {
+    transfers: List[Transfer]
+  ): Validation[List[ParsedTransfer]] =
     transfers.traverse { case Transfer(recipient, amount) =>
       AddressOrAlias.fromString(recipient).map(ParsedTransfer(_, amount))
     }
-  }
 
   private def toJson(transfers: List[ParsedTransfer]): JsValue =
     Json.toJson(transfers.map { case ParsedTransfer(address, amount) =>

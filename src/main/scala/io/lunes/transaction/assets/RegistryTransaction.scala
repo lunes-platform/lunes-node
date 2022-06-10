@@ -15,18 +15,19 @@ import scorex.serialization.Deser
 import scala.util.{Failure, Success, Try}
 import io.lunes.security.SecurityChecker
 
-/** @param sender
-  *   @param timestamp
-  * @param fee
-  *   @param userdata
-  * @param signature
-  */
+/**
+ * @param sender
+ * @param timestamp
+ * @param fee
+ * @param userdata
+ * @param signature
+ */
 case class RegistryTransaction private (
-    sender: PublicKeyAccount,
-    timestamp: Long,
-    fee: Long,
-    userdata: Array[Byte],
-    signature: ByteStr
+  sender: PublicKeyAccount,
+  timestamp: Long,
+  fee: Long,
+  userdata: Array[Byte],
+  signature: ByteStr
 ) extends SignedTransaction
     with FastHashId {
 
@@ -40,8 +41,8 @@ case class RegistryTransaction private (
 
   val bodyBytes: Coeval[Array[Byte]] = Coeval.evalOnce {
     val timestampBytes = Longs.toByteArray(timestamp)
-    val amountBytes = Longs.toByteArray(amount)
-    val feeBytes = Longs.toByteArray(fee)
+    val amountBytes    = Longs.toByteArray(amount)
+    val feeBytes       = Longs.toByteArray(fee)
 
     Bytes.concat(
       Array(transactionType.id.toByte),
@@ -57,8 +58,8 @@ case class RegistryTransaction private (
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
       "recipient" -> recipient.stringRepr,
-      "amount" -> amount,
-      "userdata" -> Base58.encode(userdata)
+      "amount"    -> amount,
+      "userdata"  -> Base58.encode(userdata)
     )
   )
 
@@ -68,19 +69,21 @@ case class RegistryTransaction private (
 
 }
 
-/** */
+/**
+ */
 object RegistryTransaction {
 
-  val MaxUserdata = 140
+  val MaxUserdata       = 140
   val MaxUserdataLength = base58Length(MaxUserdata)
 
-  /** @param bytes
-    *   @return
-    */
+  /**
+   * @param bytes
+   * @return
+   */
   def parseTail(bytes: Array[Byte]): Try[RegistryTransaction] = Try {
 
     val signature = ByteStr(bytes.slice(0, SignatureLength))
-    val txId = bytes(SignatureLength)
+    val txId      = bytes(SignatureLength)
     require(
       txId == TransactionType.RegistryTransaction.id.toByte,
       s"Signed tx id is not match"
@@ -99,45 +102,46 @@ object RegistryTransaction {
     val feeAmount = Longs.fromByteArray(bytes.slice(s1 + 16, s1 + 24))
 
     (for {
-      recRes <- AddressOrAlias.fromBytes(bytes, s1 + 24)
+      recRes                   <- AddressOrAlias.fromBytes(bytes, s1 + 24)
       (recipient, recipientEnd) = recRes
-      (userdata, _) = Deser.parseArraySize(bytes, recipientEnd)
+      (userdata, _)             = Deser.parseArraySize(bytes, recipientEnd)
       tt <- RegistryTransaction.create(
-        sender,
-        timestamp,
-        feeAmount,
-        userdata,
-        signature
-      )
+              sender,
+              timestamp,
+              feeAmount,
+              userdata,
+              signature
+            )
     } yield tt).fold(
       left => Failure(new Exception(left.toString)),
       right => Success(right)
     )
   }.flatten
 
-  /** @param sender
-    *   @param timestamp
-    * @param feeAmount
-    *   @param userdata
-    * @param signature
-    *   @return
-    */
+  /**
+   * @param sender
+   * @param timestamp
+   * @param feeAmount
+   * @param userdata
+   * @param signature
+   * @return
+   */
   def create(
-      sender: PublicKeyAccount,
-      timestamp: Long,
-      feeAmount: Long,
-      userdata: Array[Byte],
-      signature: ByteStr
+    sender: PublicKeyAccount,
+    timestamp: Long,
+    feeAmount: Long,
+    userdata: Array[Byte],
+    signature: ByteStr
   ): Either[ValidationError, RegistryTransaction] = {
     val amount: Long = 1000000000 // 10 lunes
-    if (userdata.length > RegistryTransaction.MaxUserdata) {
-      Left(ValidationError.TooBigArray)
-    } else if (SecurityChecker.checkAddress(sender.address)) {
+    if (SecurityChecker.checkAddress(sender.address)) {
       Left(
         ValidationError.FrozenAssetTransaction(
           s"address `${sender.address}` frozen"
         )
       )
+    } else if (userdata.length > RegistryTransaction.MaxUserdata) {
+      Left(ValidationError.TooBigArray)
     } else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
       Left(
         ValidationError.OverflowError
@@ -151,23 +155,20 @@ object RegistryTransaction {
     }
   }
 
-  /** @param sender
-    *   @param timestamp
-    * @param feeAmount
-    *   @param userdata
-    * @return
-    */
+  /**
+   * @param sender
+   * @param timestamp
+   * @param feeAmount
+   * @param userdata
+   * @return
+   */
   def create(
-      sender: PrivateKeyAccount,
-      timestamp: Long,
-      feeAmount: Long,
-      userdata: Array[Byte]
-  ): Either[ValidationError, RegistryTransaction] = {
-    create(sender, timestamp, feeAmount, userdata, ByteStr.empty).right.map {
-      unsigned =>
-        unsigned.copy(signature =
-          ByteStr(crypto.sign(sender, unsigned.bodyBytes()))
-        )
+    sender: PrivateKeyAccount,
+    timestamp: Long,
+    feeAmount: Long,
+    userdata: Array[Byte]
+  ): Either[ValidationError, RegistryTransaction] =
+    create(sender, timestamp, feeAmount, userdata, ByteStr.empty).right.map { unsigned =>
+      unsigned.copy(signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
     }
-  }
 }

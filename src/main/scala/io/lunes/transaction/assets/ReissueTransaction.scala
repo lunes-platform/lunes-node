@@ -12,22 +12,23 @@ import io.lunes.transaction.{ValidationError, _}
 import scala.util.{Failure, Success, Try}
 import io.lunes.security.SecurityChecker
 
-/** @param sender
-  *   @param assetId
-  * @param quantity
-  *   @param reissuable
-  * @param fee
-  *   @param timestamp
-  * @param signature
-  */
+/**
+ * @param sender
+ * @param assetId
+ * @param quantity
+ * @param reissuable
+ * @param fee
+ * @param timestamp
+ * @param signature
+ */
 case class ReissueTransaction private (
-    sender: PublicKeyAccount,
-    assetId: ByteStr,
-    quantity: Long,
-    reissuable: Boolean,
-    fee: Long,
-    timestamp: Long,
-    signature: ByteStr
+  sender: PublicKeyAccount,
+  assetId: ByteStr,
+  quantity: Long,
+  reissuable: Boolean,
+  fee: Long,
+  timestamp: Long,
+  signature: ByteStr
 ) extends SignedTransaction
     with FastHashId {
 
@@ -48,8 +49,8 @@ case class ReissueTransaction private (
 
   override val json: Coeval[JsObject] = Coeval.evalOnce(
     jsonBase() ++ Json.obj(
-      "assetId" -> assetId.base58,
-      "quantity" -> quantity,
+      "assetId"    -> assetId.base58,
+      "quantity"   -> quantity,
       "reissuable" -> reissuable
     )
   )
@@ -61,11 +62,12 @@ case class ReissueTransaction private (
   )
 }
 
-/** */
+/**
+ */
 object ReissueTransaction {
   def parseTail(bytes: Array[Byte]): Try[ReissueTransaction] = Try {
     val signature = ByteStr(bytes.slice(0, SignatureLength))
-    val txId = bytes(SignatureLength)
+    val txId      = bytes(SignatureLength)
     require(
       txId == TransactionType.ReissueTransaction.id.toByte,
       s"Signed tx id is not match"
@@ -97,32 +99,33 @@ object ReissueTransaction {
       )
   }.flatten
 
-  /** @param sender
-    *   @param assetId
-    * @param quantity
-    *   @param reissuable
-    * @param fee
-    *   @param timestamp
-    * @param signature
-    *   @return
-    */
+  /**
+   * @param sender
+   * @param assetId
+   * @param quantity
+   * @param reissuable
+   * @param fee
+   * @param timestamp
+   * @param signature
+   * @return
+   */
   def create(
-      sender: PublicKeyAccount,
-      assetId: ByteStr,
-      quantity: Long,
-      reissuable: Boolean,
-      fee: Long,
-      timestamp: Long,
-      signature: ByteStr
+    sender: PublicKeyAccount,
+    assetId: ByteStr,
+    quantity: Long,
+    reissuable: Boolean,
+    fee: Long,
+    timestamp: Long,
+    signature: ByteStr
   ): Either[ValidationError, ReissueTransaction] =
-    if (quantity <= 0) {
-      Left(ValidationError.NegativeAmount(quantity, "assets"))
-    } else if (SecurityChecker.checkAddress(sender.address)) {
+    if (SecurityChecker.checkAddress(sender.address)) {
       Left(
         ValidationError.FrozenAssetTransaction(
           s"address `${sender.address}` frozen"
         )
       )
+    } else if (quantity <= 0) {
+      Left(ValidationError.NegativeAmount(quantity, "assets"))
     } else if (fee <= 0) {
       Left(ValidationError.InsufficientFee)
     } else {
@@ -139,21 +142,22 @@ object ReissueTransaction {
       )
     }
 
-  /** @param sender
-    *   @param assetId
-    * @param quantity
-    *   @param reissuable
-    * @param fee
-    *   @param timestamp
-    * @return
-    */
+  /**
+   * @param sender
+   * @param assetId
+   * @param quantity
+   * @param reissuable
+   * @param fee
+   * @param timestamp
+   * @return
+   */
   def create(
-      sender: PrivateKeyAccount,
-      assetId: ByteStr,
-      quantity: Long,
-      reissuable: Boolean,
-      fee: Long,
-      timestamp: Long
+    sender: PrivateKeyAccount,
+    assetId: ByteStr,
+    quantity: Long,
+    reissuable: Boolean,
+    fee: Long,
+    timestamp: Long
   ): Either[ValidationError, ReissueTransaction] =
     create(
       sender,
@@ -164,8 +168,6 @@ object ReissueTransaction {
       timestamp,
       ByteStr.empty
     ).right.map { unsigned =>
-      unsigned.copy(signature =
-        ByteStr(crypto.sign(sender, unsigned.bodyBytes()))
-      )
+      unsigned.copy(signature = ByteStr(crypto.sign(sender, unsigned.bodyBytes())))
     }
 }
