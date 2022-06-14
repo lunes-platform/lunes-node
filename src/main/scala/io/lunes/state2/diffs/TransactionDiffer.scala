@@ -23,6 +23,7 @@ object TransactionDiffer {
     currentBlockTimestamp: Long,
     currentBlockHeight: Int
   )(s: SnapshotStateReader, fp: FeatureProvider, tx: Transaction): Either[ValidationError, Diff] = {
+    println(tx)
     for {
       t0 <- Verifier(s, currentBlockHeight)(tx)
       t1 <- CommonValidation.disallowTxFromFuture(settings, currentBlockTimestamp, t0)
