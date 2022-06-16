@@ -10,7 +10,6 @@ import io.lunes.transaction.TransactionParser._
 import io.lunes.transaction._
 
 import scala.util.{Failure, Success, Try}
-import io.lunes.security.SecurityChecker
 
 case class LeaseTransaction private (
   sender: PublicKeyAccount,
@@ -98,13 +97,7 @@ object LeaseTransaction {
     recipient: AddressOrAlias,
     signature: ByteStr
   ): Either[ValidationError, LeaseTransaction] =
-    if (SecurityChecker.checkAddress(sender.address)) {
-      Left(
-        ValidationError.FrozenAssetTransaction(
-          s"address `${sender.address}` frozen"
-        )
-      )
-    } else if (amount <= 0) {
+    if (amount <= 0) {
       Left(ValidationError.NegativeAmount(amount, "lunes"))
     } else if (Try(Math.addExact(amount, fee)).isFailure) {
       Left(ValidationError.OverflowError)

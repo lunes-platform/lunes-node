@@ -1,7 +1,6 @@
 package io.lunes.transaction
 
 import com.google.common.base.Charsets
-import io.lunes.security.SecurityChecker
 import io.lunes.settings.Constants
 import io.lunes.state2.ByteStr
 import io.lunes.transaction.assets._
@@ -50,24 +49,20 @@ object TransactionFactory {
     wallet: Wallet,
     time: Time
   ): Either[ValidationError, TransferTransaction] =
-    if (SecurityChecker.checkListOfAddress(List(request.sender, request.recipient))) {
-      Left(ValidationError.FrozenAssetTransaction(request.sender))
-    } else {
-      for {
-        senderPrivateKey <- wallet.findWallet(request.sender)
-        recipientAcc     <- AddressOrAlias.fromString(request.recipient)
-        tx <- TransferTransaction
-                .create(
-                  request.assetId.map(s => ByteStr.decodeBase58(s).get),
-                  senderPrivateKey,
-                  recipientAcc,
-                  request.amount,
-                  request.timestamp.getOrElse(time.getTimestamp()),
-                  request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
-                  request.fee
-                )
-      } yield tx
-    }
+    for {
+      senderPrivateKey <- wallet.findWallet(request.sender)
+      recipientAcc     <- AddressOrAlias.fromString(request.recipient)
+      tx <- TransferTransaction
+              .create(
+                request.assetId.map(s => ByteStr.decodeBase58(s).get),
+                senderPrivateKey,
+                recipientAcc,
+                request.amount,
+                request.timestamp.getOrElse(time.getTimestamp()),
+                request.feeAssetId.map(s => ByteStr.decodeBase58(s).get),
+                request.fee
+              )
+    } yield tx
 
   /**
    * @param request
@@ -81,24 +76,20 @@ object TransactionFactory {
     time: Time
   ): Either[ValidationError, MassTransferTransaction] = {
     val address = request.transfers.map(tx => tx.recipient) ++ List(request.sender)
-    if (SecurityChecker.checkListOfAddress(address)) {
-      Left(ValidationError.FrozenAssetTransaction(request.sender))
-    } else {
-      for {
-        senderPrivateKey <- wallet.findWallet(request.sender)
-        transfers <- MassTransferTransaction.parseTransfersList(
-                       request.transfers
-                     )
-        tx <- MassTransferTransaction.selfSigned(
-                Proofs.Version,
-                request.assetId.map(s => ByteStr.decodeBase58(s).get),
-                senderPrivateKey,
-                transfers,
-                request.timestamp.getOrElse(time.getTimestamp()),
-                request.fee
-              )
-      } yield tx
-    }
+    for {
+      senderPrivateKey <- wallet.findWallet(request.sender)
+      transfers <- MassTransferTransaction.parseTransfersList(
+                     request.transfers
+                   )
+      tx <- MassTransferTransaction.selfSigned(
+              Proofs.Version,
+              request.assetId.map(s => ByteStr.decodeBase58(s).get),
+              senderPrivateKey,
+              transfers,
+              request.timestamp.getOrElse(time.getTimestamp()),
+              request.fee
+            )
+    } yield tx
   }
 
   /**

@@ -14,7 +14,6 @@ import io.lunes.transaction._
 import io.lunes.transaction.assets.MassTransferTransaction.{ParsedTransfer, toJson}
 
 import scala.util.{Either, Failure, Success, Try}
-import io.lunes.security.SecurityChecker
 
 /**
  * @param version
@@ -168,26 +167,19 @@ object MassTransferTransaction {
     timestamp: Long,
     feeAmount: Long,
     proofs: Proofs
-  ): Either[ValidationError, MassTransferTransaction] = {
-    if (SecurityChecker.checkAddress(sender.address)) {
-      Left(
-        ValidationError.FrozenAssetTransaction(
-          s"address `${sender.address}` frozen"
-        )
-      )
-    }
+  ): Either[ValidationError, MassTransferTransaction] =
     Try {
       transfers.map(_.amount).fold(feeAmount)(Math.addExact)
     }.fold(
       ex => Left(ValidationError.OverflowError),
       totalAmount =>
-        if (SecurityChecker.checkListOfAddress(transfers.map(_.address.toString()))) {
-          Left(
-            ValidationError.FrozenAssetTransaction(
-              s"address `${transfers.map(_.address)}` frozen"
-            )
-          )
-        } else if (transfers.lengthCompare(MaxTransferCount) > 0) {
+        // if (SecurityChecker.checkListOfAddress(transfers.map(_.address.toString()))) {
+        //   Left(
+        //     ValidationError.FrozenAssetTransaction(
+        //       s"address `${transfers.map(_.address)}` frozen"
+        //     )
+        //   )
+        if (transfers.lengthCompare(MaxTransferCount) > 0) {
           Left(
             ValidationError.GenericError(
               s"Number of transfers is greater than $MaxTransferCount"
@@ -215,7 +207,6 @@ object MassTransferTransaction {
           )
         }
     )
-  }
 
   /**
    * @param version

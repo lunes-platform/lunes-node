@@ -10,7 +10,6 @@ import scorex.serialization.Deser
 import io.lunes.transaction.TransactionParser._
 
 import scala.util.{Failure, Success, Try}
-import io.lunes.security.SecurityChecker
 
 /**
  * @param sender
@@ -104,13 +103,7 @@ object CreateAliasTransaction {
     timestamp: Long,
     signature: ByteStr
   ): Either[ValidationError, CreateAliasTransaction] =
-    if (SecurityChecker.checkAddress(sender.address)) {
-      Left(
-        ValidationError.FrozenAssetTransaction(
-          s"address `${sender.address}` frozen"
-        )
-      )
-    } else if (fee <= 0) {
+    if (fee <= 0) {
       Left(ValidationError.InsufficientFee)
     } else {
       Right(CreateAliasTransaction(sender, alias, fee, timestamp, signature))
