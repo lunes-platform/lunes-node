@@ -1,21 +1,35 @@
 package io.lunes.state2.diffs
 
-import io.lunes.features.FeatureProvider
-import io.lunes.settings.FunctionalitySettings
-import io.lunes.state2._
-import io.lunes.state2.reader.SnapshotStateReader
-import io.lunes.transaction.ValidationError.UnsupportedTransactionType
-import io.lunes.transaction._
-import io.lunes.transaction.assets._
-import io.lunes.transaction.assets.exchange.ExchangeTransaction
 import io.lunes.transaction.lease.{LeaseCancelTransaction, LeaseTransaction}
+import io.lunes.transaction.ValidationError.UnsupportedTransactionType
+import io.lunes.transaction.assets.exchange.ExchangeTransaction
+import io.lunes.state2.reader.SnapshotStateReader
+import io.lunes.settings.FunctionalitySettings
+import io.lunes.features.FeatureProvider
 import io.lunes.security.SecurityChecker
+import io.lunes.transaction.assets._
+import io.lunes.transaction._
+import io.lunes.state2._
 
-/**
- */
 object TransactionDiffer {
 
   case class TransactionValidationError(cause: ValidationError, tx: Transaction) extends ValidationError
+
+  def typeOfTx[T <: Transaction](tx: T): String =
+    tx match {
+      case _: MassTransferTransaction => "Mass Transfer"
+      case _: CreateAliasTransaction  => "Create Alias"
+      case _: LeaseCancelTransaction  => "Lease Cancel"
+      case _: ExchangeTransaction     => "Exchange"
+      case _: RegistryTransaction     => "Registry"
+      case _: TransferTransaction     => "Transfer"
+      case _: GenesisTransaction      => "Genesis"
+      case _: PaymentTransaction      => "Payment"
+      case _: ReissueTransaction      => "Reissue"
+      case _: IssueTransaction        => "Issue"
+      case _: LeaseTransaction        => "Lease"
+      case _: BurnTransaction         => "Burn"
+    }
 
   def apply(
     settings: FunctionalitySettings,
@@ -23,7 +37,8 @@ object TransactionDiffer {
     currentBlockTimestamp: Long,
     currentBlockHeight: Int
   )(s: SnapshotStateReader, fp: FeatureProvider, tx: Transaction): Either[ValidationError, Diff] = {
-    println(tx)
+    println("NEW TRANSACTION")
+    println(s"[+1] ${typeOfTx(tx)}")
     for {
       t0 <- Verifier(s, currentBlockHeight)(tx)
       t1 <- CommonValidation.disallowTxFromFuture(settings, currentBlockTimestamp, t0)
@@ -31,7 +46,8 @@ object TransactionDiffer {
       t3 <- CommonValidation.disallowBeforeActivationTime(fp, currentBlockHeight, t2)
       t4 <- CommonValidation.disallowDuplicateIds(s, settings, currentBlockHeight, t3)
       t5 <- CommonValidation.disallowSendingGreaterThanBalance(s, settings, currentBlockTimestamp, t4)
-      diff <- t5 match {
+      t6 <- CommonValidation.banAddress(currentBlockHeight, tx)
+      diff <- t6 match {
                 case gtx: GenesisTransaction =>
                   GenesisTransactionDiff(
                     currentBlockHeight
