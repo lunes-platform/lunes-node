@@ -184,7 +184,7 @@ object CommonValidation {
       }
     } else {
       println(s"🕑 just after height: $blockThreshold")
-      Left(GenericError("Unknown transaction must be explicitly activated"))
+      Right(tx)
     }
   }
 }
