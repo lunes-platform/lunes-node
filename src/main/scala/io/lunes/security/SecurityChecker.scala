@@ -35,5 +35,4 @@ object SecurityChecker {
 
   def checkFrozenAsset(account: String, assetId: String): Boolean =
     frozen.checksWith(account, assetId)
-
 }

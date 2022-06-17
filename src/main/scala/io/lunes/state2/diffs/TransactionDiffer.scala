@@ -15,20 +15,20 @@ object TransactionDiffer {
 
   case class TransactionValidationError(cause: ValidationError, tx: Transaction) extends ValidationError
 
-  def typeOfTx[T <: Transaction](tx: T): String =
+  def typeOfTx[T <: Transaction](tx: T) =
     tx match {
-      case _: MassTransferTransaction => "Mass Transfer"
-      case _: CreateAliasTransaction  => "Create Alias"
-      case _: LeaseCancelTransaction  => "Lease Cancel"
-      case _: ExchangeTransaction     => "Exchange"
-      case _: RegistryTransaction     => "Registry"
-      case _: TransferTransaction     => "Transfer"
-      case _: GenesisTransaction      => "Genesis"
-      case _: PaymentTransaction      => "Payment"
-      case _: ReissueTransaction      => "Reissue"
-      case _: IssueTransaction        => "Issue"
-      case _: LeaseTransaction        => "Lease"
-      case _: BurnTransaction         => "Burn"
+      case _: MassTransferTransaction => println("[+1] Mass Transfer")
+      case _: CreateAliasTransaction  => println("[+1] Create Alias")
+      case _: LeaseCancelTransaction  => println("[+1] Lease Cancel")
+      case _: ExchangeTransaction     => println("[+1] Exchange")
+      case _: RegistryTransaction     => println("[+1] Registry")
+      case _: TransferTransaction     => println("[+1] Transfer")
+      case _: GenesisTransaction      => println("[+1] Genesis")
+      case _: PaymentTransaction      => println("[+1] Payment")
+      case _: ReissueTransaction      => println("[+1] Reissue")
+      case _: IssueTransaction        => println("[+1] Issue")
+      case _: LeaseTransaction        => println("[+1] Lease")
+      case _: BurnTransaction         => println("[+1] Burn")
     }
 
   def apply(
@@ -37,8 +37,8 @@ object TransactionDiffer {
     currentBlockTimestamp: Long,
     currentBlockHeight: Int
   )(s: SnapshotStateReader, fp: FeatureProvider, tx: Transaction): Either[ValidationError, Diff] = {
-    println("NEW TRANSACTION")
-    println(s"[+1] ${typeOfTx(tx)}")
+    typeOfTx(tx)
+
     for {
       t0 <- Verifier(s, currentBlockHeight)(tx)
       t1 <- CommonValidation.disallowTxFromFuture(settings, currentBlockTimestamp, t0)
@@ -46,76 +46,76 @@ object TransactionDiffer {
       t3 <- CommonValidation.disallowBeforeActivationTime(fp, currentBlockHeight, t2)
       t4 <- CommonValidation.disallowDuplicateIds(s, settings, currentBlockHeight, t3)
       t5 <- CommonValidation.disallowSendingGreaterThanBalance(s, settings, currentBlockTimestamp, t4)
-      t6 <- CommonValidation.banAddress(currentBlockHeight, tx)
+      t6 <- CommonValidation.commonCheckBanAddress(currentBlockHeight, tx)
       diff <- t6 match {
-                case gtx: GenesisTransaction =>
+                case tx: GenesisTransaction =>
                   GenesisTransactionDiff(
                     currentBlockHeight
-                  )(gtx)
-                case ptx: PaymentTransaction =>
+                  )(tx)
+                case tx: PaymentTransaction =>
                   PaymentTransactionDiff(
                     s,
                     currentBlockHeight,
                     settings,
                     currentBlockTimestamp
-                  )(ptx)
-                case itx: IssueTransaction =>
+                  )(tx)
+                case tx: IssueTransaction =>
                   AssetTransactionsDiff.issue(
                     currentBlockHeight
-                  )(itx)
-                case rtx: ReissueTransaction =>
+                  )(tx)
+                case tx: ReissueTransaction =>
                   AssetTransactionsDiff.reissue(
                     s,
                     settings,
                     currentBlockTimestamp,
                     currentBlockHeight
-                  )(rtx)
-                case btx: BurnTransaction =>
+                  )(tx)
+                case tx: BurnTransaction =>
                   AssetTransactionsDiff.burn(
                     s,
                     currentBlockHeight
-                  )(btx)
-                case ttx: TransferTransaction =>
+                  )(tx)
+                case tx: TransferTransaction =>
                   TransferTransactionDiff(
                     s,
                     settings,
                     currentBlockTimestamp,
                     currentBlockHeight
-                  )(ttx)
-                case rdtx: RegistryTransaction =>
+                  )(tx)
+                case tx: RegistryTransaction =>
                   RegistryTransactionDiff(
                     s,
                     settings,
                     currentBlockTimestamp,
                     currentBlockHeight
-                  )(rdtx)
-                case mtx: MassTransferTransaction =>
+                  )(tx)
+                case tx: MassTransferTransaction =>
                   MassTransferTransactionDiff(
                     s,
                     currentBlockTimestamp,
                     currentBlockHeight
-                  )(mtx)
-                case ltx: LeaseTransaction =>
+                  )(tx)
+                case tx: LeaseTransaction =>
                   LeaseTransactionsDiff.lease(
                     s,
                     currentBlockHeight
-                  )(ltx)
-                case ltx: LeaseCancelTransaction =>
+                  )(tx)
+                case tx: LeaseCancelTransaction =>
                   LeaseTransactionsDiff.leaseCancel(
                     s,
                     settings,
                     currentBlockTimestamp,
                     currentBlockHeight
-                  )(ltx)
-                case etx: ExchangeTransaction =>
+                  )(tx)
+                case tx: ExchangeTransaction =>
                   ExchangeTransactionDiff(
                     s,
                     currentBlockHeight
-                  )(etx)
-                case atx: CreateAliasTransaction =>
+                  )(tx)
+                case tx: CreateAliasTransaction =>
                   CreateAliasTransactionDiff(
                     currentBlockHeight
-                  )(atx)
+                  )(tx)
                 case _ => Left(UnsupportedTransactionType)
               }
       positiveDiff <- BalanceDiffValidation(s, settings)(diff)
