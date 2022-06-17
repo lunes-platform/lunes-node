@@ -13,7 +13,6 @@ import scorex.crypto.encode.Base58
 import scorex.serialization.Deser
 
 import scala.util.{Failure, Success, Try}
-import io.lunes.security.SecurityChecker
 
 /**
  * @param sender
@@ -134,13 +133,7 @@ object RegistryTransaction {
     signature: ByteStr
   ): Either[ValidationError, RegistryTransaction] = {
     val amount: Long = 1000000000 // 10 lunes
-    if (SecurityChecker.checkAddress(sender.address)) {
-      Left(
-        ValidationError.FrozenAssetTransaction(
-          s"address `${sender.address}` frozen"
-        )
-      )
-    } else if (userdata.length > RegistryTransaction.MaxUserdata) {
+    if (userdata.length > RegistryTransaction.MaxUserdata) {
       Left(ValidationError.TooBigArray)
     } else if (Try(Math.addExact(amount, feeAmount)).isFailure) {
       Left(

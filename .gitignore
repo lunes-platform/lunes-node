@@ -1,5 +1,5 @@
 lunes.*
-lunesblockchain/*
+blockchain/*
 project/project/*
 project/target/*
 target/*
@@ -12,3 +12,4 @@ data
 .settings
 .metals
 .bloop
+.vscode

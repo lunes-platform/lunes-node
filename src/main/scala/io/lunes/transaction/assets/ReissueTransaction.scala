@@ -10,7 +10,6 @@ import io.lunes.transaction.TransactionParser._
 import io.lunes.transaction.{ValidationError, _}
 
 import scala.util.{Failure, Success, Try}
-import io.lunes.security.SecurityChecker
 
 /**
  * @param sender
@@ -118,13 +117,7 @@ object ReissueTransaction {
     timestamp: Long,
     signature: ByteStr
   ): Either[ValidationError, ReissueTransaction] =
-    if (SecurityChecker.checkAddress(sender.address)) {
-      Left(
-        ValidationError.FrozenAssetTransaction(
-          s"address `${sender.address}` frozen"
-        )
-      )
-    } else if (quantity <= 0) {
+    if (quantity <= 0) {
       Left(ValidationError.NegativeAmount(quantity, "assets"))
     } else if (fee <= 0) {
       Left(ValidationError.InsufficientFee)

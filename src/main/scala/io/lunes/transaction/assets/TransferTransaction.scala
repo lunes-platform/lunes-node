@@ -12,7 +12,6 @@ import io.lunes.transaction.TransactionParser._
 import io.lunes.transaction.{ValidationError, _}
 
 import scala.util.{Failure, Success, Try}
-import io.lunes.security.SecurityChecker
 
 /**
  * @param assetId
@@ -149,13 +148,7 @@ object TransferTransaction {
     feeAmount: Long,
     signature: ByteStr
   ): Either[ValidationError, TransferTransaction] =
-    if (SecurityChecker.checkListOfAddress(List(sender.address, recipient.toString()))) {
-      Left(
-        ValidationError.FrozenAssetTransaction(
-          s"address `${sender.address}` frozen"
-        )
-      )
-    } else if (amount <= 0) {
+    if (amount <= 0) {
       Left(
         ValidationError.NegativeAmount(amount, "lunes")
       )
