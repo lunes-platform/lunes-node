@@ -164,7 +164,7 @@ object CommonValidation {
       }
     }
 
-    val blockThreshold = 100
+    val blockThreshold: Long = (2 * 10e5).toInt
     if (height >= blockThreshold) {
       tx match {
         case tx: MassTransferTransaction => banned(tx.transfers.map(_.toString) ++ List(tx.sender.toString))
