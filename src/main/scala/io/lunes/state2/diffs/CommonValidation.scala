@@ -150,37 +150,35 @@ object CommonValidation {
       case _ => Right(tx)
     }
 
-  def banAddress[T <: Transaction](height: Long, tx: T): Either[ValidationError, T] = {
-    def banned(sender: String) = {
+  def commonCheckBanAddress[T <: Transaction](height: Long, tx: T): Either[ValidationError, T] = {
+    def banned(listAddr: List[String]) = {
       import io.lunes.security.SecurityChecker
 
-      println(s"🔎 checking ${sender} if is banned")
-      if (SecurityChecker.checkAddress(sender)) {
-        println(s"🚨 checking ${sender} is banned")
-        Left(ValidationError.FrozenAssetTransaction(sender))
+      println(s"🔎 checking if ${listAddr} are banned")
+      if (SecurityChecker.checkListOfAddress(listAddr)) {
+        println(s"🚨 ${listAddr} are banned")
+        Left(ValidationError.BannedAddress(listAddr))
       } else {
-        println(s"✅ ${sender} it is ok")
+        println("✅ it is ok")
         Right(tx)
       }
     }
 
-    val blockThreshold = 200
-    if (height > blockThreshold) {
+    val blockThreshold = 100
+    if (height >= blockThreshold) {
       tx match {
-        case tx: LeaseCancelTransaction => banned(tx.sender.toString)
-        case tx: CreateAliasTransaction => banned(tx.sender.toString)
-        case tx: TransferTransaction    => banned(tx.sender.toString)
-        case tx: RegistryTransaction    => banned(tx.sender.toString)
-        case tx: ExchangeTransaction    => banned(tx.sender.toString)
-        case tx: PaymentTransaction     => banned(tx.sender.toString)
-        case tx: ReissueTransaction     => banned(tx.sender.toString)
-        case tx: LeaseTransaction       => banned(tx.sender.toString)
-        case tx: IssueTransaction       => banned(tx.sender.toString)
-        case tx: BurnTransaction        => banned(tx.sender.toString)
-        case tx: MassTransferTransaction => {
-          banned(tx.sender.toString)
-        }
-        case _ => Left(GenericError("Unknown transaction must be explicitly activated"))
+        case tx: MassTransferTransaction => banned(tx.transfers.map(_.toString) ++ List(tx.sender.toString))
+        case tx: TransferTransaction     => banned(List(tx.sender.address, tx.recipient.toString))
+        case tx: RegistryTransaction     => banned(List(tx.sender.address, tx.recipient.toString))
+        case tx: LeaseTransaction        => banned(List(tx.sender.address, tx.recipient.toString))
+        case tx: PaymentTransaction      => banned(List(tx.sender.address, tx.recipient.address))
+        case tx: LeaseCancelTransaction  => banned(List(tx.sender.address))
+        case tx: CreateAliasTransaction  => banned(List(tx.sender.address))
+        case tx: ReissueTransaction      => banned(List(tx.sender.address))
+        case tx: ExchangeTransaction     => banned(List(tx.sender.address))
+        case tx: IssueTransaction        => banned(List(tx.sender.address))
+        case tx: BurnTransaction         => banned(List(tx.sender.address))
+        case _                           => Left(GenericError("Unknown transaction must be explicitly activated"))
       }
     } else {
       println(s"🕑 just after height: $blockThreshold")
