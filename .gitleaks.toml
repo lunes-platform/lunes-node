@@ -1,0 +1,43 @@
+# Gitleaks Configuration
+# Add this file to the root of each repository as: .gitleaks.toml
+
+title = "Lunes Platform Gitleaks Config"
+
+[extend]
+# Use default rules
+useDefault = true
+
+# Allowlist - paths/patterns to ignore
+[allowlist]
+description = "Allowlisted files and patterns"
+paths = [
+    '''node_modules''',
+    '''vendor''',
+    '''\.git''',
+    '''package-lock\.json''',
+    '''yarn\.lock''',
+    '''pnpm-lock\.yaml''',
+    '''Cargo\.lock''',
+    '''\.env\.example''',
+    '''\.env\.sample''',
+    '''test/''',
+    '''tests/''',
+    '''__tests__/''',
+    '''\.test\.''',
+    '''\.spec\.''',
+    '''mock''',
+    '''fixture'''
+]
+
+# Custom rules for Lunes-specific patterns
+[[rules]]
+id = "lunes-wallet-key"
+description = "Lunes Wallet Private Key"
+regex = '''lunes[_-]?(?:private[_-]?key|secret)['":\s]*[=:]\s*['"]?[A-Za-z0-9+/=]{32,}['"]?'''
+tags = ["key", "lunes", "wallet"]
+
+[[rules]]
+id = "substrate-seed-phrase"
+description = "Substrate/Polkadot Seed Phrase"
+regex = '''(?i)(seed|mnemonic)['":\s]*[=:]\s*['"]?(\w+\s+){11,23}\w+['"]?'''
+tags = ["seed", "substrate", "polkadot"]

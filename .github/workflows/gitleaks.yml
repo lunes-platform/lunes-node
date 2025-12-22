@@ -1,0 +1,41 @@
+# Gitleaks Secret Scanner - GitHub Actions Workflow
+# Add this file to: .github/workflows/gitleaks.yml in each repository
+
+name: Gitleaks Secret Scan
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+  pull_request:
+    branches: ["main", "master", "develop"]
+  schedule:
+    # Scan daily at 2am UTC (substitute for GitGuardian 24/7 monitoring)
+    - cron: "0 2 * * *"
+
+jobs:
+  gitleaks:
+    name: 🔐 Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for complete scan
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: Report to SARIF for GitHub Security tab
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
+          GITLEAKS_ENABLE_SUMMARY: true
+
+      # Optional: Notify on Slack when secrets are found
+      # - name: Notify Slack on Failure
+      #   if: failure()
+      #   uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: ${{ job.status }}
+      #     fields: repo,message,commit,author
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
